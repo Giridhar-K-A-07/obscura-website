@@ -1,0 +1,152 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+/*
+  DEVELOPMENT PREVIEW ONLY — not a public page.
+  Built only by `astro dev` (import.meta.env.DEV). In a production build getStaticPaths
+  returns nothing, so this route is not emitted. It exists to inspect the PROVISIONAL
+  design tokens and primitives. All text is placeholder and states no club fact.
+*/
+export function getStaticPaths() {
+  return import.meta.env.DEV ? [{ params: { preview: "design-system" } }] : [];
+}
+
+const palette = [
+  ["ink", "#080b12", "Page background"],
+  ["chamber", "#111826", "Raised surfaces"],
+  ["slate", "#34465c", "Decorative lines only"],
+  ["haze", "#6b7788", "UI borders; large text only"],
+  ["mist", "#9aa5b4", "Secondary text"],
+  ["lumen", "#e9ebee", "Primary text"],
+  ["aperture", "#bccdff", "Single accent"],
+] as const;
+---
+
+<BaseLayout title="Design system preview (development only)" noindex>
+  <main id="main" tabindex="-1">
+    <div class="page section flow" style="--flow-space: var(--space-6)">
+      <p class="badge badge-accent">Development preview — not a public page</p>
+      <h1 class="type-display">Design system</h1>
+      <p class="type-lead measure">
+        Every colour and font here is <strong>provisional</strong>. None is an official OBSCURA
+        brand decision. Text on this page is placeholder.
+      </p>
+
+      <hr class="divider" />
+      <section aria-labelledby="colour" class="flow">
+        <h2 id="colour">Colour (provisional)</h2>
+        <ul class="grid-page" style="list-style: none; padding: 0">
+          {palette.map(([name, hex, use]) => (
+            <li class="card" style="grid-column: span 4">
+              <div
+                style={`background:${hex};height:3rem;border:1px solid var(--border-ui);border-radius:var(--radius-sm)`}
+              />
+              <p class="type-label" style="margin-top: var(--space-3)">
+                {name} <code>{hex}</code>
+              </p>
+              <p class="type-meta">{use}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="type" class="flow">
+        <h2 id="type">Typography (provisional system fonts)</h2>
+        <p class="type-display">Display</p>
+        <h1 class="type-h1">Heading one</h1>
+        <h2 class="type-h2">Heading two</h2>
+        <h3>Heading three</h3>
+        <h4>Heading four</h4>
+        <p class="type-lead measure">Lead paragraph for introductions.</p>
+        <p class="measure">
+          Body text. Placeholder sentence used to check the line length, line height and rhythm of
+          running text on a dark background. It states nothing about the club.
+        </p>
+        <p class="type-label">Label text</p>
+        <p class="type-meta">Metadata text</p>
+        <p class="type-code">Monospace is for code only</p>
+      </section>
+
+      <section aria-labelledby="actions" class="flow">
+        <h2 id="actions">Links, buttons, badges</h2>
+        <p>
+          <a class="link" href="#actions">
+            A standard link
+          </a>{" "}
+          ·{" "}
+          <a class="link-quiet" href="#actions">
+            A quiet link
+          </a>
+        </p>
+        <p style="display: flex; flex-wrap: wrap; gap: var(--space-3)">
+          <button class="btn btn-primary" type="button">
+            Primary
+          </button>
+          <button class="btn" type="button">
+            Secondary
+          </button>
+          <button class="btn btn-quiet" type="button">
+            Quiet
+          </button>
+          <button class="btn" type="button" disabled>
+            Disabled
+          </button>
+        </p>
+        <p style="display: flex; flex-wrap: wrap; gap: var(--space-3)">
+          <span class="badge">Draft</span>
+          <span class="badge badge-accent">Verified</span>
+        </p>
+      </section>
+
+      <section aria-labelledby="surfaces" class="flow">
+        <h2 id="surfaces">Surfaces</h2>
+        <div class="surface">
+          <p>Surface (chamber)</p>
+        </div>
+        <div class="card">
+          <p>Card — only for self-contained objects</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="forms" class="flow">
+        <h2 id="forms">Form field</h2>
+        <form class="flow" style="max-width: 28rem">
+          <div class="field">
+            <label class="field-label" for="demo-a">
+              Label
+            </label>
+            <input class="input" id="demo-a" type="text" aria-describedby="demo-a-hint" />
+            <p class="field-hint" id="demo-a-hint">
+              Hint text sits under the field.
+            </p>
+          </div>
+          <div class="field">
+            <label class="field-label" for="demo-b">
+              Label with error
+            </label>
+            <input
+              class="input"
+              id="demo-b"
+              type="text"
+              aria-invalid="true"
+              aria-describedby="demo-b-err"
+            />
+            <p class="field-error" id="demo-b-err">
+              Error: say what happened and how to fix it.
+            </p>
+          </div>
+        </form>
+      </section>
+
+      <section aria-labelledby="motion" class="flow">
+        <h2 id="motion">Motion</h2>
+        <p class="measure type-meta">
+          The reveal plays once on load below. With reduced motion enabled it does not animate.
+        </p>
+        <div class="surface reveal">
+          <p>Revealed surface</p>
+        </div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

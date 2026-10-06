@@ -1,0 +1,117 @@
+/* Base element defaults: semantic HTML looks right before any class is applied. */
+
+@layer base {
+  html {
+    background-color: var(--surface-page);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 100%; /* respect the visitor's browser font size */
+    line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-padding-top: var(--space-8); /* anchors are not hidden under a future sticky header */
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-wrap: break-word; /* long words/URLs must not force horizontal scrolling */
+  }
+
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Headings: serif display direction, sentence case (Master Brief §7.3). */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  h1 {
+    font-size: var(--text-h1);
+    line-height: var(--text-h1--line-height);
+  }
+  h2 {
+    font-size: var(--text-h2);
+    line-height: var(--text-h2--line-height);
+  }
+  h3 {
+    font-size: var(--text-h3);
+    line-height: var(--text-h3--line-height);
+  }
+  h4 {
+    font-size: var(--text-h4);
+    line-height: var(--text-h4--line-height);
+    font-weight: 600;
+  }
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  /* Links: underlined, so they are not identified by colour alone. */
+  a {
+    color: var(--text-accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+  a:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono);
+    font-size: 0.9375em;
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  /*
+    Focus (WCAG 2.4.7, 2.4.11). The ring is drawn with outline so it survives
+    forced-colors mode, and offset so it is visible against both ink and chamber.
+    :focus-visible keeps the ring for keyboard users without showing it on mouse clicks.
+  */
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+  }
+  /* Programmatic focus targets (e.g. #main after the skip link) need no ring. */
+  [tabindex="-1"]:focus {
+    outline: none;
+  }
+
+  /*
+    Motion: Master Brief §7.6 — replace movement with instant state changes.
+    This is a deliberate global safety net; components should not need to repeat it.
+  */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

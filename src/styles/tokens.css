@@ -1,0 +1,128 @@
+/*
+  OBSCURA design tokens.
+
+  STATUS: PROVISIONAL. Nothing in this file is an official OBSCURA brand decision.
+  - Colours come from Master Brief §7.1 [R]. They were sampled from 3D mockup renders and
+    adjusted for contrast, so they are approximations.
+    [[NEEDED: official brand colours, if any — Master Brief §15 B3]]
+  - Font stacks below are system fonts used as a placeholder. No font is chosen or approved.
+    [[NEEDED: font decision from the typography prototype — Master Brief §7.3, §15 B2]]
+  - Spacing, radii, shadows, type scale and breakpoints are working values for the design
+    system phase and are expected to change after the Design/Brand review.
+
+  Structure:
+    1. @theme static  — raw scales; Tailwind generates utilities from these.
+    2. :root          — semantic aliases (what components use) and non-Tailwind tokens.
+  Components and pages should use the semantic aliases, not the raw palette.
+*/
+
+@theme static {
+  /* ---- Colour palette (PROVISIONAL, Master Brief §7.1) ---------------------------- */
+  --color-ink: #080b12; /* page background */
+  --color-chamber: #111826; /* raised surfaces */
+  --color-slate: #34465c; /* decorative lines only — never text, never a required UI boundary */
+  --color-haze: #6b7788; /* UI borders, large text only — fails 4.5:1 for body text */
+  --color-mist: #9aa5b4; /* secondary text, metadata */
+  --color-lumen: #e9ebee; /* primary text */
+  --color-aperture: #bccdff; /* the single accent: focus, links, active states */
+
+  /* ---- Font stacks (PROVISIONAL system fonts; no webfonts are loaded) -------------- */
+  --font-serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+  /* ---- Type scale (fluid: clamp between a 360px phone and a 1440px wide screen) ----- */
+  --text-display: clamp(2.5rem, 1.9rem + 3vw, 4.5rem);
+  --text-display--line-height: 1.05;
+  --text-h1: clamp(2rem, 1.6rem + 2vw, 3.25rem);
+  --text-h1--line-height: 1.1;
+  --text-h2: clamp(1.625rem, 1.4rem + 1.1vw, 2.25rem);
+  --text-h2--line-height: 1.2;
+  --text-h3: clamp(1.25rem, 1.15rem + 0.5vw, 1.5rem);
+  --text-h3--line-height: 1.3;
+  --text-h4: 1.125rem;
+  --text-h4--line-height: 1.4;
+  --text-lead: clamp(1.125rem, 1.05rem + 0.4vw, 1.375rem);
+  --text-lead--line-height: 1.5;
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.5;
+
+  /* ---- Radii (restrained; Master Brief §6.3 discourages grids of rounded cards) ----- */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  /* ---- Shadows (dark UI: shadows only separate layers, they never glow) ------------- */
+  --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px rgb(0 0 0 / 0.25);
+  --shadow-overlay: 0 8px 32px rgb(0 0 0 / 0.55);
+
+  /* ---- Breakpoints (Master Brief §11.2; mobile-first, min-width) -------------------- */
+  --breakpoint-*: initial;
+  --breakpoint-tablet: 641px; /* 641–1024  */
+  --breakpoint-desktop: 1025px; /* 1025–1439 */
+  --breakpoint-wide: 1440px; /* ≥ 1440    */
+
+  /* ---- Easing --------------------------------------------------------------------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  color-scheme: dark;
+
+  /* ---- Semantic colour aliases ----------------------------------------------------- */
+  --surface-page: var(--color-ink);
+  --surface-raised: var(--color-chamber);
+  --text-primary: var(--color-lumen); /* 16.48:1 on ink */
+  --text-secondary: var(--color-mist); /* 7.89:1 on ink */
+  --text-accent: var(--color-aperture); /* 12.48:1 on ink */
+  --border-ui: var(--color-haze); /* 3:1+ — input/button boundaries (WCAG 1.4.11) */
+  --border-subtle: var(--color-slate); /* decorative dividers only */
+  --accent: var(--color-aperture);
+  --on-accent: var(--color-ink);
+  --focus-ring: var(--color-aperture);
+
+  /* ---- Spacing (4px base; use with padding/margin/gap) ------------------------------ */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+  --space-section: clamp(var(--space-7), 2rem + 6vw, var(--space-9));
+
+  /* ---- Layout ---------------------------------------------------------------------- */
+  --gutter: clamp(1rem, 0.5rem + 2.5vw, 2.5rem); /* page side padding */
+  --container-narrow: 44rem; /* prose-only pages */
+  --container-content: 72rem; /* default */
+  --container-wide: 90rem; /* capped on ≥1440px; extra space stays empty */
+  --measure: 68ch; /* body line length 60–75 characters */
+  --grid-columns: 4; /* 4 on mobile, 12 from tablet up (Master Brief §7.4) */
+  --grid-gap: var(--space-4);
+  --target-min: 2.75rem; /* 44px minimum touch target */
+
+  /* ---- Layering --------------------------------------------------------------------- */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-overlay: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+  --z-skip-link: 1000;
+
+  /* ---- Motion (Master Brief §7.6) ---------------------------------------------------- */
+  --duration-feedback: 200ms; /* 150–250ms: answers a visitor action */
+  --duration-reveal: 600ms; /* ≤600ms: the single signature "reveal" */
+}
+
+@media (min-width: 641px) {
+  :root {
+    --grid-columns: 12;
+    --grid-gap: var(--space-5);
+  }
+}
