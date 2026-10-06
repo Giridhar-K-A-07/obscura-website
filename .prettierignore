@@ -1,0 +1,8 @@
+dist/
+.astro/
+.vercel/
+node_modules/
+package-lock.json
+# Documents are written by hand and reviewed as prose; the brief and decision records must not be reformatted.
+*.md
+public/
