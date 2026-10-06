@@ -141,3 +141,10 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Astro / Vercel / tooling (added for the Astro scaffold)
+.astro/
+.vercel
+.DS_Store
+playwright-report/
+test-results/

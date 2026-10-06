@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/*
+  Design tokens — PROVISIONAL.
+  Source: Master Brief §7.1 [R]. The values were derived from 3D mockup renders of
+  the logo, so they are approximations, not official brand colours.
+  [[NEEDED: official brand colours, if any — Master Brief §15 B3]]
+  They are tested in the design-system phase before being fixed.
+  Fonts are intentionally not chosen yet (Master Brief §7.3 lists candidates only).
+  [[NEEDED: font decision from the typography prototype]]
+*/
+@theme {
+  --color-ink: #080b12;
+  --color-chamber: #111826;
+  --color-slate: #34465c;
+  --color-haze: #6b7788;
+  --color-mist: #9aa5b4;
+  --color-lumen: #e9ebee;
+  --color-aperture: #bccdff;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    background-color: var(--color-ink);
+    color: var(--color-lumen);
+    line-height: 1.6;
+  }
+
+  /* Visible focus indicator in the single accent colour (Master Brief §11.1). */
+  :focus-visible {
+    outline: 2px solid var(--color-aperture);
+    outline-offset: 2px;
+  }
+
+  /* Master Brief §7.6: replace movement with instant state changes. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

@@ -1,0 +1,10 @@
+# Placeholder record. It contains no club facts. Every value below is unknown until the
+# club confirms it (Master Brief §15). It stays "draft", so it can never be published.
+status: draft
+source: "Placeholder created by the project scaffold. Contains no club facts."
+description: "[[NEEDED: official 1–2 sentence description of OBSCURA — Master Brief §15 C1]]"
+foundingDate: "[[NEEDED: founding date or year — Master Brief §15 C2]]"
+affiliation: "[[NEEDED: official wording for the institutional affiliation — Master Brief §15 C2]]"
+contactEmail: "[[NEEDED: official contact email — Master Brief §15 C4]]"
+githubOrganisation: "[[NEEDED: GitHub organisation, if one exists — Master Brief §15 R1]]"
+productionUrl: "[[NEEDED: production site URL — Master Brief §15 C7]]"
