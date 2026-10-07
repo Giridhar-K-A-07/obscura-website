@@ -1,0 +1,40 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import EventsIntro from "../../../components/events/EventsIntro.astro";
+import PastSection from "../../../components/events/PastSection.astro";
+import PrototypeNotice from "../../../components/home/PrototypeNotice.astro";
+import SiteFooter from "../../../components/home/SiteFooter.astro";
+import { applyFilter, filterCombinations, filterPath } from "../../../lib/eventsContent";
+import { loadEventsContent } from "../../../lib/eventsData";
+
+/*
+  Filtered view of the past archive, by event type and/or year. The site is static, so each
+  filter combination that has at least one verified past event is its own pre-rendered page:
+  /events/archive/type/<type>, /events/archive/year/<year>, /events/archive/type/<type>/year/<year>.
+  With no verified past events, no filter page is generated.
+*/
+export async function getStaticPaths() {
+  const { past } = await loadEventsContent();
+  return filterCombinations(past).map((filter) => ({
+    params: { filter: filterPath(filter) },
+    props: { filter },
+  }));
+}
+
+const { filter } = Astro.props;
+const { past } = await loadEventsContent();
+const events = applyFilter(past, filter);
+---
+
+<BaseLayout
+  title="Past events — Events & Initiatives Archive — OBSCURA"
+  description="Events & Initiatives Archive. Design prototype; not verified club content."
+  noindex
+>
+  <PrototypeNotice />
+  <main id="main" tabindex="-1">
+    <EventsIntro />
+    <PastSection allPast={past} events={events} selected={filter} />
+  </main>
+  <SiteFooter />
+</BaseLayout>

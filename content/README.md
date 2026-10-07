@@ -13,4 +13,6 @@ Rules (Master Brief §9 and §13, and `docs/decisions/0001-site-stack.md`):
 
 Faculty on the About page are ordinary `people` with a verified `memberships` record in a verified team named `Faculty`, a stated role, and recorded consent.
 
+Events (`events/`) are published at `/events/<file name>`, so choose the file name carefully. Write `start` and `end` with an explicit UTC offset (for example `2030-07-01T15:30:00+05:30`) and give `timezone` as an IANA name (for example `Asia/Kolkata`); an event with an unrecognised timezone, or an end before its start, is not published. Past or upcoming is decided from the instants alone. In a Markdown or MDX event file, the body is the recap. `photos` and `slides` are site paths or `https` links; `repositories` are `https` links. Speakers are not published.
+
 The committed `site/site.yaml` is a placeholder with no club facts. The other folders are empty on purpose.

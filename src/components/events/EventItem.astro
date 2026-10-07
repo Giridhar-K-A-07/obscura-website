@@ -1,0 +1,80 @@
+---
+import EventWhen from "./EventWhen.astro";
+import type { PublicEvent } from "../../lib/eventsContent";
+
+/*
+  One event in a list. Title, date, type and venue always appear. The description appears for
+  upcoming events. For past events, links to the recap, photos, slides and repositories appear
+  only for those that exist, so no empty label is ever shown.
+*/
+interface Props {
+  event: PublicEvent;
+  state: "upcoming" | "past";
+}
+const { event, state } = Astro.props;
+const href = `/events/${event.id}`;
+const extras = [
+  event.hasRecap && { label: "Recap", anchor: "recap" },
+  event.photos.length > 0 && {
+    label: event.photos.length === 1 ? "Photo" : "Photos",
+    anchor: "photos",
+  },
+  event.slides.length > 0 && { label: "Slides", anchor: "slides" },
+  event.repositories.length > 0 && {
+    label: event.repositories.length === 1 ? "Repository" : "Repositories",
+    anchor: "repositories",
+  },
+].filter((item): item is { label: string; anchor: string } => item !== false);
+---
+
+<article class="event">
+  <p class="type-meta">{event.type}</p>
+  <h3 class="type-h3">
+    <a class="title" href={href}>
+      {event.title}
+    </a>
+  </h3>
+  <EventWhen event={event} />
+  <p class="type-meta">{event.venue}</p>
+  {state === "upcoming" && event.description && <p class="measure">{event.description}</p>}
+  {state === "past" && extras.length > 0 && (
+    <ul class="extras" aria-label={`More from ${event.title}`}>
+      {extras.map((item) => (
+        <li>
+          <a class="link action" href={`${href}#${item.anchor}`}>
+            {item.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  )}
+</article>
+
+<style>
+  .event > * + * {
+    margin-top: var(--space-2);
+  }
+  .title {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    color: var(--text-primary);
+    text-decoration-color: var(--border-ui);
+  }
+  .title:hover {
+    color: var(--text-accent);
+  }
+  .extras {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-5);
+  }
+  .action {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+</style>

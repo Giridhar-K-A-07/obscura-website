@@ -1,0 +1,34 @@
+---
+import Section from "../home/Section.astro";
+import EventItem from "./EventItem.astro";
+import type { PublicEvent } from "../../lib/eventsContent";
+
+/* Verified events that have not ended, soonest first. Rendered only when there is at least one. */
+interface Props {
+  events: PublicEvent[];
+}
+const { events } = Astro.props;
+---
+
+<Section id="upcoming" kicker="Events" title="Upcoming events">
+  <ul class="list">
+    {events.map((event) => (
+      <li>
+        <EventItem event={event} state="upcoming" />
+      </li>
+    ))}
+  </ul>
+</Section>
+
+<style>
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .list li {
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+</style>

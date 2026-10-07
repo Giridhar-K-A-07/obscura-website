@@ -1,14 +1,31 @@
 ---
-import SectionPage from "../layouts/SectionPage.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import EventsIntro from "../components/events/EventsIntro.astro";
+import PastSection from "../components/events/PastSection.astro";
+import UpcomingSection from "../components/events/UpcomingSection.astro";
+import PrototypeNotice from "../components/home/PrototypeNotice.astro";
+import SiteFooter from "../components/home/SiteFooter.astro";
+import { loadEventsContent } from "../lib/eventsData";
+
+/*
+  Events & Initiatives Archive (Master Brief P2, §8.4). Upcoming and Past render only when they
+  have verified events (src/lib/eventsContent.ts); with none, the page is its introduction.
+  There are no club facts in this file. Still `noindex`: there is no verified launch content yet.
+  Filtered views of the past archive are pre-rendered under /events/archive/.
+*/
+const { upcoming, past } = await loadEventsContent();
 ---
 
-<SectionPage
-  title="Events & Initiatives Archive"
-  kicker="Events"
-  summary="Upcoming events first, then an archive of past events with photos, recaps, slides and repositories."
-  needed={[
-    "event titles, dates, times, timezone, types and venues",
-    "recaps, photos and slides, with permission to publish",
-    "who owns RSVP data and which tool processes it — Master Brief §15",
-  ]}
-/>
+<BaseLayout
+  title="Events & Initiatives Archive — OBSCURA"
+  description="Events & Initiatives Archive. Design prototype; not verified club content."
+  noindex
+>
+  <PrototypeNotice />
+  <main id="main" tabindex="-1">
+    <EventsIntro />
+    {upcoming.length > 0 && <UpcomingSection events={upcoming} />}
+    {past.length > 0 && <PastSection allPast={past} events={past} />}
+  </main>
+  <SiteFooter />
+</BaseLayout>
