@@ -1,13 +1,32 @@
 ---
-import SectionPage from "../layouts/SectionPage.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import AchievementsIntro from "../components/achievements/AchievementsIntro.astro";
+import SpotlightsSection from "../components/achievements/SpotlightsSection.astro";
+import WinnersSection from "../components/achievements/WinnersSection.astro";
+import PrototypeNotice from "../components/home/PrototypeNotice.astro";
+import SiteFooter from "../components/home/SiteFooter.astro";
+import { loadAchievementsContent } from "../lib/achievementsData";
+
+/*
+  Hall of Achievements & Wall of Fame (Master Brief P3, §8.4). Competition Winners and Member
+  Spotlights each render only when they have verified content (src/lib/achievementsContent.ts);
+  with none, the page is its introduction. There are no club facts in this file. Leaderboards are
+  not built: their meaning is an open club question (Master Brief §15 H1). Still `noindex`:
+  there is no verified launch content yet.
+*/
+const { winners, spotlights } = await loadAchievementsContent();
 ---
 
-<SectionPage
-  title="Hall of Achievements & Wall of Fame"
-  kicker="Achievements"
-  summary="Competition winners and leaderboards, plus member spotlights featured with consent."
-  needed={[
-    "competition results, only from verified records",
-    "member spotlights, each with the member's consent",
-  ]}
-/>
+<BaseLayout
+  title="Hall of Achievements & Wall of Fame — OBSCURA"
+  description="Hall of Achievements & Wall of Fame. Design prototype; not verified club content."
+  noindex
+>
+  <PrototypeNotice />
+  <main id="main" tabindex="-1">
+    <AchievementsIntro />
+    {winners.length > 0 && <WinnersSection winners={winners} />}
+    {spotlights.length > 0 && <SpotlightsSection groups={spotlights} />}
+  </main>
+  <SiteFooter />
+</BaseLayout>
