@@ -1,0 +1,330 @@
+/*
+  Reusable UI primitives. Deliberately generic: no page-specific components live here.
+  Every interactive primitive:
+    - has a 44px minimum target,
+    - keeps the global :focus-visible ring,
+    - treats :hover as an enhancement only (nothing is revealed by hover alone).
+*/
+
+@layer components {
+  /* ---- Layout ---------------------------------------------------------------------- */
+  .page {
+    width: min(100% - 2 * var(--gutter), var(--container-content));
+    margin-inline: auto;
+  }
+  .page-narrow {
+    width: min(100% - 2 * var(--gutter), var(--container-narrow));
+    margin-inline: auto;
+  }
+  .page-wide {
+    width: min(100% - 2 * var(--gutter), var(--container-wide));
+    margin-inline: auto;
+  }
+
+  /* 4-column grid on mobile, 12-column from tablet up. Children opt in with grid-column. */
+  .grid-page {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+    gap: var(--grid-gap);
+  }
+
+  .section {
+    padding-block: var(--space-section);
+  }
+
+  /* Vertical rhythm between siblings. */
+  .flow > * + * {
+    margin-top: var(--flow-space, var(--space-4));
+  }
+
+  /* ---- Typography primitives -------------------------------------------------------- */
+  .type-display {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: var(--text-display);
+    line-height: var(--text-display--line-height);
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .type-h1 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: var(--text-h1);
+    line-height: var(--text-h1--line-height);
+    text-wrap: balance;
+  }
+  .type-h2 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: var(--text-h2);
+    line-height: var(--text-h2--line-height);
+    text-wrap: balance;
+  }
+  .type-h3 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: var(--text-h3);
+    line-height: var(--text-h3--line-height);
+  }
+  .type-lead {
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+    color: var(--text-primary);
+  }
+  .type-body {
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+  /* Labels and metadata: sentence case, sans, no decorative monospace (Master Brief §7.3). */
+  .type-label {
+    font-size: var(--text-small);
+    line-height: var(--text-small--line-height);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  .type-meta {
+    font-size: var(--text-small);
+    line-height: var(--text-small--line-height);
+    color: var(--text-secondary);
+  }
+  .type-nav {
+    font-size: var(--text-body);
+    line-height: 1.4;
+    font-weight: 500;
+  }
+  .type-button {
+    font-size: var(--text-body);
+    line-height: 1.25;
+    font-weight: 600;
+  }
+  .type-code {
+    font-family: var(--font-mono);
+  }
+
+  /* Readable line length. */
+  .measure {
+    max-width: var(--measure);
+  }
+
+  .text-secondary {
+    color: var(--text-secondary);
+  }
+
+  /* ---- Links ------------------------------------------------------------------------ */
+  .link {
+    color: var(--text-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  /* Quiet links (e.g. navigation): no underline until hover or focus. */
+  .link-quiet {
+    color: var(--text-primary);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+  .link-quiet:hover,
+  .link-quiet[aria-current="page"] {
+    color: var(--text-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+  }
+
+  /* ---- Buttons ---------------------------------------------------------------------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--target-min);
+    min-width: var(--target-min);
+    padding: var(--space-2) var(--space-5);
+    border: 1px solid var(--border-ui);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: var(--text-body);
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color var(--duration-feedback) var(--ease-out),
+      border-color var(--duration-feedback) var(--ease-out),
+      color var(--duration-feedback) var(--ease-out);
+  }
+  .btn:hover {
+    border-color: var(--accent);
+    color: var(--text-accent);
+  }
+  .btn:active {
+    background: var(--surface-raised);
+  }
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent); /* ink on aperture: 12.48:1 */
+  }
+  .btn-primary:hover {
+    background: var(--text-primary);
+    border-color: var(--text-primary);
+    color: var(--on-accent);
+  }
+  /* Quiet: text-only button; keeps a real target size and focus ring. */
+  .btn-quiet {
+    border-color: transparent;
+    padding-inline: var(--space-3);
+  }
+  .btn[disabled],
+  .btn[aria-disabled="true"] {
+    opacity: 0.55; /* disabled controls are exempt from contrast, but stay legible */
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* ---- Surfaces and dividers --------------------------------------------------------- */
+  .surface {
+    background: var(--surface-raised);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+  }
+  /* Card: a self-contained object only (Master Brief §7.4). Not a default wrapper. */
+  .card {
+    background: var(--surface-raised);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-raised);
+  }
+  .divider {
+    border: 0;
+    border-top: 1px solid var(--border-subtle);
+    margin-block: var(--space-6);
+  }
+
+  /* ---- Badges / status labels ---------------------------------------------------------
+     Meaning is always carried by the visible text, never by colour alone. */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--border-ui);
+    border-radius: var(--radius-full);
+    color: var(--text-secondary);
+    font-size: var(--text-small);
+    font-weight: 500;
+    line-height: 1.25;
+  }
+  .badge-accent {
+    border-color: var(--accent);
+    color: var(--text-accent);
+  }
+
+  /* ---- Form-field foundation ---------------------------------------------------------- */
+  .field {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .field-label {
+    font-size: var(--text-small);
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .field-hint {
+    font-size: var(--text-small);
+    color: var(--text-secondary);
+  }
+  .input {
+    width: 100%;
+    min-height: var(--target-min);
+    padding: var(--space-2) var(--space-3);
+    background: var(--surface-page);
+    border: 1px solid var(--border-ui); /* 3:1+ against the page (WCAG 1.4.11) */
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: max(1rem, 16px); /* 16px+ prevents zoom-on-focus on iOS */
+  }
+  .input::placeholder {
+    color: var(--text-secondary);
+  }
+  /* Errors: border weight, a text prefix supplied by the markup, and aria-invalid.
+     No new hue is introduced; a semantic error colour is a Design/Brand decision. */
+  .input[aria-invalid="true"] {
+    border-width: 2px;
+    border-color: var(--text-primary);
+  }
+  .field-error {
+    font-size: var(--text-small);
+    font-weight: 600;
+    color: var(--text-primary);
+    border-left: 3px solid var(--text-primary);
+    padding-left: var(--space-3);
+  }
+
+  /* ---- Accessibility helpers ---------------------------------------------------------- */
+  .skip-link {
+    position: absolute;
+    left: var(--space-4);
+    top: var(--space-4);
+    z-index: var(--z-skip-link);
+    padding: var(--space-3) var(--space-4);
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    text-decoration: none;
+    transform: translateY(-200%);
+  }
+  .skip-link:focus {
+    transform: none;
+  }
+
+  /* ---- Motion --------------------------------------------------------------------------
+     1. Feedback motion: short transitions that answer an action. Use on the property that
+        changes, never `all`.
+     2. The reveal: dim and soft -> bright and sharp. The ONE signature motion. Use for the
+        hero, timeline entries and expanding details only (Master Brief §7.6).
+     Content is fully visible without these classes; they only animate on top of it. */
+  .motion-feedback {
+    transition-duration: var(--duration-feedback);
+    transition-timing-function: var(--ease-out);
+    transition-property: background-color, border-color, color, opacity;
+  }
+  .reveal {
+    animation: reveal var(--duration-reveal) var(--ease-out) both;
+  }
+  @keyframes reveal {
+    from {
+      opacity: 0.35;
+      filter: blur(3px);
+    }
+    to {
+      opacity: 1;
+      filter: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal {
+      animation: none;
+    }
+  }
+}
+
+/* Forced-colors (Windows high contrast): keep boundaries and focus visible. */
+@media (forced-colors: active) {
+  .btn,
+  .input,
+  .badge,
+  .card {
+    border: 1px solid ButtonText;
+  }
+  .btn-primary {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+}
