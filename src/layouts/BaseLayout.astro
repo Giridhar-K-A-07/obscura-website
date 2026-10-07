@@ -21,7 +21,7 @@ const { title, description, noindex = false } = Astro.props;
     {noindex && <meta name="robots" content="noindex, nofollow" />}
   </head>
   <body>
-    <!-- Pages must provide <main id="main" tabindex="-1">. -->
+    {/* Pages must provide <main id="main" tabindex="-1">. */}
     <a class="skip-link" href="#main">
       Skip to main content
     </a>

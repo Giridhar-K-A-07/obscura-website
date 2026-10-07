@@ -1,0 +1,29 @@
+---
+/* Thin notice that distinguishes this prototype from verified club content. */
+---
+
+<div class="notice" role="note">
+  <p class="page">
+    <strong>Design prototype.</strong> Layout and visual direction only. Text marked{" "}
+    <span class="mark">[[NEEDED: …]]</span> is information the club has not yet provided. Colours
+    and fonts are provisional. Nothing here is verified club content.
+  </p>
+</div>
+
+<style>
+  .notice {
+    background: var(--surface-raised);
+    border-bottom: 1px solid var(--border-subtle);
+    padding-block: var(--space-3);
+    font-size: var(--text-small);
+    line-height: var(--text-small--line-height);
+    color: var(--text-secondary);
+  }
+  .notice strong {
+    color: var(--text-primary);
+  }
+  .mark {
+    font-style: italic;
+    border-bottom: 1px dashed var(--border-ui);
+  }
+</style>
