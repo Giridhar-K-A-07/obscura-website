@@ -3,16 +3,23 @@ import { isCurrent, primaryNav } from "../../lib/navigation";
 
 /*
   Shared site header. Static HTML: the links work with no JavaScript.
-  On narrow screens the links sit in a <details> disclosure panel. It is rendered open so the
-  no-JavaScript fallback shows every link; the small script below collapses it on narrow
-  screens and keeps it open from the desktop breakpoint up.
+  Master Brief §8.2: inline links from the desktop breakpoint up, a full-screen menu below it.
+  The menu is a <details> disclosure rendered open, so every link is reachable without
+  JavaScript (where the links show inline instead of full-screen). The small script below
+  collapses the menu on narrow screens, keeps it open on desktop, closes it on Escape, and makes
+  the page behind an open full-screen menu inert.
 */
 const { pathname } = Astro.url;
 ---
 
 <header class="site-header">
   <div class="page bar">
-    <a class="brand" href="/" aria-label="OBSCURA, home">
+    <a
+      class="brand"
+      href="/"
+      aria-label="OBSCURA, home"
+      aria-current={isCurrent("/", pathname) ? "page" : undefined}
+    >
       OBSCURA
     </a>
     <nav aria-label="Primary">
@@ -42,11 +49,20 @@ const { pathname } = Astro.url;
   const menu = document.querySelector<HTMLDetailsElement>("[data-menu]");
   const desktop = window.matchMedia("(min-width: 1025px)");
   if (menu) {
+    const header = menu.closest("header");
+    // While the full-screen menu is open, the rest of the page is unreachable.
+    const setPageInert = (inert: boolean) => {
+      for (const el of Array.from(document.body.children)) {
+        if (el !== header && el.tagName !== "SCRIPT") (el as HTMLElement).inert = inert;
+      }
+    };
     const sync = () => {
       menu.open = desktop.matches;
+      setPageInert(!desktop.matches && menu.open);
     };
     sync();
     desktop.addEventListener("change", sync);
+    menu.addEventListener("toggle", () => setPageInert(!desktop.matches && menu.open));
     menu.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && !desktop.matches && menu.open) {
         menu.open = false;
@@ -116,21 +132,82 @@ const { pathname } = Astro.url;
     text-decoration: underline;
     text-underline-offset: 0.3em;
   }
-  /* Below desktop: the links open as a full-width panel under the bar. */
+  /* Below desktop: the open menu fills the viewport; the bar stays on top so it can be closed. */
   @media (max-width: 1024px) {
+    .brand,
+    .menu-toggle {
+      position: relative;
+      z-index: calc(var(--z-overlay) + 1);
+    }
     .links {
-      position: absolute;
-      inset-inline: 0;
-      top: 100%;
-      z-index: var(--z-sticky);
-      padding: var(--space-2) var(--gutter) var(--space-4);
-      background: var(--surface-raised);
-      border-bottom: 1px solid var(--border-subtle);
-      box-shadow: var(--shadow-overlay);
+      position: fixed;
+      inset: 0;
+      z-index: var(--z-overlay);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      overflow-y: auto;
+      padding: calc(var(--target-min) + var(--space-4) + var(--space-5)) var(--gutter)
+        var(--space-7);
+      background: var(--surface-page);
+      animation: menu-in var(--duration-feedback) var(--ease-out) both;
     }
     .links :global(.link-quiet) {
       display: flex;
       width: 100%;
+      font-family: var(--font-serif);
+      font-size: var(--text-h2);
+      line-height: 1.2;
+      padding-block: var(--space-2);
+    }
+    :global(body:has([data-menu][open])) {
+      overflow: hidden; /* no page scrolling behind the full-screen menu */
+    }
+    /* No JavaScript: the menu cannot be collapsed on load, so show the links inline instead. */
+    @media (scripting: none) {
+      .brand,
+      .menu-toggle {
+        z-index: auto;
+      }
+      .menu-toggle {
+        display: none;
+      }
+      .links {
+        position: static;
+        padding: 0;
+        overflow: visible;
+        animation: none;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: var(--space-1) var(--space-4);
+        background: none;
+      }
+      .links :global(.link-quiet) {
+        width: auto;
+        font-family: inherit;
+        font-size: var(--text-body);
+        line-height: 1.4;
+        padding-block: 0;
+      }
+      .bar {
+        flex-wrap: wrap;
+      }
+      :global(body:has([data-menu][open])) {
+        overflow: visible;
+      }
+    }
+  }
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .links {
+      animation: none;
     }
   }
   @media (min-width: 1025px) {
