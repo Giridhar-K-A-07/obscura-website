@@ -1,0 +1,30 @@
+---
+/*
+  Page header: the one h1, and the club's verified description under it when there is one.
+  The description is the club's own wording, shown as supplied.
+*/
+interface Props {
+  description?: string | null;
+}
+const { description } = Astro.props;
+---
+
+<header class="intro">
+  <div class="page-narrow flow">
+    <p class="type-meta kicker">About</p>
+    <h1 class="type-display">About OBSCURA</h1>
+    {description && <p class="type-lead measure">{description}</p>}
+  </div>
+</header>
+
+<style>
+  .intro {
+    padding-block: var(--space-7) var(--space-section);
+  }
+  .kicker {
+    font-weight: 500;
+  }
+  .intro :global(.flow) {
+    --flow-space: var(--space-4);
+  }
+</style>

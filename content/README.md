@@ -9,4 +9,8 @@ Rules (Master Brief §9 and §13, and `docs/decisions/0001-site-stack.md`):
 - Do not commit a person's name, photo, LinkedIn link or achievements until their consent is recorded. This repository is public.
 - Synthetic sample data does not belong here. It goes in a development-only fixtures folder that is never deployed.
 
-`site/site.yaml` is a placeholder with no club facts. The other folders are empty on purpose.
+`site/site.yaml` holds club-level facts. Every field is optional: leave a field out until it is verified, and the site hides it. It also holds the official `vision`, `mission` and `aims` (one entry per official category) for the About page. A verified record must never contain a marker.
+
+Faculty on the About page are ordinary `people` with a verified `memberships` record in a verified team named `Faculty`, a stated role, and recorded consent.
+
+The committed `site/site.yaml` is a placeholder with no club facts. The other folders are empty on purpose.

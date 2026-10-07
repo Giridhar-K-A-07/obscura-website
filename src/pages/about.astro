@@ -1,14 +1,34 @@
 ---
-import SectionPage from "../layouts/SectionPage.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import AimsObjectives from "../components/about/AimsObjectives.astro";
+import ContactSection from "../components/about/ContactSection.astro";
+import FacultySection from "../components/about/FacultySection.astro";
+import IntroSection from "../components/about/IntroSection.astro";
+import VisionMission from "../components/about/VisionMission.astro";
+import PrototypeNotice from "../components/home/PrototypeNotice.astro";
+import SiteFooter from "../components/home/SiteFooter.astro";
+import { loadAboutContent } from "../lib/aboutData";
+
+/*
+  About OBSCURA (Master Brief §8.1). Every section renders only when verified content exists
+  (src/lib/aboutContent.ts); with none, the page is just its heading. There are no club facts in
+  this file. Still `noindex`: there is no verified launch content yet.
+*/
+const { identity, faculty, contact } = await loadAboutContent();
 ---
 
-<SectionPage
-  title="About OBSCURA"
-  kicker="About"
-  summary="The club's vision, mission, aims and faculty, in the club's own words."
-  needed={[
-    "official 1–2 sentence description of OBSCURA — Master Brief §8.3, §15",
-    "vision, mission and aims, confirmed by the club",
-    "faculty names and roles, confirmed by the club and shared with their consent",
-  ]}
-/>
+<BaseLayout
+  title="About OBSCURA — OBSCURA"
+  description="About OBSCURA. Design prototype; not verified club content."
+  noindex
+>
+  <PrototypeNotice />
+  <main id="main" tabindex="-1">
+    <IntroSection description={identity.description} />
+    <VisionMission vision={identity.vision} mission={identity.mission} />
+    {identity.aims.length > 0 && <AimsObjectives aims={identity.aims} />}
+    {faculty.length > 0 && <FacultySection faculty={faculty} />}
+    {contact && <ContactSection contact={contact} />}
+  </main>
+  <SiteFooter />
+</BaseLayout>

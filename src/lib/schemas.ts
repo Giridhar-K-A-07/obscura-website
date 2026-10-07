@@ -56,14 +56,35 @@ export function record<Shape extends z.ZodRawShape>(shape: Shape) {
     });
 }
 
+/** The five official aim categories, in the order the club presents them (Master Brief §4.2). */
+export const AIM_CATEGORIES = [
+  "Skill Development",
+  "Career Exposure",
+  "Innovation & Research",
+  "Interdepartmental Collaboration",
+  "Community Building",
+] as const;
+
+const aim = z.strictObject({ category: orNeeded(z.enum(AIM_CATEGORIES)), text });
+
 export const schemas = {
+  /*
+    Club-level facts. Every field is optional, and an omitted field is hidden on the site.
+    This lets the club verify facts one at a time (for example the description before the
+    contact email): a verified record may omit what is not yet confirmed, but may never hold a
+    [[NEEDED]] marker. Vision, mission and aims are the club's official text (Master Brief §4.1,
+    §4.2), used exactly as supplied.
+  */
   site: record({
-    description: text,
-    foundingDate: text,
-    affiliation: text,
-    contactEmail: text,
+    description: text.optional(),
+    vision: text.optional(),
+    mission: text.optional(),
+    aims: z.array(aim).default([]),
+    foundingDate: text.optional(),
+    affiliation: text.optional(),
+    contactEmail: text.optional(),
     githubOrganisation: text.optional(),
-    productionUrl: url,
+    productionUrl: url.optional(),
   }),
   terms: record({
     name: text,

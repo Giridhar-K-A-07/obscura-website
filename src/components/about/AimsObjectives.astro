@@ -1,0 +1,41 @@
+---
+import Section from "../home/Section.astro";
+import type { Aim } from "../../lib/aboutContent";
+
+/*
+  Aims & Objectives (Master Brief §4.2). `aims` already holds only verified aims, one per official
+  category, in the club's order. Each is a list item with its category as the heading. The text is
+  shown exactly as supplied.
+*/
+interface Props {
+  aims: Aim[];
+}
+const { aims } = Astro.props;
+---
+
+<Section id="aims" kicker="About" title="Aims & Objectives">
+  <ul class="aims">
+    {aims.map((aim) => (
+      <li>
+        <h3 class="type-h4">{aim.category}</h3>
+        <p>{aim.text}</p>
+      </li>
+    ))}
+  </ul>
+</Section>
+
+<style>
+  .aims {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .aims li {
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .aims li > * + * {
+    margin-top: var(--space-2);
+  }
+</style>
