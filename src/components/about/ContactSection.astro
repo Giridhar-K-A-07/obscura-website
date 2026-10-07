@@ -1,0 +1,74 @@
+---
+import Section from "../home/Section.astro";
+import type { AboutContact } from "../../lib/aboutContent";
+
+/*
+  Contact and affiliation: verified site-level values only. Each row appears only if its value
+  exists. Kept last and apart from the club's own text. Privacy information lives on /privacy.
+*/
+interface Props {
+  contact: AboutContact;
+}
+const { contact } = Astro.props;
+const isUrl = (value: string) => /^https?:\/\//.test(value);
+---
+
+<Section id="contact" kicker="About" title="Contact and affiliation">
+  <dl class="rows">
+    {contact.contactEmail && (
+      <div>
+        <dt class="type-label">Contact email</dt>
+        <dd>
+          <a class="link" href={`mailto:${contact.contactEmail}`}>
+            {contact.contactEmail}
+          </a>
+        </dd>
+      </div>
+    )}
+    {contact.githubOrganisation && (
+      <div>
+        <dt class="type-label">GitHub</dt>
+        <dd>
+          {isUrl(contact.githubOrganisation) ? (
+            <a class="link" href={contact.githubOrganisation}>
+              {contact.githubOrganisation}
+            </a>
+          ) : (
+            contact.githubOrganisation
+          )}
+        </dd>
+      </div>
+    )}
+    {contact.affiliation && (
+      <div>
+        <dt class="type-label">Affiliation</dt>
+        <dd>{contact.affiliation}</dd>
+      </div>
+    )}
+    {contact.foundingDate && (
+      <div>
+        <dt class="type-label">Founded</dt>
+        <dd>{contact.foundingDate}</dd>
+      </div>
+    )}
+  </dl>
+</Section>
+
+<style>
+  .rows {
+    margin: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .rows > div {
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .rows dd {
+    margin: var(--space-1) 0 0;
+  }
+  .rows a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+</style>
