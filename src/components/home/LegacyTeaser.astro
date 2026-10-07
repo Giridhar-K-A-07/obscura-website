@@ -1,0 +1,70 @@
+---
+import Section from "./Section.astro";
+import type { HomeLegacy } from "../../lib/homeContent";
+
+/*
+  Legacy Line teaser (Master Brief §8.3, §8.4): the current term, and the founding term when a
+  verified record marks one. Rendered only when a verified term exists. Terms come from verified
+  records only; none are written here.
+*/
+interface Props {
+  legacy: HomeLegacy;
+}
+const { legacy } = Astro.props;
+const stops = [
+  ...(legacy.founding ? [{ label: "Founding term", term: legacy.founding }] : []),
+  { label: "Latest term", term: legacy.latest },
+];
+---
+
+<Section id="legacy" kicker="The Legacy Line" title="Batch by batch, one line of history">
+  <ol class="line">
+    {stops.map(({ label, term }) => (
+      <li class="stop">
+        <p class="type-meta">
+          {label} · {term.academicYear}
+        </p>
+        <h3 class="type-h4">{term.name}</h3>
+        {term.summary && <p>{term.summary}</p>}
+      </li>
+    ))}
+  </ol>
+  <p>
+    <a class="btn" href="/legacy">
+      Explore the Legacy Line
+    </a>
+  </p>
+</Section>
+
+<style>
+  .line {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 var(--space-6);
+    position: relative;
+  }
+  .line::before {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 0.5rem;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(var(--border-ui), transparent);
+  }
+  .stop {
+    position: relative;
+    padding-bottom: var(--space-6);
+  }
+  .stop::before {
+    content: "";
+    position: absolute;
+    left: calc(-1 * var(--space-6));
+    top: 0.45rem;
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-full);
+    background: var(--surface-page);
+    border: 2px solid var(--accent);
+  }
+</style>

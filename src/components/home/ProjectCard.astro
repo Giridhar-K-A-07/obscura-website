@@ -16,6 +16,8 @@ interface Props {
   links?: Link[];
 }
 const { name, description, topics = [], contributors = [], links = [] } = Astro.props;
+// An empty "Contributors" label is never shown: omit it unless there is something to list.
+const showContributors = contributors.length > 0 || Astro.slots.has("contributors");
 ---
 
 <article class="card project">
@@ -28,10 +30,12 @@ const { name, description, topics = [], contributors = [], links = [] } = Astro.
       ))}
     </ul>
   )}
-  <dl class="meta">
-    <dt class="type-label">Contributors</dt>
-    <dd>{contributors.length > 0 ? contributors.join(", ") : <slot name="contributors" />}</dd>
-  </dl>
+  {showContributors && (
+    <dl class="meta">
+      <dt class="type-label">Contributors</dt>
+      <dd>{contributors.length > 0 ? contributors.join(", ") : <slot name="contributors" />}</dd>
+    </dl>
+  )}
   {links.length > 0 && (
     <ul class="links">
       {links.map((link) => (

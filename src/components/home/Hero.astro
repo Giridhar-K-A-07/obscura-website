@@ -1,6 +1,5 @@
 ---
 import HeroCanvas from "./HeroCanvas";
-import Needed from "./Needed.astro";
 import { areaNodes, tracksOf } from "../../lib/homeGraph";
 
 /*
@@ -9,6 +8,11 @@ import { areaNodes, tracksOf } from "../../lib/homeGraph";
   Tagline: "Unveiling the unknown" is recorded in Master Brief §4 / §14 as the tagline observed
   on the logo ([L]). It still needs club confirmation before being treated as official.
 */
+interface Props {
+  /** The club's verified description. Omitted from the hero when none exists. */
+  description?: string;
+}
+const { description } = Astro.props;
 ---
 
 <section class="hero" aria-labelledby="hero-title" id="top">
@@ -18,9 +22,7 @@ import { areaNodes, tracksOf } from "../../lib/homeGraph";
         OBSCURA
       </h1>
       <p class="tagline">Unveiling the unknown</p>
-      <p class="type-lead measure">
-        <Needed what="official 1–2 sentence description of OBSCURA — Master Brief §8.3, §15" />
-      </p>
+      {description && <p class="type-lead measure">{description}</p>}
       <p class="actions">
         <a class="btn btn-primary" href="/about">
           Explore OBSCURA
