@@ -1,0 +1,147 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { render } from "astro:content";
+import EventAssets from "../../components/events/EventAssets.astro";
+import PrototypeNotice from "../../components/home/PrototypeNotice.astro";
+import SiteFooter from "../../components/home/SiteFooter.astro";
+import { classify, describeWhen } from "../../lib/eventsContent";
+import { loadEventsContent } from "../../lib/eventsData";
+
+/*
+  One event. A page is generated only for a verified, valid event (src/lib/eventsContent.ts), so
+  draft and unverified records never get a route. The URL slug is the record id. Every block
+  renders only when it has verified content. Not built: RSVP, countdown, calendar export, a photo
+  lightbox. Those wait on club decisions (Master Brief §15) and are follow-ups. Still `noindex`.
+*/
+export async function getStaticPaths() {
+  const { all } = await loadEventsContent();
+  return all.map((event) => ({ params: { slug: event.id }, props: { event } }));
+}
+
+const { event } = Astro.props;
+const { entries, now } = await loadEventsContent();
+const state = classify(event, now);
+const when = describeWhen(event);
+const entry = entries.get(event.id);
+const Content = event.hasRecap && entry ? (await render(entry)).Content : null;
+---
+
+<BaseLayout
+  title={`${event.title} — Events — OBSCURA`}
+  description="Event page. Design prototype; not verified club content."
+  noindex
+>
+  <PrototypeNotice />
+  <main id="main" tabindex="-1">
+    <article class="page-narrow section flow" style="--flow-space: var(--space-6)">
+      <header class="flow" style="--flow-space: var(--space-3)">
+        <p>
+          <a class="link back" href="/events">
+            All events
+          </a>
+        </p>
+        <p class="type-meta">
+          {event.type} · {state === "upcoming" ? "Upcoming event" : "Past event"}
+        </p>
+        <h1 class="type-display">{event.title}</h1>
+      </header>
+
+      <dl class="facts">
+        <div>
+          <dt class="type-label">{event.end && !when.sameDay ? "Starts" : "Date"}</dt>
+          <dd>
+            <time datetime={event.start.toISOString()}>
+              {when.startDate}
+              {event.end && !when.sameDay ? `, ${when.startTime}` : ""}
+            </time>
+          </dd>
+        </div>
+        {event.end && !when.sameDay && (
+          <div>
+            <dt class="type-label">Ends</dt>
+            <dd>
+              <time datetime={event.end.toISOString()}>
+                {when.endDate}, {when.endTime}
+              </time>
+            </dd>
+          </div>
+        )}
+        {(!event.end || when.sameDay) && (
+          <div>
+            <dt class="type-label">{event.end ? "Time" : "Starts"}</dt>
+            <dd>
+              {when.startTime}
+              {event.end && ` to ${when.endTime}`}
+            </dd>
+          </div>
+        )}
+        <div>
+          <dt class="type-label">Timezone</dt>
+          <dd>
+            {when.timezone} ({when.offset})
+          </dd>
+        </div>
+        <div>
+          <dt class="type-label">Venue</dt>
+          <dd>{event.venue}</dd>
+        </div>
+      </dl>
+
+      {event.description && <p class="type-lead measure">{event.description}</p>}
+
+      {Content && (
+        <section id="recap" aria-labelledby="recap-title" class="flow measure">
+          <h2 class="type-h3" id="recap-title">
+            Recap
+          </h2>
+          <div class="recap flow">
+            <Content />
+          </div>
+        </section>
+      )}
+
+      <EventAssets event={event} />
+
+      {event.relatedPost && (
+        <p>
+          Related article:{" "}
+          <a class="link related" href={`/blog/${event.relatedPost.id}`}>
+            {event.relatedPost.title}
+          </a>
+        </p>
+      )}
+    </article>
+  </main>
+  <SiteFooter />
+</BaseLayout>
+
+<style>
+  .related {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+  .back {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+  .facts {
+    display: grid;
+    gap: var(--space-3) var(--space-5);
+    padding-block: var(--space-4);
+    border-block: 1px solid var(--border-subtle);
+    margin: 0;
+  }
+  .facts dd {
+    margin: var(--space-1) 0 0;
+  }
+  @media (min-width: 641px) {
+    .facts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  #recap {
+    scroll-margin-top: var(--space-6);
+  }
+</style>

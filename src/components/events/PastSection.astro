@@ -1,0 +1,54 @@
+---
+import Section from "../home/Section.astro";
+import EventFilters from "./EventFilters.astro";
+import EventItem from "./EventItem.astro";
+import {
+  filterOptions,
+  slugify,
+  type EventFilter,
+  type PublicEvent,
+} from "../../lib/eventsContent";
+
+/*
+  The past archive, newest first. `allPast` is every verified past event, used to decide which
+  filter options exist; `events` is what is listed (all of them, or those matching `selected`).
+  Filters appear only when there is something to choose between.
+*/
+interface Props {
+  allPast: PublicEvent[];
+  events: PublicEvent[];
+  selected?: EventFilter;
+}
+const { allPast, events, selected = {} } = Astro.props;
+const options = filterOptions(allPast, selected);
+const overall = filterOptions(allPast);
+const showFilters = overall.types.length > 1 || overall.years.length > 1;
+const typeLabel =
+  selected.type === undefined
+    ? undefined
+    : allPast.find((e) => slugify(e.type) === selected.type)?.type;
+---
+
+<Section id="past" kicker="Events" title="Past events">
+  {showFilters && <EventFilters options={options} selected={selected} typeLabel={typeLabel} />}
+  <ul class="list">
+    {events.map((event) => (
+      <li>
+        <EventItem event={event} state="past" />
+      </li>
+    ))}
+  </ul>
+</Section>
+
+<style>
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .list li {
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+</style>

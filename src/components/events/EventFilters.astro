@@ -1,0 +1,110 @@
+---
+import { filterHref, type EventFilter, type FilterOptions } from "../../lib/eventsContent";
+
+/*
+  Narrow the past archive by type and year. These are ordinary links to pre-rendered pages, so
+  they work without JavaScript. Options come only from the verified events; the selected value
+  is marked with aria-current and shown in words. Selecting one dimension keeps the other.
+*/
+interface Props {
+  options: FilterOptions;
+  selected: EventFilter;
+  typeLabel?: string;
+}
+const { options, selected, typeLabel } = Astro.props;
+const active = selected.type !== undefined || selected.year !== undefined;
+---
+
+<div class="filters">
+  <nav aria-label="Filter past events by type">
+    <p class="type-label" id="filter-type">
+      Type
+    </p>
+    <ul aria-labelledby="filter-type">
+      <li>
+        <a
+          class="link-quiet"
+          href={filterHref({ year: selected.year })}
+          aria-current={selected.type === undefined ? "true" : undefined}
+        >
+          All types
+        </a>
+      </li>
+      {options.types.map((type) => (
+        <li>
+          <a
+            class="link-quiet"
+            href={filterHref({ type: type.slug, year: selected.year })}
+            aria-current={selected.type === type.slug ? "true" : undefined}
+          >
+            {type.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+  <nav aria-label="Filter past events by year">
+    <p class="type-label" id="filter-year">
+      Year
+    </p>
+    <ul aria-labelledby="filter-year">
+      <li>
+        <a
+          class="link-quiet"
+          href={filterHref({ type: selected.type })}
+          aria-current={selected.year === undefined ? "true" : undefined}
+        >
+          All years
+        </a>
+      </li>
+      {options.years.map((year) => (
+        <li>
+          <a
+            class="link-quiet"
+            href={filterHref({ type: selected.type, year })}
+            aria-current={selected.year === year ? "true" : undefined}
+          >
+            {year}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+  {active && (
+    <p class="status type-meta">
+      Showing past events
+      {typeLabel && <> of type {typeLabel}</>}
+      {selected.year !== undefined && <> from {selected.year}</>}.{" "}
+      <a class="link action" href="/events">
+        Show all events
+      </a>
+    </p>
+  )}
+</div>
+
+<style>
+  .filters {
+    display: grid;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-4);
+  }
+  .filters :global(.link-quiet[aria-current="true"]) {
+    color: var(--text-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+    font-weight: 600;
+  }
+  .action {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+</style>
