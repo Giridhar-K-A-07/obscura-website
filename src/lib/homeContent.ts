@@ -226,10 +226,12 @@ export interface HomeLearning {
   tracks: HomeTrack[];
 }
 
-/** Non-null when any verified learning resource exists. */
+/**
+ * Non-null only when at least one official track has a verified roadmap. Other verified
+ * resources (cheat sheets, templates, datasets) alone do not show the homepage section.
+ */
 export function selectLearning(resources: Entry<Data<"resources">>[]): HomeLearning | null {
   const verified = resources.filter(isVerified).filter((r) => real(r.data.title));
-  if (verified.length === 0) return null;
   const tracks: HomeTrack[] = [];
   for (const track of TRACKS) {
     const roadmap = verified
@@ -243,7 +245,7 @@ export function selectLearning(resources: Entry<Data<"resources">>[]): HomeLearn
       roadmap: { title: title as string, link: real(link) ? link : undefined },
     });
   }
-  return { tracks };
+  return tracks.length > 0 ? { tracks } : null;
 }
 
 // ---- Whole homepage ------------------------------------------------------------------------

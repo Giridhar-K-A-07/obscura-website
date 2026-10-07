@@ -274,9 +274,30 @@ describe("learning", () => {
     expect(learning?.tracks[0].roadmap.link).toBe("https://example.com/p");
   });
 
-  it("shows the section but lists no track when only non-roadmap resources are verified", () => {
-    const learning = selectLearning([resource("c", "verified")]);
-    expect(learning).toEqual({ tracks: [] });
+  it("is null when only non-roadmap resources are verified", () => {
+    const resources = [
+      resource("a", "verified", { kind: "cheat-sheet" }),
+      resource("b", "verified", { kind: "code-template" }),
+      resource("c", "verified", { kind: "dataset" }),
+    ];
+    expect(selectLearning(resources)).toBeNull();
+  });
+
+  it("is null when the only roadmaps are drafts", () => {
+    const resources = [
+      resource("a", "draft", { kind: "roadmap", track: "sql" }),
+      resource("b", "verified", { kind: "cheat-sheet" }),
+    ];
+    expect(selectLearning(resources)).toBeNull();
+  });
+
+  it("renders with only that track when one verified roadmap exists", () => {
+    const resources = [
+      resource("a", "verified", { kind: "roadmap", track: "sql" }),
+      resource("b", "verified", { kind: "dataset" }),
+    ];
+    const learning = selectLearning(resources);
+    expect(learning?.tracks.map((t) => t.label)).toEqual(["SQL"]);
   });
 });
 
