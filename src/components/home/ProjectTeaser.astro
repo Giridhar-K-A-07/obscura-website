@@ -1,0 +1,47 @@
+---
+import ProjectCard from "./ProjectCard.astro";
+import Section from "./Section.astro";
+import type { HomeProject } from "../../lib/homeContent";
+
+/* A small selection of verified projects (Master Brief §8.3). Rendered only when any exist. */
+interface Props {
+  projects: HomeProject[];
+}
+const { projects } = Astro.props;
+---
+
+<Section id="projects" kicker="Project Showcase & Portfolio" title="Built by members">
+  <ul class="projects">
+    {projects.map((project) => (
+      <li>
+        <ProjectCard
+          name={project.name}
+          description={project.description}
+          topics={project.topics}
+          contributors={project.contributors}
+          links={[
+            { label: `${project.name} repository`, href: project.repository },
+            ...(project.liveDemo
+              ? [{ label: `${project.name} live demo`, href: project.liveDemo }]
+              : []),
+          ]}
+        />
+      </li>
+    ))}
+  </ul>
+  <p>
+    <a class="btn" href="/projects">
+      Project showcase
+    </a>
+  </p>
+</Section>
+
+<style>
+  .projects {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-4);
+  }
+</style>

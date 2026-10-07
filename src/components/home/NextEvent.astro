@@ -1,0 +1,58 @@
+---
+import Section from "./Section.astro";
+import { formatEventDate, type HomeEvent } from "../../lib/homeContent";
+
+/*
+  Next verified upcoming event (Master Brief §8.3). Rendered only when one exists.
+  The written date, time and timezone are always shown. No countdown or RSVP yet: both depend on
+  decisions still open in Master Brief §15.
+*/
+interface Props {
+  event: HomeEvent;
+}
+const { event } = Astro.props;
+---
+
+<Section id="next-event" kicker="Next event" title={event.title}>
+  <dl class="facts">
+    <div>
+      <dt class="type-label">Date and time</dt>
+      <dd>
+        <time datetime={event.start.toISOString()}>
+          {formatEventDate(event.start, event.timezone)}
+        </time>
+      </dd>
+    </div>
+    <div>
+      <dt class="type-label">Type</dt>
+      <dd>{event.type}</dd>
+    </div>
+    <div>
+      <dt class="type-label">Venue</dt>
+      <dd>{event.venue}</dd>
+    </div>
+  </dl>
+  <p>
+    <a class="btn" href="/events">
+      All events
+    </a>
+  </p>
+</Section>
+
+<style>
+  .facts {
+    display: grid;
+    gap: var(--space-3) var(--space-5);
+    padding-block: var(--space-4);
+    border-block: 1px solid var(--border-subtle);
+    margin: 0;
+  }
+  .facts dd {
+    margin: var(--space-1) 0 0;
+  }
+  @media (min-width: 641px) {
+    .facts {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

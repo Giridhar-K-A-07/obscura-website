@@ -1,0 +1,57 @@
+---
+import Section from "./Section.astro";
+import { formatDay, type HomeRecent } from "../../lib/homeContent";
+
+/*
+  Latest verified past event and latest verified article (Master Brief §8.3).
+  Each item appears only if it exists; the section is not rendered when neither does.
+  Items are rows in a list, not cards.
+*/
+interface Props {
+  recent: HomeRecent;
+}
+const { recent } = Astro.props;
+---
+
+<Section id="recent" kicker="Recent" title="Lately in the chamber">
+  <ul class="items">
+    {recent.event && (
+      <li>
+        <p class="type-meta">Past event · {formatDay(recent.event.start)}</p>
+        <h3 class="type-h4">{recent.event.title}</h3>
+        <p>
+          <a class="link" href="/events">
+            Events archive
+          </a>
+        </p>
+      </li>
+    )}
+    {recent.post && (
+      <li>
+        <p class="type-meta">Article · {formatDay(recent.post.date)}</p>
+        <h3 class="type-h4">{recent.post.title}</h3>
+        <p>
+          <a class="link" href="/blog">
+            Read the blog
+          </a>
+        </p>
+      </li>
+    )}
+  </ul>
+</Section>
+
+<style>
+  .items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .items li {
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .items li > * + * {
+    margin-top: var(--space-2);
+  }
+</style>
