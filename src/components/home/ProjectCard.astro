@@ -1,0 +1,72 @@
+---
+/*
+  Reusable project card (Master Brief §8.4, Club Repositories). Every field is optional:
+  links that do not exist are omitted, not disabled. The homepage renders it with
+  [[NEEDED]] values only; no project is real yet.
+*/
+interface Link {
+  label: string;
+  href: string;
+}
+interface Props {
+  name?: string;
+  description?: string;
+  topics?: string[];
+  contributors?: string[];
+  links?: Link[];
+}
+const { name, description, topics = [], contributors = [], links = [] } = Astro.props;
+---
+
+<article class="card project">
+  <h3 class="type-h3">{name ?? <slot name="name" />}</h3>
+  <p>{description ?? <slot name="description" />}</p>
+  {topics.length > 0 && (
+    <ul class="tags" aria-label="Topics">
+      {topics.map((topic) => (
+        <li class="badge">{topic}</li>
+      ))}
+    </ul>
+  )}
+  <dl class="meta">
+    <dt class="type-label">Contributors</dt>
+    <dd>{contributors.length > 0 ? contributors.join(", ") : <slot name="contributors" />}</dd>
+  </dl>
+  {links.length > 0 && (
+    <ul class="links">
+      {links.map((link) => (
+        <li>
+          <a class="link" href={link.href}>
+            {link.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  )}
+</article>
+
+<style>
+  .project {
+    display: grid;
+    gap: var(--space-3);
+    box-shadow: none;
+  }
+  .tags,
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+  .tags {
+    gap: var(--space-2);
+  }
+  .meta {
+    display: grid;
+    gap: var(--space-1);
+  }
+  dd {
+    margin: 0;
+  }
+</style>

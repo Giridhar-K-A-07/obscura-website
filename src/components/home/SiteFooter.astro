@@ -1,0 +1,82 @@
+---
+import Needed from "./Needed.astro";
+---
+
+<footer class="footer">
+  <div class="page grid">
+    <div class="flow">
+      <p class="mark">OBSCURA</p>
+      <p class="type-meta measure">
+        Prototype footer. Contact, social and legal details are not yet confirmed.
+      </p>
+    </div>
+    <dl class="fields">
+      <div>
+        <dt class="type-label">Official LinkedIn</dt>
+        <dd>
+          <Needed what="confirm the official LinkedIn page — Master Brief §4.5" />
+        </dd>
+      </div>
+      <div>
+        <dt class="type-label">Contact</dt>
+        <dd>
+          <Needed what="official contact email — Master Brief §15" />
+        </dd>
+      </div>
+      <div>
+        <dt class="type-label">GitHub</dt>
+        <dd>
+          <Needed what="GitHub organisation, if one exists — Master Brief §15" />
+        </dd>
+      </div>
+      <div>
+        <dt class="type-label">Privacy</dt>
+        <dd>
+          <Needed what="privacy notice, required if any personal data is collected" />
+        </dd>
+      </div>
+    </dl>
+  </div>
+  <p class="page type-meta legal">
+    <Needed what="copyright holder and year" />
+  </p>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--border-subtle);
+    padding-block: var(--space-7);
+  }
+  .grid {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .mark {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    font-size: var(--text-h3);
+  }
+  .fields {
+    display: grid;
+    gap: var(--space-4);
+  }
+  dd {
+    margin: var(--space-1) 0 0;
+  }
+  .legal {
+    margin-top: var(--space-6);
+    display: block;
+  }
+  @media (min-width: 641px) {
+    .fields {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 1025px) {
+    .grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--space-8);
+    }
+  }
+</style>

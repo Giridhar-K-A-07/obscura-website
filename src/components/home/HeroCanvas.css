@@ -1,0 +1,115 @@
+/* Hero graph (Interactive Data Canvas). Colours come from the design-system tokens. */
+
+.hero-canvas {
+  position: relative;
+  touch-action: pan-y; /* never block vertical page scroll */
+}
+
+.hero-canvas svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.hero-canvas .backdrop circle {
+  fill: var(--color-slate);
+  opacity: 0.7;
+}
+
+.hero-canvas .edge {
+  stroke: var(--color-slate);
+  stroke-width: 1.5;
+  opacity: 0.55;
+  transition:
+    stroke var(--duration-feedback) var(--ease-out),
+    opacity var(--duration-feedback) var(--ease-out);
+}
+.hero-canvas .edge[data-lit="half"] {
+  stroke: var(--color-haze);
+  opacity: 0.8;
+}
+.hero-canvas .edge[data-lit="true"] {
+  stroke: var(--color-aperture);
+  opacity: 0.85;
+}
+
+.hero-canvas .node circle {
+  fill: var(--color-chamber);
+  stroke: var(--color-haze);
+  stroke-width: 2;
+  transition:
+    fill var(--duration-feedback) var(--ease-out),
+    stroke var(--duration-feedback) var(--ease-out);
+}
+.hero-canvas .node[data-kind="hub"] circle {
+  stroke: var(--color-mist);
+  stroke-width: 3;
+}
+.hero-canvas .node[data-lit="true"] circle {
+  fill: var(--color-aperture);
+  stroke: var(--color-aperture);
+}
+.hero-canvas .node a {
+  cursor: pointer;
+}
+
+/* Labels appear only for what is in focus (Master Brief §7.5). */
+.hero-canvas .node text {
+  fill: var(--color-lumen);
+  font-family: var(--font-sans);
+  font-size: 30px;
+  font-weight: 500;
+  paint-order: stroke;
+  stroke: var(--color-ink);
+  stroke-width: 6px;
+  stroke-linejoin: round;
+  opacity: 0;
+  transition: opacity var(--duration-feedback) var(--ease-out);
+  pointer-events: none;
+}
+.hero-canvas .node[data-lit="true"] text {
+  opacity: 1;
+}
+
+/* The lens: a soft pool of projected light, not a glow. */
+.hero-canvas .lens {
+  transition: transform 350ms var(--ease-out);
+  pointer-events: none;
+}
+
+/* Subtle depth: two layers drift gently and shift a few units with the pointer. */
+.hero-canvas[data-motion="on"] .layer-far {
+  transform: translate(calc(var(--px, 0) * -6px), calc(var(--py, 0) * -6px));
+  transition: transform 500ms var(--ease-out);
+}
+.hero-canvas[data-motion="on"] .layer-near {
+  transform: translate(calc(var(--px, 0) * 12px), calc(var(--py, 0) * 12px));
+  transition: transform 500ms var(--ease-out);
+}
+.hero-canvas[data-motion="on"] .drift {
+  animation: hero-drift 26s ease-in-out infinite alternate;
+}
+.hero-canvas[data-motion="on"][data-running="false"] .drift {
+  animation-play-state: paused;
+}
+@keyframes hero-drift {
+  from {
+    transform: translate(-5px, 3px);
+  }
+  to {
+    transform: translate(5px, -4px);
+  }
+}
+
+.hero-canvas .motion-toggle {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-canvas .drift {
+    animation: none;
+  }
+}

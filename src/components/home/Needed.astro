@@ -1,0 +1,20 @@
+---
+/*
+  Inline marker for information the club has not yet provided (Master Brief §13.2).
+  Renders the literal `[[NEEDED: …]]` text so it can never be mistaken for real content.
+*/
+interface Props {
+  what: string;
+}
+const { what } = Astro.props;
+---
+
+<span class="needed">[[NEEDED: {what}]]</span>
+
+<style>
+  .needed {
+    color: var(--text-secondary);
+    font-style: italic;
+    border-bottom: 1px dashed var(--border-ui);
+  }
+</style>

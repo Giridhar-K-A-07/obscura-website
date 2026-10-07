@@ -1,0 +1,158 @@
+---
+import HeroCanvas from "./HeroCanvas";
+import Needed from "./Needed.astro";
+import { areaNodes, tracksOf } from "../../lib/homeGraph";
+
+/*
+  Hero. Everything except the canvas is static HTML that renders and works without
+  JavaScript. The canvas island hydrates when the browser is idle.
+  Tagline: "Unveiling the unknown" is recorded in Master Brief §4 / §14 as the tagline observed
+  on the logo ([L]). It still needs club confirmation before being treated as official.
+*/
+---
+
+<section class="hero" aria-labelledby="hero-title" id="top">
+  <div class="page hero-grid">
+    <div class="copy flow">
+      <h1 id="hero-title" class="wordmark">
+        OBSCURA
+      </h1>
+      <p class="tagline">Unveiling the unknown</p>
+      <p class="type-lead measure">
+        <Needed what="official 1–2 sentence description of OBSCURA — Master Brief §8.3, §15" />
+      </p>
+      <p class="actions">
+        <a class="btn btn-primary" href="#introduction">
+          Explore OBSCURA
+        </a>
+        <a class="btn" href="#legacy">
+          The Legacy Line
+        </a>
+      </p>
+    </div>
+    <div class="canvas reveal">
+      <HeroCanvas client:idle />
+    </div>
+    <div class="explore-wrap">
+      <nav aria-label="Explore OBSCURA" class="explore">
+        <p class="type-label">Explore</p>
+        <ul>
+          {areaNodes.map((area) => (
+            <li>
+              <a class="link-quiet" href={area.href} data-node-link={area.id}>
+                {area.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+        <p class="type-label">Study roadmap tracks</p>
+        <ul class="tracks">
+          {tracksOf("learning").map((track) => (
+            <li>
+              <a class="link-quiet" href={track.href} data-node-link={track.id}>
+                {track.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding-block: var(--space-7) var(--space-section);
+    overflow-x: clip; /* the canvas may bleed visually but never forces horizontal scroll */
+  }
+  .hero-grid {
+    display: grid;
+    gap: var(--space-6);
+    align-items: center;
+    grid-template-areas:
+      "copy"
+      "canvas"
+      "explore";
+  }
+  .copy {
+    grid-area: copy;
+  }
+  .canvas {
+    grid-area: canvas;
+  }
+  .explore-wrap {
+    grid-area: explore;
+  }
+  .wordmark {
+    font-family: var(--font-serif);
+    font-size: clamp(2.75rem, 12vw, 4.5rem);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    line-height: 1;
+  }
+  .tagline {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: var(--text-h3);
+    color: var(--text-accent);
+  }
+  .copy {
+    --flow-space: var(--space-5);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+  .explore {
+    border-top: 1px solid var(--border-subtle);
+    padding-top: var(--space-4);
+  }
+  .explore ul {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-2) 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-5);
+  }
+  .explore .type-label:not(:first-child) {
+    margin-top: var(--space-3);
+  }
+  .tracks :global(.link-quiet) {
+    color: var(--text-secondary);
+  }
+  .canvas {
+    min-width: 0;
+  }
+  @media (min-width: 641px) {
+    .hero-grid {
+      gap: var(--space-7);
+    }
+  }
+  @media (min-width: 1025px) {
+    .wordmark {
+      font-size: clamp(3.5rem, 1rem + 4.2vw, 5.5rem);
+      white-space: nowrap;
+    }
+    .hero {
+      min-height: min(100svh, 62rem);
+      display: grid;
+      align-items: center;
+    }
+    .hero-grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      grid-template-areas:
+        "copy canvas"
+        "explore canvas";
+      align-items: start;
+    }
+    .canvas {
+      align-self: center;
+    }
+    .canvas {
+      margin-right: calc(-1 * var(--gutter));
+    }
+  }
+</style>

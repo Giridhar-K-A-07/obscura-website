@@ -1,0 +1,59 @@
+---
+/*
+  Editorial homepage section: heading column on the left, body on the right from desktop up.
+  Sections are separated by a divider only; they are not wrapped in cards.
+*/
+interface Props {
+  id: string;
+  kicker: string;
+  title: string;
+}
+const { id, kicker, title } = Astro.props;
+---
+
+<section class="section" aria-labelledby={`${id}-title`} id={id}>
+  <div class="page layout">
+    <header class="head">
+      <p class="type-meta kicker">{kicker}</p>
+      <h2 class="type-h2" id={`${id}-title`}>
+        {title}
+      </h2>
+      <slot name="lede" />
+    </header>
+    <div class="body flow">
+      <slot />
+    </div>
+  </div>
+</section>
+
+<style>
+  .section {
+    border-top: 1px solid var(--border-subtle);
+    padding-block: var(--space-section);
+  }
+  .layout {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .head > * + * {
+    margin-top: var(--space-3);
+  }
+  .kicker {
+    font-weight: 500;
+  }
+  .body {
+    --flow-space: var(--space-5);
+    min-width: 0;
+  }
+  @media (min-width: 1025px) {
+    .layout {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--space-8);
+      align-items: start;
+    }
+    .head {
+      position: sticky;
+      top: var(--space-6);
+    }
+  }
+</style>
