@@ -1,0 +1,42 @@
+---
+import Section from "../home/Section.astro";
+import type { MilestoneGroup } from "../../lib/legacyContent";
+
+/*
+  Milestones: the verified milestones recorded for each term, newest term first. Rendered only
+  when at least one verified milestone exists. Named "Milestones" rather than "Hall of Fame",
+  which the Master Brief reserves for Achievements (§3 P1, §15 C9).
+*/
+interface Props {
+  groups: MilestoneGroup[];
+}
+const { groups } = Astro.props;
+---
+
+<Section id="milestones" kicker="The Legacy Line" title="Milestones">
+  {groups.map((group) => (
+    <section class="group" aria-labelledby={`milestones-${group.id}`}>
+      <h3 class="type-h4" id={`milestones-${group.id}`}>
+        {group.name} · {group.academicYear}
+      </h3>
+      <ul>
+        {group.items.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</Section>
+
+<style>
+  .group + .group {
+    margin-top: var(--space-6);
+  }
+  .group ul {
+    margin: var(--space-2) 0 0;
+    padding-left: var(--space-5);
+  }
+  .group li + li {
+    margin-top: var(--space-2);
+  }
+</style>

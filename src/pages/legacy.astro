@@ -1,14 +1,31 @@
 ---
-import SectionPage from "../layouts/SectionPage.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import LegacyIntro from "../components/legacy/LegacyIntro.astro";
+import MilestonesSection from "../components/legacy/MilestonesSection.astro";
+import Timeline from "../components/legacy/Timeline.astro";
+import PrototypeNotice from "../components/home/PrototypeNotice.astro";
+import SiteFooter from "../components/home/SiteFooter.astro";
+import { loadLegacyContent } from "../lib/legacyData";
+
+/*
+  The Legacy Line (Master Brief §8.1, §8.4). The timeline and the Milestones section render only
+  when verified content exists (src/lib/legacyContent.ts); with none, the page is its
+  introduction. There are no club facts in this file. Still `noindex`: there is no verified
+  launch content yet. Per-term pages (/legacy/[term]) are not built yet.
+*/
+const { terms, milestones } = await loadLegacyContent();
 ---
 
-<SectionPage
-  title="The Legacy Line"
-  kicker="Legacy"
-  summary="A timeline of the club's terms, with each term's Executive Committee and a dedicated Founders' Badge at its origin."
-  needed={[
-    "founding batch, date and story for the Founders' Badge",
-    "term names and a short summary of each term's milestones",
-    "Executive Committee members, roles and teams, each shared with their consent",
-  ]}
-/>
+<BaseLayout
+  title="The Legacy Line — OBSCURA"
+  description="The Legacy Line. Design prototype; not verified club content."
+  noindex
+>
+  <PrototypeNotice />
+  <main id="main" tabindex="-1">
+    <LegacyIntro />
+    {terms.length > 0 && <Timeline terms={terms} />}
+    {milestones.length > 0 && <MilestonesSection groups={milestones} />}
+  </main>
+  <SiteFooter />
+</BaseLayout>
