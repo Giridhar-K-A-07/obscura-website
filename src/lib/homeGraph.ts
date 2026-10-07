@@ -14,7 +14,7 @@ export type NodeKind = "hub" | "area" | "track";
 export interface GraphNode {
   id: string;
   label: string;
-  /** In-page anchor on the homepage; the fallback list and the graph both use it. */
+  /** Site route; the fallback list and the graph both use it. */
   href?: string;
   kind: NodeKind;
   x: number;
@@ -27,23 +27,23 @@ export const VIEWBOX = { width: 800, height: 680 } as const;
 
 export const nodes: GraphNode[] = [
   { id: "hub", label: "OBSCURA", kind: "hub", x: 450, y: 310 },
-  { id: "legacy", label: "The Legacy Line", href: "#legacy", kind: "area", x: 235, y: 175 },
-  { id: "events", label: "Events", href: "#events", kind: "area", x: 500, y: 95 },
+  { id: "legacy", label: "The Legacy Line", href: "/legacy", kind: "area", x: 235, y: 175 },
+  { id: "events", label: "Events", href: "/events", kind: "area", x: 500, y: 95 },
   {
     id: "achievements",
     label: "Achievements",
-    href: "#achievements",
+    href: "/achievements",
     kind: "area",
     x: 690,
     y: 215,
   },
-  { id: "projects", label: "Projects", href: "#projects", kind: "area", x: 665, y: 400 },
-  { id: "learning", label: "Learning", href: "#learning", kind: "area", x: 455, y: 505 },
-  { id: "insights", label: "Insights", href: "#insights", kind: "area", x: 205, y: 400 },
+  { id: "projects", label: "Projects", href: "/projects", kind: "area", x: 665, y: 400 },
+  { id: "learning", label: "Learning", href: "/learn", kind: "area", x: 455, y: 505 },
+  { id: "insights", label: "Insights", href: "/blog", kind: "area", x: 205, y: 400 },
   {
     id: "data-science",
     label: "Data Science",
-    href: "#learning",
+    href: "/learn",
     kind: "track",
     x: 275,
     y: 600,
@@ -52,7 +52,7 @@ export const nodes: GraphNode[] = [
   {
     id: "machine-learning",
     label: "Machine Learning",
-    href: "#learning",
+    href: "/learn",
     kind: "track",
     x: 430,
     y: 640,
@@ -61,13 +61,13 @@ export const nodes: GraphNode[] = [
   {
     id: "python",
     label: "Python",
-    href: "#learning",
+    href: "/learn",
     kind: "track",
     x: 585,
     y: 615,
     parent: "learning",
   },
-  { id: "sql", label: "SQL", href: "#learning", kind: "track", x: 480, y: 580, parent: "learning" },
+  { id: "sql", label: "SQL", href: "/learn", kind: "track", x: 480, y: 580, parent: "learning" },
 ];
 
 export const edges: ReadonlyArray<readonly [string, string]> = [

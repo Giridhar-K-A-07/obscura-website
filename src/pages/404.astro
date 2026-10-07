@@ -1,0 +1,23 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteFooter from "../components/home/SiteFooter.astro";
+---
+
+<BaseLayout title="Page not found — OBSCURA" noindex>
+  <main id="main" tabindex="-1">
+    <div class="page-narrow section flow" style="--flow-space: var(--space-5)">
+      <p class="type-meta">Error 404</p>
+      <h1 class="type-display">Page not found</h1>
+      <p class="type-lead measure">
+        This page does not exist, or it has not been built yet. Use the navigation above, or return
+        to the homepage.
+      </p>
+      <p>
+        <a class="btn btn-primary" href="/">
+          Back to the homepage
+        </a>
+      </p>
+    </div>
+  </main>
+  <SiteFooter />
+</BaseLayout>

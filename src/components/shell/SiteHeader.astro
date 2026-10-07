@@ -1,0 +1,147 @@
+---
+import { isCurrent, primaryNav } from "../../lib/navigation";
+
+/*
+  Shared site header. Static HTML: the links work with no JavaScript.
+  On narrow screens the links sit in a <details> disclosure panel. It is rendered open so the
+  no-JavaScript fallback shows every link; the small script below collapses it on narrow
+  screens and keeps it open from the desktop breakpoint up.
+*/
+const { pathname } = Astro.url;
+---
+
+<header class="site-header">
+  <div class="page bar">
+    <a class="brand" href="/" aria-label="OBSCURA, home">
+      OBSCURA
+    </a>
+    <nav aria-label="Primary">
+      <details class="menu" open data-menu>
+        <summary class="menu-toggle">
+          <span>Menu</span>
+        </summary>
+        <ul class="links">
+          {primaryNav.map((item) => (
+            <li>
+              <a
+                class="link-quiet"
+                href={item.href}
+                aria-current={isCurrent(item.href, pathname) ? "page" : undefined}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const menu = document.querySelector<HTMLDetailsElement>("[data-menu]");
+  const desktop = window.matchMedia("(min-width: 1025px)");
+  if (menu) {
+    const sync = () => {
+      menu.open = desktop.matches;
+    };
+    sync();
+    desktop.addEventListener("change", sync);
+    menu.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !desktop.matches && menu.open) {
+        menu.open = false;
+        menu.querySelector("summary")?.focus();
+      }
+    });
+  }
+</script>
+
+<style>
+  .site-header {
+    position: relative; /* anchors the mobile menu panel */
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    column-gap: var(--space-5);
+    padding-block: var(--space-2);
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: var(--text-h3);
+    letter-spacing: 0.06em;
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+  .menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--target-min);
+    min-width: var(--target-min);
+    padding-inline: var(--space-4);
+    border: 1px solid var(--border-ui);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 600;
+    list-style: none;
+  }
+  .menu-toggle::-webkit-details-marker {
+    display: none;
+  }
+  .menu-toggle::after {
+    content: "+";
+    font-weight: 400;
+  }
+  .menu[open] .menu-toggle::after {
+    content: "-";
+  }
+  .menu-toggle:hover {
+    border-color: var(--accent);
+    color: var(--text-accent);
+  }
+  .links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .links :global(.link-quiet[aria-current="page"]) {
+    color: var(--text-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+  }
+  /* Below desktop: the links open as a full-width panel under the bar. */
+  @media (max-width: 1024px) {
+    .links {
+      position: absolute;
+      inset-inline: 0;
+      top: 100%;
+      z-index: var(--z-sticky);
+      padding: var(--space-2) var(--gutter) var(--space-4);
+      background: var(--surface-raised);
+      border-bottom: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-overlay);
+    }
+    .links :global(.link-quiet) {
+      display: flex;
+      width: 100%;
+    }
+  }
+  @media (min-width: 1025px) {
+    .menu-toggle {
+      display: none;
+    }
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: var(--space-1) var(--space-5);
+    }
+  }
+</style>

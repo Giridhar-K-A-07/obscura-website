@@ -31,9 +31,9 @@ describe("homepage hero graph", () => {
     }
   });
 
-  it("links every non-hub node to an in-page anchor so the fallback list has no dead links", () => {
+  it("links every non-hub node to a top-level route so the fallback list has no dead links", () => {
     for (const n of nodes.filter((n) => n.kind !== "hub")) {
-      expect(n.href).toMatch(/^#[a-z-]+$/);
+      expect(n.href).toMatch(/^\/[a-z]+$/);
     }
   });
 

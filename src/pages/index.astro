@@ -13,7 +13,8 @@ import SiteFooter from "../components/home/SiteFooter.astro";
   Brief §8.3 says a section with no real content is hidden in production. These sections are
   shown only because this is a design prototype; each must be driven by verified content
   records (and hidden when empty) before launch.
-  All links are in-page anchors: the section pages (/legacy, /events, …) are not built yet.
+  Links point to the top-level section pages (/legacy, /events, …), which are structural
+  placeholders until verified content exists. Detail routes are not built yet.
 */
 const tracks = ["Data Science", "Machine Learning", "Python", "SQL"];
 ---
@@ -36,7 +37,7 @@ const tracks = ["Data Science", "Machine Learning", "Python", "SQL"];
         provides and verifies them, none are shown.
       </p>
       <p>
-        <a class="link" href="#introduction">
+        <a class="link" href="/about">
           About OBSCURA
         </a>
       </p>
@@ -68,7 +69,7 @@ const tracks = ["Data Science", "Machine Learning", "Python", "SQL"];
         </li>
       </ol>
       <p>
-        <a class="btn" href="#legacy">
+        <a class="btn" href="/legacy">
           Explore the Legacy Line
         </a>
       </p>
@@ -134,7 +135,7 @@ const tracks = ["Data Science", "Machine Learning", "Python", "SQL"];
         </div>
       </dl>
       <p>
-        <a class="btn" href="#events">
+        <a class="btn" href="/events">
           Events archive
         </a>
       </p>
@@ -175,7 +176,7 @@ const tracks = ["Data Science", "Machine Learning", "Python", "SQL"];
         </div>
       </div>
       <p>
-        <a class="btn" href="#achievements">
+        <a class="btn" href="/achievements">
           Hall of Achievements
         </a>
       </p>
@@ -198,7 +199,7 @@ const tracks = ["Data Science", "Machine Learning", "Python", "SQL"];
         </Fragment>
       </ProjectCard>
       <p>
-        <a class="btn" href="#projects">
+        <a class="btn" href="/projects">
           Project showcase
         </a>
       </p>
@@ -220,7 +221,7 @@ const tracks = ["Data Science", "Machine Learning", "Python", "SQL"];
         ))}
       </ul>
       <p>
-        <a class="btn" href="#learning">
+        <a class="btn" href="/learn">
           Resource & Learning Hub
         </a>
       </p>
@@ -257,7 +258,7 @@ const tracks = ["Data Science", "Machine Learning", "Python", "SQL"];
         </div>
       </dl>
       <p>
-        <a class="btn" href="#insights">
+        <a class="btn" href="/blog">
           Read the blog
         </a>
       </p>
@@ -272,10 +273,10 @@ const tracks = ["Data Science", "Machine Learning", "Python", "SQL"];
           Follow the Legacy Line, browse the archive, or begin a learning path.
         </p>
         <p class="actions">
-          <a class="btn btn-primary" href="#legacy">
+          <a class="btn btn-primary" href="/legacy">
             The Legacy Line
           </a>
-          <a class="btn" href="#learning">
+          <a class="btn" href="/learn">
             Start learning
           </a>
         </p>
