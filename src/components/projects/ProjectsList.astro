@@ -1,0 +1,63 @@
+---
+import ProjectCard from "../home/ProjectCard.astro";
+import Section from "../home/Section.astro";
+import type { PublicProject } from "../../lib/projectsContent";
+
+/*
+  The portfolio: one card per verified project (cards are used here because the Master Brief
+  asks for them, §8.4). Everything shown comes from the verified record. A link or label appears
+  only when its value exists; the order is alphabetical and carries no ranking.
+*/
+interface Props {
+  projects: PublicProject[];
+}
+const { projects } = Astro.props;
+
+const links = (project: PublicProject) => [
+  { label: `Source repository for ${project.name} (external site)`, href: project.repository },
+  ...(project.liveDemo
+    ? [{ label: `Live demo of ${project.name} (external site)`, href: project.liveDemo }]
+    : []),
+  ...project.datasets.map((href, index) => ({
+    label:
+      project.datasets.length === 1
+        ? `Dataset for ${project.name} (external site)`
+        : `Dataset ${index + 1} for ${project.name} (external site)`,
+    href,
+  })),
+];
+---
+
+<Section id="projects" kicker="Projects" title="Built by members">
+  <ul class="projects">
+    {projects.map((project) => (
+      <li>
+        <ProjectCard
+          name={project.name}
+          description={project.description}
+          topics={project.topics}
+          contributors={project.contributors}
+          links={links(project)}
+        />
+      </li>
+    ))}
+  </ul>
+</Section>
+
+<style>
+  .projects {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: repeat(auto-fill, minmax(min(22rem, 100%), 1fr));
+  }
+  .projects > li {
+    min-width: 0;
+  }
+  .projects :global(.project) {
+    height: 100%;
+    align-content: start;
+  }
+</style>

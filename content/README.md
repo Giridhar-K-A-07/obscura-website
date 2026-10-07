@@ -17,4 +17,6 @@ Events (`events/`) are published at `/events/<file name>`, so choose the file na
 
 Achievements and spotlights (`achievements/`, `spotlights/`) refer to people by `people` record id, never by written name: a name is shown only if that person is verified with consent recorded, and a spotlight is shown only if its own consent is also recorded. `project` is a `projects` record id and is shown only if that project is verified. Write `date` as a plain date (for example `2030-03-01`). Leaderboards are not built; what they mean is an open club question.
 
+Projects (`projects/`): `repository`, `liveDemo` and `datasets` must be `https` links, and a project without a valid repository is not published. `contributors` are `people` record ids, never written names: a name is shown only if that person is verified with consent recorded. Projects are listed alphabetically by name; the order says nothing about quality or importance.
+
 The committed `site/site.yaml` is a placeholder with no club facts. The other folders are empty on purpose.

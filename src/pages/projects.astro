@@ -1,14 +1,30 @@
 ---
-import SectionPage from "../layouts/SectionPage.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ProjectsIntro from "../components/projects/ProjectsIntro.astro";
+import ProjectsList from "../components/projects/ProjectsList.astro";
+import PrototypeNotice from "../components/home/PrototypeNotice.astro";
+import SiteFooter from "../components/home/SiteFooter.astro";
+import { loadProjects } from "../lib/projectsData";
+
+/*
+  Project Showcase & Portfolio (Master Brief P4, §8.4). The list renders only when there are
+  verified projects (src/lib/projectsContent.ts); with none, the page is its introduction. There
+  are no club facts in this file. Per-project pages (/projects/[slug]) are optional in the brief
+  and are not built: cards link straight out. Still `noindex`: there is no verified launch
+  content yet.
+*/
+const projects = await loadProjects();
 ---
 
-<SectionPage
-  title="Project Showcase & Portfolio"
-  kicker="Projects"
-  summary="Open-source work by members, linking to the repository, live demo and dataset where they exist."
-  needed={[
-    "project names, one-line descriptions and contributors",
-    "repository, live demo and dataset links",
-    "GitHub organisation, if one exists — Master Brief §15",
-  ]}
-/>
+<BaseLayout
+  title="Project Showcase & Portfolio — OBSCURA"
+  description="Project Showcase & Portfolio. Design prototype; not verified club content."
+  noindex
+>
+  <PrototypeNotice />
+  <main id="main" tabindex="-1">
+    <ProjectsIntro />
+    {projects.length > 0 && <ProjectsList projects={projects} />}
+  </main>
+  <SiteFooter />
+</BaseLayout>
