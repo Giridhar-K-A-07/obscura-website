@@ -1,0 +1,83 @@
+---
+import TermEntry from "./TermEntry.astro";
+import type { LegacyTerm } from "../../lib/legacyContent";
+
+/*
+  The vertical timeline: one entry per verified term, newest first. Plain static HTML with
+  natural scrolling. With two or more terms, a short index links to each term. Rendered only
+  when at least one verified term exists.
+*/
+interface Props {
+  terms: LegacyTerm[];
+}
+const { terms } = Astro.props;
+---
+
+<section class="timeline-section" aria-labelledby="timeline-title">
+  <div class="page">
+    <header class="head">
+      <h2 class="type-h2" id="timeline-title">
+        Batch by batch
+      </h2>
+      {terms.length > 1 && (
+        <nav aria-label="Jump to a term">
+          <ul class="index">
+            {terms.map((term) => (
+              <li>
+                <a class="link-quiet" href={`#term-${term.id}`}>
+                  {term.academicYear}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+    </header>
+    <ol class="timeline">
+      {terms.map((term) => (
+        <TermEntry term={term} />
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  .timeline-section {
+    border-top: 1px solid var(--border-subtle);
+    padding-block: var(--space-section);
+  }
+  .head {
+    display: grid;
+    gap: var(--space-3);
+    margin-bottom: var(--space-7);
+  }
+  .index {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-5);
+  }
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+  }
+  /* The line itself. It fades out at the top: the line continues as new terms are added. */
+  .timeline::before {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(transparent, var(--border-ui) 12%);
+  }
+  @media (min-width: 1025px) {
+    .timeline::before {
+      left: calc(9rem - 1px);
+    }
+  }
+</style>

@@ -1,0 +1,135 @@
+---
+import FoundersBadge from "./FoundersBadge.astro";
+import MemberProfile from "./MemberProfile.astro";
+import type { LegacyTerm } from "../../lib/legacyContent";
+
+/*
+  One term on the line: its academic year on the rail, then its name, summary and Executive
+  Committee grouped by team. An entry is rendered only for a verified term. The founding term
+  carries the Founders' Badge.
+*/
+interface Props {
+  term: LegacyTerm;
+}
+const { term } = Astro.props;
+---
+
+<li class="entry" id={`term-${term.id}`} data-founding={term.isFounding || undefined}>
+  <div class="rail">
+    <p class="year">{term.academicYear}</p>
+  </div>
+  <div class="content">
+    {term.isFounding && <FoundersBadge academicYear={term.academicYear} />}
+    <h3 class="type-h2">{term.name}</h3>
+    {term.summary && <p class="measure">{term.summary}</p>}
+    {term.teams.map((team) => (
+      <section class="team" aria-labelledby={`team-${term.id}-${team.id}`}>
+        <h4 class="type-h4" id={`team-${term.id}-${team.id}`}>
+          {team.name}
+        </h4>
+        <ul class="people">
+          {team.members.map((member) => (
+            <li>
+              <MemberProfile member={member} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+</li>
+
+<style>
+  .entry {
+    position: relative;
+    display: grid;
+    padding-left: var(--space-6);
+    padding-bottom: var(--space-8);
+    scroll-margin-top: var(--space-6);
+  }
+  /* Marker on the line. */
+  .entry::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-full);
+    background: var(--surface-page);
+    border: 2px solid var(--accent);
+  }
+  .entry[data-founding]::before {
+    background: var(--accent);
+  }
+  .year {
+    font-size: var(--text-small);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text-accent);
+    margin-bottom: var(--space-2);
+  }
+  .content > * + * {
+    margin-top: var(--space-4);
+  }
+  .team > * + * {
+    margin-top: var(--space-3);
+  }
+  .people {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
+  }
+
+  /* Desktop: the year sits in a sticky rail to the left of the line. */
+  @media (min-width: 1025px) {
+    .entry {
+      grid-template-columns: 9rem minmax(0, 1fr);
+      padding-left: 0;
+    }
+    .entry::before {
+      left: calc(9rem - 6px);
+    }
+    .rail {
+      padding-right: var(--space-5);
+      text-align: right;
+    }
+    .year {
+      position: sticky;
+      top: var(--space-6);
+      font-size: var(--text-h3);
+      margin-bottom: 0;
+    }
+    .content {
+      padding-left: var(--space-6);
+    }
+  }
+
+  /*
+    The brief's single "reveal" motion, driven by scroll position in CSS. Native scrolling is
+    untouched; where scroll-driven animation is unsupported, or motion is reduced, the entry is
+    simply visible.
+  */
+  @keyframes legacy-reveal {
+    from {
+      opacity: 0.35;
+      filter: blur(3px);
+    }
+    to {
+      opacity: 1;
+      filter: none;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .content {
+        animation: legacy-reveal linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 35%;
+      }
+    }
+  }
+</style>
