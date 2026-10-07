@@ -1,0 +1,80 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import Needed from "../components/home/Needed.astro";
+import SiteFooter from "../components/home/SiteFooter.astro";
+
+/*
+  Structural placeholder for a top-level section that has no verified content yet.
+  It states what the section is for and lists the information the club still has to provide.
+  It never shows club facts. When a section gets verified content, replace its use of this
+  layout with real, content-driven markup (Master Brief §8.3: no "coming soon" grids in production).
+*/
+interface Props {
+  /** Document title; also the page <h1>. Use the official feature name (Master Brief §8.2). */
+  title: string;
+  /** Short label above the heading. */
+  kicker: string;
+  /** One or two sentences on what the section will hold. States no club fact. */
+  summary: string;
+  /** What the club still has to provide, each rendered as a [[NEEDED: …]] marker. */
+  needed: readonly string[];
+  /** Overrides the default placeholder status line. */
+  status?: string;
+}
+
+const {
+  title,
+  kicker,
+  summary,
+  needed,
+  status = "Structural placeholder. This section has no verified club content yet.",
+} = Astro.props;
+---
+
+<BaseLayout
+  title={`${title} — OBSCURA`}
+  description="Structural placeholder page. Not verified club content."
+  noindex
+>
+  <main id="main" tabindex="-1">
+    <div class="page-narrow section flow" style="--flow-space: var(--space-5)">
+      <p class="badge badge-accent">{status}</p>
+      <p class="type-meta kicker">{kicker}</p>
+      <h1 class="type-display">{title}</h1>
+      <p class="type-lead measure">{summary}</p>
+      <hr class="divider" />
+      <section aria-labelledby="needed-title" class="flow">
+        <h2 class="type-h3" id="needed-title">
+          Information still needed
+        </h2>
+        <ul class="needed-list">
+          {needed.map((what) => (
+            <li>
+              <Needed what={what} />
+            </li>
+          ))}
+        </ul>
+      </section>
+      <slot />
+      <p>
+        <a class="btn" href="/">
+          Back to the homepage
+        </a>
+      </p>
+    </div>
+  </main>
+  <SiteFooter />
+</BaseLayout>
+
+<style>
+  .kicker {
+    font-weight: 500;
+  }
+  .needed-list {
+    list-style: disc;
+    padding-left: var(--space-5);
+  }
+  .needed-list li + li {
+    margin-top: var(--space-3);
+  }
+</style>
