@@ -15,4 +15,6 @@ Faculty on the About page are ordinary `people` with a verified `memberships` re
 
 Events (`events/`) are published at `/events/<file name>`, so choose the file name carefully. Write `start` and `end` with an explicit UTC offset (for example `2030-07-01T15:30:00+05:30`) and give `timezone` as an IANA name (for example `Asia/Kolkata`); an event with an unrecognised timezone, or an end before its start, is not published. Past or upcoming is decided from the instants alone. In a Markdown or MDX event file, the body is the recap. `photos` and `slides` are site paths or `https` links; `repositories` are `https` links. Speakers are not published.
 
+Achievements and spotlights (`achievements/`, `spotlights/`) refer to people by `people` record id, never by written name: a name is shown only if that person is verified with consent recorded, and a spotlight is shown only if its own consent is also recorded. `project` is a `projects` record id and is shown only if that project is verified. Write `date` as a plain date (for example `2030-03-01`). Leaderboards are not built; what they mean is an open club question.
+
 The committed `site/site.yaml` is a placeholder with no club facts. The other folders are empty on purpose.

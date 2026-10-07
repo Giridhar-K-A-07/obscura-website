@@ -1,0 +1,111 @@
+---
+import Section from "../home/Section.astro";
+import { formatDay, type Winner } from "../../lib/achievementsContent";
+
+/*
+  Competition Winners (Master Brief P3.1). One entry per verified achievement, newest first.
+  The result is set first and largest so it can be scanned. People, project and evidence appear
+  only when the record supplies them and they resolve; no ranking or leaderboard is shown.
+  Entries are rows in a list, not cards.
+*/
+interface Props {
+  winners: Winner[];
+}
+const { winners } = Astro.props;
+---
+
+<Section id="winners" kicker="Achievements" title="Competition Winners">
+  <ul class="entries">
+    {winners.map((win) => (
+      <li>
+        <article class="entry" aria-labelledby={`winner-${win.id}`}>
+          <p class="type-meta">
+            {win.competition} ·{" "}
+            <time datetime={win.date.toISOString().slice(0, 10)}>{formatDay(win.date)}</time>
+          </p>
+          <h3 class="type-h3" id={`winner-${win.id}`}>
+            {win.title}
+          </h3>
+          <dl class="facts">
+            <div>
+              <dt class="type-label">Result</dt>
+              <dd class="result">{win.result}</dd>
+            </div>
+            {win.people.length > 0 && (
+              <div>
+                <dt class="type-label">{win.people.length === 1 ? "Member" : "Members"}</dt>
+                <dd>
+                  <ul class="names">
+                    {win.people.map((name) => (
+                      <li>{name}</li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            )}
+            {win.project && (
+              <div>
+                <dt class="type-label">Project</dt>
+                <dd>{win.project.name}</dd>
+              </div>
+            )}
+          </dl>
+          {win.evidenceLink && (
+            <p>
+              <a class="link action" href={win.evidenceLink} rel="noopener noreferrer">
+                Evidence for {win.title}
+                <span class="type-meta"> (external site)</span>
+              </a>
+            </p>
+          )}
+        </article>
+      </li>
+    ))}
+  </ul>
+</Section>
+
+<style>
+  .entries {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .entries > li {
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .entry > * + * {
+    margin-top: var(--space-2);
+  }
+  .facts {
+    display: grid;
+    gap: var(--space-3) var(--space-5);
+    margin: var(--space-3) 0 0;
+  }
+  .facts dd {
+    margin: var(--space-1) 0 0;
+  }
+  .result {
+    font-family: var(--font-serif);
+    font-size: var(--text-h3);
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text-accent);
+  }
+  .names {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .action {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+  @media (min-width: 641px) {
+    .facts {
+      grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    }
+  }
+</style>
