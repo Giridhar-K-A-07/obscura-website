@@ -1,4 +1,5 @@
 import type { z } from "astro/zod";
+import { publishablePeople } from "./achievementsContent";
 import { NEEDED_MARKER } from "./needed";
 import type { schemas } from "./schemas";
 
@@ -189,11 +190,20 @@ export interface HomeProject {
   liveDemo?: string;
 }
 
-/** A small, stable selection of verified projects (alphabetical by name), or an empty list. */
+/**
+ * A small, stable selection of verified projects (alphabetical by name), or an empty list.
+ *
+ * Contributors are `people` record ids, not names (the same rule as /projects). A name is shown
+ * only when that person is verified with consent recorded and has a real name; an id that does
+ * not resolve, a draft person, a person without consent, and a plain written name are all
+ * dropped. `people` is required so consent can never be skipped by omission.
+ */
 export function selectProjects(
   projects: Entry<Data<"projects">>[],
+  people: Entry<Data<"people">>[],
   limit = HOME_PROJECT_LIMIT,
 ): HomeProject[] {
+  const names = publishablePeople(people);
   const found: HomeProject[] = [];
   for (const entry of projects.filter(isVerified)) {
     const { name, description, repository, liveDemo, topics, contributors } = entry.data;
@@ -203,7 +213,14 @@ export function selectProjects(
       name,
       description,
       topics: topics.filter(real),
-      contributors: contributors.filter(real),
+      contributors: [
+        ...new Set(
+          contributors
+            .filter(real)
+            .map((id) => names.get(id))
+            .filter((name): name is string => name !== undefined),
+        ),
+      ],
       repository,
       liveDemo: real(liveDemo) ? liveDemo : undefined,
     });
@@ -256,6 +273,7 @@ export interface HomeSource {
   posts: Entry<Data<"posts">>[];
   terms: Entry<Data<"terms">>[];
   projects: Entry<Data<"projects">>[];
+  people: Entry<Data<"people">>[];
   resources: Entry<Data<"resources">>[];
 }
 
@@ -275,7 +293,7 @@ export function selectHomeContent(source: HomeSource, now: Date): HomeContent {
     intro: selectIntro(source.site),
     legacy: selectLegacy(source.terms),
     recent: selectRecent(source.events, source.posts, now),
-    projects: selectProjects(source.projects),
+    projects: selectProjects(source.projects, source.people),
     learning: selectLearning(source.resources),
   };
 }

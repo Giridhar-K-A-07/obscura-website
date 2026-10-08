@@ -56,6 +56,9 @@ const project = (id: string, status: string, name: string, extra: Record<string,
     ...extra,
   });
 
+const person = (id: string, extra: Record<string, unknown> = {}, status = "verified") =>
+  rec(id, { status, name: `Test Person ${id}`, consent: "recorded", ...extra });
+
 const term = (
   id: string,
   status: string,
@@ -72,6 +75,7 @@ const empty: HomeSource = {
   posts: [],
   terms: [],
   projects: [],
+  people: [],
   resources: [],
 };
 
@@ -94,6 +98,7 @@ describe("empty state: no content hides every section", () => {
       posts: [post("p", "draft", "2030-01-01")],
       terms: [term("t", "draft", "2029-30")],
       projects: [project("pr", "draft", "Test project")],
+      people: [],
       resources: [resource("r", "draft")],
     };
     expect(selectHomeContent(drafts, NOW)).toEqual(selectHomeContent(empty, NOW));
@@ -106,6 +111,7 @@ describe("empty state: no content hides every section", () => {
       posts: [post("p", "verified", "2030-01-01", { title: NEEDED })],
       terms: [term("t", "verified", "2029-30", { name: NEEDED })],
       projects: [project("pr", "verified", NEEDED)],
+      people: [],
       resources: [resource("r", "verified", { title: NEEDED })],
     };
     expect(selectHomeContent(marked, NOW)).toEqual(selectHomeContent(empty, NOW));
@@ -219,14 +225,14 @@ describe("legacy teaser", () => {
 
 describe("projects", () => {
   it("excludes unverified projects", () => {
-    expect(selectProjects([project("d", "draft", "Test project")])).toEqual([]);
+    expect(selectProjects([project("d", "draft", "Test project")], [])).toEqual([]);
   });
 
   it("selects verified projects in a stable order, up to the homepage limit", () => {
     const projects = ["D", "B", "A", "C", "E"].map((name) =>
       project(name.toLowerCase(), "verified", `Test project ${name}`),
     );
-    const selected = selectProjects(projects);
+    const selected = selectProjects(projects, []);
     expect(selected).toHaveLength(HOME_PROJECT_LIMIT);
     expect(selected.map((p) => p.name)).toEqual([
       "Test project A",
@@ -236,11 +242,100 @@ describe("projects", () => {
   });
 
   it("keeps only the fields the homepage needs and omits a missing live demo", () => {
-    const [selected] = selectProjects([project("p", "verified", "Test project")]);
+    const [selected] = selectProjects([project("p", "verified", "Test project")], []);
     expect(selected.liveDemo).toBeUndefined();
     expect(Object.keys(selected).sort()).toEqual(
       ["contributors", "description", "id", "liveDemo", "name", "repository", "topics"].sort(),
     );
+  });
+});
+
+describe("project contributors (consent)", () => {
+  const contributorsOf = (ids: string[], people: never[]) =>
+    selectProjects([project("p", "verified", "Test project", { contributors: ids })], people)[0]
+      .contributors;
+
+  it("names a contributor who is a verified person with consent recorded", () => {
+    expect(contributorsOf(["a"], [person("a")])).toEqual(["Test Person a"]);
+  });
+
+  it("keeps the order written in the record", () => {
+    expect(contributorsOf(["b", "a"], [person("a"), person("b")])).toEqual([
+      "Test Person b",
+      "Test Person a",
+    ]);
+  });
+
+  it("omits a draft person", () => {
+    expect(contributorsOf(["a"], [person("a", {}, "draft")])).toEqual([]);
+  });
+
+  it("omits a person without recorded consent", () => {
+    expect(contributorsOf(["a"], [person("a", { consent: "not-recorded" })])).toEqual([]);
+  });
+
+  it("omits an unresolved id, and never shows the raw id", () => {
+    const result = contributorsOf(["missing-id"], [person("a")]);
+    expect(result).toEqual([]);
+    expect(JSON.stringify(result)).not.toContain("missing-id");
+  });
+
+  it("omits a written name instead of showing it as a fallback", () => {
+    expect(contributorsOf(["Some Written Name"], [person("a")])).toEqual([]);
+  });
+
+  it("shows a duplicated id once", () => {
+    expect(contributorsOf(["a", "a"], [person("a")])).toEqual(["Test Person a"]);
+  });
+
+  it("omits a person whose name is a [[NEEDED]] marker", () => {
+    expect(contributorsOf(["a"], [person("a", { name: NEEDED })])).toEqual([]);
+  });
+
+  it("still returns the project when no contributor can be named, with an empty list to omit", () => {
+    const [selected] = selectProjects(
+      [project("p", "verified", "Test project", { contributors: ["a", "b"] })],
+      [person("a", { consent: "not-recorded" })],
+    );
+    expect(selected).toMatchObject({ name: "Test project", contributors: [] });
+  });
+
+  it("exposes only the name: no photo, LinkedIn, bio or id", () => {
+    const rich = person("a", {
+      photo: "/people/secret.jpg",
+      linkedin: "https://www.linkedin.com/in/secret",
+      bio: "Secret bio",
+    });
+    const projects = selectProjects(
+      [project("p", "verified", "Test project", { contributors: ["a"] })],
+      [rich],
+    );
+    const text = JSON.stringify(projects);
+    for (const leaked of ["secret.jpg", "linkedin", "Secret bio"])
+      expect(text).not.toContain(leaked);
+    expect(projects[0].contributors).toEqual(["Test Person a"]);
+  });
+
+  it("applies the same rule through the whole homepage selection", () => {
+    const source: HomeSource = {
+      ...empty,
+      projects: [project("p", "verified", "Test project", { contributors: ["a", "b", "Written"] })],
+      people: [person("a"), person("b", { consent: "not-recorded" })],
+    };
+    expect(selectHomeContent(source, NOW).projects[0].contributors).toEqual(["Test Person a"]);
+  });
+
+  it("keeps the homepage project order and limit when contributors are present", () => {
+    const projects = ["D", "B", "A", "C", "E"].map((name) =>
+      project(name.toLowerCase(), "verified", `Test project ${name}`, { contributors: ["a"] }),
+    );
+    const selected = selectProjects(projects, [person("a")]);
+    expect(selected).toHaveLength(HOME_PROJECT_LIMIT);
+    expect(selected.map((p) => p.name)).toEqual([
+      "Test project A",
+      "Test project B",
+      "Test project C",
+    ]);
   });
 });
 
