@@ -1,0 +1,38 @@
+---
+import { describeReview, type Roadmap } from "../../lib/learnContent";
+
+/*
+  Header of one roadmap page: the one h1 (the roadmap's own title), its track, and when it was
+  last reviewed, with the reviewer's name only if that person may be named.
+*/
+interface Props {
+  roadmap: Roadmap;
+}
+const { roadmap } = Astro.props;
+---
+
+<header class="head flow">
+  <p>
+    <a class="link back" href="/learn">
+      All learning resources
+    </a>
+  </p>
+  <p class="type-meta">Study roadmap · {roadmap.trackLabel}</p>
+  <h1 class="type-display">{roadmap.title}</h1>
+  <p class="type-meta">
+    <time datetime={roadmap.lastReviewed.toISOString().slice(0, 10)}>
+      {describeReview(roadmap)}
+    </time>
+  </p>
+</header>
+
+<style>
+  .head {
+    --flow-space: var(--space-3);
+  }
+  .back {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+</style>

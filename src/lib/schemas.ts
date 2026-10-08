@@ -67,6 +67,15 @@ export const AIM_CATEGORIES = [
 
 const aim = z.strictObject({ category: orNeeded(z.enum(AIM_CATEGORIES)), text });
 
+/** One roadmap step: what to learn, why, and optional linked resources (Master Brief §8.4). */
+const roadmapStep = z.strictObject({
+  title: text,
+  why: text,
+  resources: z.array(z.strictObject({ title: text, url })).default([]),
+});
+
+const DOWNLOAD_KINDS = ["cheat-sheet", "code-template", "dataset"];
+
 export const schemas = {
   /*
     Club-level facts. Every field is optional, and an omitted field is hidden on the site.
@@ -151,6 +160,13 @@ export const schemas = {
     topics: textList,
     contributors: textList,
   }),
+  /*
+    Learning resources. `licence` and `lastReviewed` are optional on the field, because which of
+    them a record needs depends on its kind; the kind-aware check below enforces that for a
+    verified record. A roadmap carries ordered `steps` and an optional `reviewer`, the id of a
+    `people` record (named only with recorded consent). The club has not decided whether a
+    reviewer may be a team or role, so none is modelled. Files are linked, never hosted here.
+  */
   resources: record({
     kind: orNeeded(z.enum(["roadmap", "cheat-sheet", "code-template", "dataset"])),
     title: text,
@@ -158,8 +174,25 @@ export const schemas = {
     link: url.optional(),
     format: text.optional(),
     size: text.optional(),
-    licence: text,
-    lastReviewed: date,
+    licence: text.optional(),
+    lastReviewed: date.optional(),
+    reviewer: text.optional(),
+    steps: z.array(roadmapStep).default([]),
+  }).superRefine((data, ctx) => {
+    if (data.status !== "verified") return; // drafts may be incomplete
+    const missing = (path: string, message: string) =>
+      ctx.addIssue({ code: "custom", path: [path], message });
+    if (data.kind === "roadmap") {
+      if (!data.track) missing("track", "a verified roadmap needs a track");
+      if (data.steps.length === 0) missing("steps", "a verified roadmap needs at least one step");
+      if (!data.lastReviewed)
+        missing("lastReviewed", "a verified roadmap needs a lastReviewed date");
+    } else if (DOWNLOAD_KINDS.includes(data.kind as string)) {
+      if (typeof data.link !== "string" || !/^https:\/\/\S+$/.test(data.link)) {
+        missing("link", "a verified download needs an https link");
+      }
+      if (!data.licence) missing("licence", "a verified download needs a licence");
+    }
   }),
   posts: record({
     title: text,

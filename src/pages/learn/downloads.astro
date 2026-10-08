@@ -1,0 +1,33 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import DownloadsList from "../../components/learn/DownloadsList.astro";
+import LearnIntro from "../../components/learn/LearnIntro.astro";
+import PrototypeNotice from "../../components/home/PrototypeNotice.astro";
+import SiteFooter from "../../components/home/SiteFooter.astro";
+import { loadLearnContent } from "../../lib/learnData";
+
+/*
+  Cheat Sheets & Datasets (Master Brief P5.2). Always generated; the list renders only when there
+  are verified downloads, so with none the page is its introduction. Files are linked externally:
+  none is hosted in this repository, because the hosting policy is still an open club decision.
+  Still `noindex`.
+*/
+const { downloads } = await loadLearnContent();
+---
+
+<BaseLayout
+  title="Cheat Sheets & Datasets — OBSCURA"
+  description="Cheat Sheets & Datasets. Design prototype; not verified club content."
+  noindex
+>
+  <PrototypeNotice />
+  <main id="main" tabindex="-1">
+    <LearnIntro
+      kicker="Learn"
+      title="Cheat Sheets & Datasets"
+      lead="Downloadable guides, code templates and practice datasets, with the format, size and licence of each."
+    />
+    {downloads.length > 0 && <DownloadsList groups={downloads} />}
+  </main>
+  <SiteFooter />
+</BaseLayout>

@@ -3,7 +3,7 @@ import Section from "./Section.astro";
 import type { HomeLearning } from "../../lib/homeContent";
 
 /*
-  Start learning (Master Brief §8.3). Rendered only when verified learning resources exist.
+  Start learning (Master Brief §8.3). Rendered only when a roadmap is published.
   Only the official tracks that have a verified roadmap are listed; the others are not shown,
   so no roadmap is implied before its content is verified.
 */
@@ -20,13 +20,9 @@ const { learning } = Astro.props;
         <li>
           <h3 class="type-h4">{track.label}</h3>
           <p class="type-meta">
-            {track.roadmap.link ? (
-              <a class="link" href={track.roadmap.link}>
-                {track.roadmap.title}
-              </a>
-            ) : (
-              track.roadmap.title
-            )}
+            <a class="link" href={track.roadmap.href}>
+              {track.roadmap.title}
+            </a>
           </p>
         </li>
       ))}
@@ -45,6 +41,11 @@ const { learning } = Astro.props;
     padding: 0;
     margin: 0;
     border-top: 1px solid var(--border-subtle);
+  }
+  .tracks a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
   }
   .tracks li {
     padding-block: var(--space-4);

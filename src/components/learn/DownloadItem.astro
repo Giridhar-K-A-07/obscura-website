@@ -1,0 +1,65 @@
+---
+import type { Download } from "../../lib/learnContent";
+
+/*
+  One download. Format and size are shown before the link, and only when the record states
+  them; the licence is always shown. The file is hosted elsewhere: the link is external.
+*/
+interface Props {
+  item: Download;
+}
+const { item } = Astro.props;
+---
+
+<article class="item" aria-labelledby={`download-${item.id}`}>
+  <h3 class="type-h3" id={`download-${item.id}`}>
+    {item.title}
+  </h3>
+  <dl class="facts">
+    {item.format && (
+      <div>
+        <dt class="type-label">Format</dt>
+        <dd>{item.format}</dd>
+      </div>
+    )}
+    {item.size && (
+      <div>
+        <dt class="type-label">Size</dt>
+        <dd>{item.size}</dd>
+      </div>
+    )}
+    <div>
+      <dt class="type-label">Licence</dt>
+      <dd>{item.licence}</dd>
+    </div>
+  </dl>
+  <p>
+    <a class="link action" href={item.link} rel="noopener noreferrer">
+      Download {item.title}
+      <span class="type-meta"> (external site)</span>
+    </a>
+  </p>
+</article>
+
+<style>
+  .item > * + * {
+    margin-top: var(--space-2);
+  }
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    margin: var(--space-3) 0 0;
+  }
+  .facts dd {
+    margin: var(--space-1) 0 0;
+  }
+  .action {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+  .action span {
+    margin-left: var(--space-1); /* inline-flex drops the space before the label */
+  }
+</style>

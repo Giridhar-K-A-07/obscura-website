@@ -1,0 +1,49 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import RoadmapHeader from "../../../components/learn/RoadmapHeader.astro";
+import RoadmapStep from "../../../components/learn/RoadmapStep.astro";
+import PrototypeNotice from "../../../components/home/PrototypeNotice.astro";
+import SiteFooter from "../../../components/home/SiteFooter.astro";
+import { roadmapPaths } from "../../../lib/learnContent";
+import { loadLearnContent } from "../../../lib/learnData";
+
+/*
+  One study roadmap (Master Brief P5.1, §8.4). A page is generated only for a track that has a
+  verified, valid roadmap, so a track without one has no route. Steps are an ordered list, and
+  the numbers come from their order. Still `noindex`.
+*/
+export async function getStaticPaths() {
+  const { roadmaps } = await loadLearnContent();
+  return roadmapPaths(roadmaps);
+}
+
+const { roadmap } = Astro.props;
+---
+
+<BaseLayout
+  title={`${roadmap.title} — Study roadmap — OBSCURA`}
+  description="Study roadmap. Design prototype; not verified club content."
+  noindex
+>
+  <PrototypeNotice />
+  <main id="main" tabindex="-1">
+    <div class="page-narrow section flow" style="--flow-space: var(--space-6)">
+      <RoadmapHeader roadmap={roadmap} />
+      <ol class="steps">
+        {roadmap.steps.map((step) => (
+          <RoadmapStep step={step} />
+        ))}
+      </ol>
+    </div>
+  </main>
+  <SiteFooter />
+</BaseLayout>
+
+<style>
+  .steps {
+    margin: 0;
+    padding: 0 0 0 var(--space-6);
+    list-style: decimal; /* the CSS reset removes list markers; the step numbers are the point */
+    border-top: 1px solid var(--border-subtle);
+  }
+</style>

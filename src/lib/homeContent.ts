@@ -1,5 +1,6 @@
 import type { z } from "astro/zod";
 import { publishablePeople } from "./achievementsContent";
+import { TRACKS, selectRoadmaps } from "./learnContent";
 import { NEEDED_MARKER } from "./needed";
 import type { schemas } from "./schemas";
 
@@ -20,13 +21,8 @@ export interface Entry<T> {
   data: T;
 }
 
-/** Official Study Roadmap tracks (Master Brief §3, P5.1). Names are fixed; roadmaps are not assumed. */
-export const TRACKS = [
-  { id: "data-science", label: "Data Science" },
-  { id: "machine-learning", label: "Machine Learning" },
-  { id: "python", label: "Python" },
-  { id: "sql", label: "SQL" },
-] as const;
+// The official tracks and the roadmap rule live in learnContent.ts; the homepage reuses them.
+export { TRACKS };
 
 /** Number of projects shown on the homepage. */
 export const HOME_PROJECT_LIMIT = 3;
@@ -235,7 +231,8 @@ export function selectProjects(
 export interface HomeTrack {
   id: (typeof TRACKS)[number]["id"];
   label: string;
-  roadmap: { title: string; link?: string };
+  /** The verified roadmap, and the on-site page it lives on. */
+  roadmap: { title: string; href: string };
 }
 
 export interface HomeLearning {
@@ -244,25 +241,22 @@ export interface HomeLearning {
 }
 
 /**
- * Non-null only when at least one official track has a verified roadmap. Other verified
- * resources (cheat sheets, templates, datasets) alone do not show the homepage section.
+ * Non-null only when at least one official track has a published roadmap. The rule is the one
+ * `/learn` uses (`selectRoadmaps`), so the homepage never links to a roadmap page that is not
+ * generated. Other verified resources (cheat sheets, templates, datasets) alone do not show the
+ * homepage section.
  */
 export function selectLearning(resources: Entry<Data<"resources">>[]): HomeLearning | null {
-  const verified = resources.filter(isVerified).filter((r) => real(r.data.title));
-  const tracks: HomeTrack[] = [];
-  for (const track of TRACKS) {
-    const roadmap = verified
-      .filter((r) => r.data.kind === "roadmap" && r.data.track === track.id)
-      .sort((a, b) => a.id.localeCompare(b.id))[0];
-    if (!roadmap) continue;
-    const { title, link } = roadmap.data;
-    tracks.push({
-      id: track.id,
-      label: track.label,
-      roadmap: { title: title as string, link: real(link) ? link : undefined },
-    });
-  }
-  return tracks.length > 0 ? { tracks } : null;
+  // The homepage does not show reviewers, so no people are needed.
+  const roadmaps = selectRoadmaps({ resources, people: [] });
+  if (roadmaps.length === 0) return null;
+  return {
+    tracks: roadmaps.map((r) => ({
+      id: r.track,
+      label: r.trackLabel,
+      roadmap: { title: r.title, href: `/learn/roadmaps/${r.track}` },
+    })),
+  };
 }
 
 // ---- Whole homepage ------------------------------------------------------------------------
