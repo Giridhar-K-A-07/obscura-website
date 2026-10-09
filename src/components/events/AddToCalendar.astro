@@ -1,0 +1,26 @@
+---
+import { calendarPath } from "../../lib/eventsContent";
+
+/*
+  Link to the event's static calendar file. A plain download link: no JavaScript. The page shows
+  it only for an event that is upcoming as of the build.
+*/
+interface Props {
+  id: string;
+}
+const { id } = Astro.props;
+---
+
+<p>
+  <a class="link action" href={calendarPath(id)} download={`${id}.ics`}>
+    Add to calendar (.ics file)
+  </a>
+</p>
+
+<style>
+  .action {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+</style>

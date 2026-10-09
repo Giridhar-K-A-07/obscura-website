@@ -25,9 +25,9 @@ import type { schemas } from "./schemas";
   controls how the date and time are written. In content files, write `start` and `end` with an
   explicit UTC offset (for example 2030-07-01T15:30:00+05:30) so the instant is unambiguous.
 
-  Calendar / .ics: not built yet. Each event already carries an absolute start, an optional end,
-  a recorded IANA timezone, a title and a venue, which is what an .ics entry needs. An .ics
-  export is a follow-up that also needs the production URL (Master Brief §15 C7).
+  Calendar: each public event also has a static calendar file at /events/<id>.ics (see
+  eventsCalendar.ts), linked from the page of an upcoming event. A live calendar view or feed is
+  not built: what "live" means is an open club decision (Master Brief P2.2, §15 E3).
 */
 
 type Data<Name extends keyof typeof schemas> = z.infer<(typeof schemas)[Name]>;
@@ -142,6 +142,9 @@ const byStartThenId = (a: PublicEvent, b: PublicEvent) =>
 
 /** The event's own page. Pages are generated for exactly the events `selectPublicEvents` returns. */
 export const eventPath = (id: string) => `/events/${id}`;
+
+/** The event's calendar file (see eventsCalendar.ts). One exists for every public event. */
+export const calendarPath = (id: string) => `/events/${id}.ics`;
 
 /** The instant an event is over: its end, or its start when it has no end. */
 export const endOf = (event: PublicEvent): Date => event.end ?? event.start;
