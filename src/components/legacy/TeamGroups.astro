@@ -1,0 +1,46 @@
+---
+import MemberProfile from "./MemberProfile.astro";
+import type { LegacyTerm } from "../../lib/legacyContent";
+
+/*
+  A term's Executive Committee grouped by team, in the order the verified team records give.
+  Shared by the timeline entry and the term page so both render the same groups. `level` is the
+  team heading's level, because the two places sit at different depths of the outline. It lists
+  the members whose verified, consented records exist; it does not claim to be the whole committee.
+*/
+interface Props {
+  term: LegacyTerm;
+  level: 2 | 4;
+}
+const { term, level } = Astro.props;
+const Heading: "h2" | "h4" = level === 2 ? "h2" : "h4";
+---
+
+{term.teams.map((team) => (
+  <section class="team" aria-labelledby={`team-${term.id}-${team.id}`}>
+    <Heading class="type-h4" id={`team-${term.id}-${team.id}`}>
+      {team.name}
+    </Heading>
+    <ul class="people">
+      {team.members.map((member) => (
+        <li>
+          <MemberProfile member={member} />
+        </li>
+      ))}
+    </ul>
+  </section>
+))}
+
+<style>
+  .team > * + * {
+    margin-top: var(--space-3);
+  }
+  .people {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
+  }
+</style>

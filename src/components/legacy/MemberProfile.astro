@@ -30,7 +30,8 @@ const { member } = Astro.props;
     {member.linkedin && (
       <p>
         <a class="link action" href={member.linkedin} rel="noopener noreferrer">
-          {member.name} on LinkedIn<span class="type-meta"> (external site)</span>
+          {member.name} on LinkedIn
+          <span class="type-meta"> (external site)</span>
         </a>
       </p>
     )}
@@ -50,7 +51,7 @@ const { member } = Astro.props;
         {member.alsoServed.map((term, index) => (
           <>
             {index > 0 ? ", " : " "}
-            <a class="link action" href={`#term-${term.id}`}>
+            <a class="link action" href={term.href}>
               {term.academicYear}
             </a>
           </>
@@ -95,6 +96,12 @@ const { member } = Astro.props;
     display: inline-flex;
     align-items: center;
     min-height: var(--target-min);
+  }
+  .action span {
+    margin-left: var(--space-1); /* inline-flex drops the space before the label */
+  }
+  .action {
+    flex-wrap: wrap; /* a long name keeps "(external site)" on its own line, not in a column */
   }
   .contributions summary {
     display: flex;

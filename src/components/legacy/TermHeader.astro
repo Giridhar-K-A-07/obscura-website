@@ -1,0 +1,37 @@
+---
+import FoundersBadge from "./FoundersBadge.astro";
+import type { LegacyTerm } from "../../lib/legacyContent";
+
+/*
+  Header of one term page: a link back to the timeline, the academic year, the one h1 (the term's
+  own name), the summary when a verified record has one, and the Founders' Badge for the term a
+  verified record marks as founding. Nothing here is written by the site.
+*/
+interface Props {
+  term: LegacyTerm;
+}
+const { term } = Astro.props;
+---
+
+<header class="head flow">
+  <p>
+    <a class="link back" href={`/legacy#term-${term.id}`}>
+      The Legacy Line
+    </a>
+  </p>
+  {term.isFounding && <FoundersBadge academicYear={term.academicYear} />}
+  <p class="type-meta">Executive Committee · {term.academicYear}</p>
+  <h1 class="type-display">{term.name}</h1>
+  {term.summary && <p class="type-lead measure">{term.summary}</p>}
+</header>
+
+<style>
+  .head {
+    --flow-space: var(--space-3);
+  }
+  .back {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+</style>

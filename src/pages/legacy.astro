@@ -11,7 +11,7 @@ import { loadLegacyContent } from "../lib/legacyData";
   The Legacy Line (Master Brief §8.1, §8.4). The timeline and the Milestones section render only
   when verified content exists (src/lib/legacyContent.ts); with none, the page is its
   introduction. There are no club facts in this file. Still `noindex`: there is no verified
-  launch content yet. Per-term pages (/legacy/[term]) are not built yet.
+  launch content yet. Per-term pages are /legacy/[term], generated only for terms with a qualifying member.
 */
 const { terms, milestones } = await loadLegacyContent();
 ---

@@ -1,4 +1,5 @@
 import type { z } from "astro/zod";
+import { isFacultyTeamName } from "./aboutContent";
 import { NEEDED_MARKER } from "./needed";
 import type { schemas } from "./schemas";
 
@@ -14,6 +15,11 @@ import type { schemas } from "./schemas";
   - a person appears only if verified with consent recorded (Master Brief §13.4);
   - optional personal details (photo, LinkedIn, contributions) appear only when present, verified
     and well-formed; a field existing in the schema is never enough on its own;
+  - the faculty team is never part of the Executive Committee, so it is left out here (faculty are
+    shown on About);
+  - a term has its own page (/legacy/<id>) only when at least one member qualifies. That one fact
+    (`hasPage`) decides the generated routes, the timeline's page links, and which "Also served"
+    links may point at a page; any other link falls back to the timeline anchor;
   - ordering is deterministic: ties are broken by id.
 */
 
@@ -41,6 +47,11 @@ export interface TermRef {
   academicYear: string;
 }
 
+/** A term another page links to. `href` is its own page when it has one, else its timeline anchor. */
+export interface TermLink extends TermRef {
+  href: string;
+}
+
 export interface LegacyMember {
   /** Person id. */
   id: string;
@@ -50,7 +61,7 @@ export interface LegacyMember {
   linkedin?: string;
   contributions: string[];
   /** The person's memberships in other verified terms, newest first. */
-  alsoServed: TermRef[];
+  alsoServed: TermLink[];
 }
 
 export interface LegacyTeam {
@@ -63,6 +74,8 @@ export interface LegacyTerm extends TermRef {
   summary?: string;
   /** True when a verified record marks this as the founding term. */
   isFounding: boolean;
+  /** True when at least one member qualifies, so `/legacy/<id>` is generated. */
+  hasPage: boolean;
   teams: LegacyTeam[];
 }
 
@@ -83,6 +96,11 @@ export interface LegacySource {
   people: Entry<Data<"people">>[];
   memberships: Entry<Data<"memberships">>[];
 }
+
+/** The term's own page, which exists only when `LegacyTerm.hasPage`. */
+export const termPagePath = (id: string) => `/legacy/${id}`;
+/** The term's entry on the timeline, which exists for every published term. */
+export const termAnchorPath = (id: string) => `/legacy#term-${id}`;
 
 // ---- Selection -----------------------------------------------------------------------------
 
@@ -108,7 +126,8 @@ export function selectLegacy(source: LegacySource): LegacyContent {
   const teams = new Map(
     source.teams
       .filter(isVerified)
-      .filter((t) => real(t.data.name) && typeof t.data.order === "number")
+      .filter((t) => real(t.data.name) && !isFacultyTeamName(t.data.name))
+      .filter((t) => typeof t.data.order === "number")
       .map((t) => [t.id, { id: t.id, name: t.data.name as string, order: t.data.order as number }]),
   );
 
@@ -134,6 +153,13 @@ export function selectLegacy(source: LegacySource): LegacyContent {
         people.has(m.person),
     );
 
+  // A term has a page exactly when a qualifying membership (so a visible member) points at it.
+  const pageTerms = new Set(memberships.map((m) => m.term));
+  const linkTo = (t: TermRef): TermLink => ({
+    ...t,
+    href: pageTerms.has(t.id) ? termPagePath(t.id) : termAnchorPath(t.id),
+  });
+
   const termsServed = (personId: string) =>
     memberships.filter((m) => m.person === personId).map((m) => termRefs.get(m.term) as TermRef);
 
@@ -149,6 +175,7 @@ export function selectLegacy(source: LegacySource): LegacyContent {
       ...ref,
       summary: real(data.summary) ? data.summary : undefined,
       isFounding: data.isFoundingTerm === true,
+      hasPage: pageTerms.has(ref.id),
       teams: teamIds.map((team) => ({
         id: team.id,
         name: team.name,
@@ -171,7 +198,7 @@ export function selectLegacy(source: LegacySource): LegacyContent {
                   ? person.linkedin
                   : undefined,
               contributions: m.contributions.filter(real),
-              alsoServed: [...others.values()].sort(newestFirst),
+              alsoServed: [...others.values()].sort(newestFirst).map(linkTo),
             };
           })
           .sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id)),
@@ -186,6 +213,21 @@ export function selectLegacy(source: LegacySource): LegacyContent {
   }
 
   return { terms: legacyTerms, milestones };
+}
+
+/** The terms that have their own page, newest first. */
+export function termsWithPages(content: LegacyContent): LegacyTerm[] {
+  return content.terms.filter((term) => term.hasPage);
+}
+
+/** The static paths to pre-render for /legacy/[term]: only terms that have a page. */
+export function legacyTermPaths(content: LegacyContent) {
+  return termsWithPages(content).map((term) => ({ params: { term: term.id }, props: { term } }));
+}
+
+/** One term that has a page, or undefined. */
+export function selectLegacyTerm(content: LegacyContent, id: string): LegacyTerm | undefined {
+  return termsWithPages(content).find((term) => term.id === id);
 }
 
 /** True when the page has nothing verified to show beyond its introduction. */

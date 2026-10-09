@@ -25,6 +25,11 @@ export interface Entry<T> {
  */
 export const FACULTY_TEAM_NAME = "Faculty";
 
+/** True when a team name is the faculty team. The Legacy page uses this to keep faculty out. */
+export function isFacultyTeamName(name: string): boolean {
+  return name.trim().toLowerCase() === FACULTY_TEAM_NAME.toLowerCase();
+}
+
 const isVerified = (entry: Entry<{ status: string }>) => entry.data.status === "verified";
 
 const real = (value: unknown): value is string =>
@@ -111,11 +116,7 @@ export function selectFaculty(source: FacultySource): FacultyMember[] {
   const facultyTeams = new Set(
     source.teams
       .filter(isVerified)
-      .filter(
-        (team) =>
-          real(team.data.name) &&
-          team.data.name.trim().toLowerCase() === FACULTY_TEAM_NAME.toLowerCase(),
-      )
+      .filter((team) => real(team.data.name) && isFacultyTeamName(team.data.name))
       .map((team) => team.id),
   );
   if (facultyTeams.size === 0) return [];
