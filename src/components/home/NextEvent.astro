@@ -1,10 +1,12 @@
 ---
 import Section from "./Section.astro";
+import { eventPath } from "../../lib/eventsContent";
 import { formatEventDate, type HomeEvent } from "../../lib/homeContent";
 
 /*
   Next verified upcoming event (Master Brief §8.3). Rendered only when one exists.
-  The written date, time and timezone are always shown. No countdown or RSVP yet: both depend on
+  The event comes from the same set the Events pages publish, so it links to its own page. The
+  written date, time and timezone are always shown. No countdown or RSVP yet: both depend on
   decisions still open in Master Brief §15.
 */
 interface Props {
@@ -32,7 +34,10 @@ const { event } = Astro.props;
       <dd>{event.venue}</dd>
     </div>
   </dl>
-  <p>
+  <p class="actions">
+    <a class="btn" href={eventPath(event.id)}>
+      Event details
+    </a>
     <a class="btn" href="/events">
       All events
     </a>
@@ -40,6 +45,11 @@ const { event } = Astro.props;
 </Section>
 
 <style>
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
   .facts {
     display: grid;
     gap: var(--space-3) var(--space-5);
