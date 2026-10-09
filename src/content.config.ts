@@ -56,5 +56,6 @@ export const collections = {
   spotlights: collection("spotlights", "spotlights"),
   projects: collection("projects", "projects"),
   resources: collection("resources", "resources", documentFiles),
-  posts: collection("posts", "posts", documentFiles),
+  // Posts are Markdown or MDX only: an article needs a body, and a YAML file has none.
+  posts: collection("posts", "posts", "**/*.{md,mdx}"),
 };

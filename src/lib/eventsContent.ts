@@ -1,4 +1,5 @@
 import type { z } from "astro/zod";
+import { publishedPosts, type PostEntry } from "./blogContent";
 import { NEEDED_MARKER } from "./needed";
 import type { schemas } from "./schemas";
 
@@ -79,9 +80,9 @@ export interface PublicEvent {
   photos: string[];
   slides: string[];
   repositories: string[];
-  /** True when the record has a verified Markdown body (the recap). */
+  /** True when the record has a verified Markdown body (the recap) and no published related article. */
   hasRecap: boolean;
-  /** A verified article this event points to; omitted if missing or unverified. */
+  /** The published article that is this event's recap; omitted if missing or not published. */
   relatedPost?: RelatedPost;
 }
 
@@ -95,12 +96,14 @@ export type EventState = "upcoming" | "past";
  */
 export function selectPublicEvents(
   events: Entry<Data<"events">>[],
-  posts: Entry<Data<"posts">>[],
+  posts: PostEntry[],
+  now: Date,
 ): PublicEvent[] {
-  const articles = new Map<string, RelatedPost>();
-  for (const post of posts.filter(isVerified)) {
-    if (real(post.data.title)) articles.set(post.id, { id: post.id, title: post.data.title });
-  }
+  // Only PUBLISHED posts (the one rule in blogContent.ts), so an event never links to an article
+  // page that is not generated.
+  const articles = new Map<string, RelatedPost>(
+    publishedPosts(posts, now).map((post) => [post.id, { id: post.id, title: post.title }]),
+  );
 
   const found: PublicEvent[] = [];
   for (const entry of events.filter(isVerified)) {
@@ -112,6 +115,7 @@ export function selectPublicEvents(
     if (validEnd && validEnd < start) continue;
 
     const related = entry.data.relatedPost;
+    const relatedPost = real(related) ? articles.get(related) : undefined;
     found.push({
       id: entry.id,
       title,
@@ -124,8 +128,10 @@ export function selectPublicEvents(
       photos: entry.data.photos.filter((p) => real(p) && ASSET.test(p)),
       slides: entry.data.slides.filter((s) => real(s) && ASSET.test(s)),
       repositories: entry.data.repositories.filter((r) => real(r) && HTTPS_URL.test(r)),
-      hasRecap: real(entry.body),
-      relatedPost: real(related) ? articles.get(related) : undefined,
+      // A published related article IS the recap, so the event's own recap body is suppressed:
+      // the recap exists once, never two versions (Master Brief P2).
+      hasRecap: real(entry.body) && relatedPost === undefined,
+      relatedPost,
     });
   }
   return found.sort(byStartThenId);
@@ -338,7 +344,7 @@ export function describeWhen(event: PublicEvent): EventWhen {
 
 export interface EventsSource {
   events: Entry<Data<"events">>[];
-  posts: Entry<Data<"posts">>[];
+  posts: PostEntry[];
 }
 
 export interface EventsContent {
@@ -349,6 +355,6 @@ export interface EventsContent {
 }
 
 export function selectEventsContent(source: EventsSource, now: Date): EventsContent {
-  const all = selectPublicEvents(source.events, source.posts);
+  const all = selectPublicEvents(source.events, source.posts, now);
   return { all, ...splitEvents(all, now) };
 }

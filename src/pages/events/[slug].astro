@@ -104,7 +104,7 @@ const Content = event.hasRecap && entry ? (await render(entry)).Content : null;
 
       {event.relatedPost && (
         <p>
-          Related article:{" "}
+          Recap article:{" "}
           <a class="link related" href={`/blog/${event.relatedPost.id}`}>
             {event.relatedPost.title}
           </a>
