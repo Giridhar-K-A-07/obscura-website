@@ -1,5 +1,6 @@
 ---
 import Section from "./Section.astro";
+import { eventPath } from "../../lib/eventsContent";
 import { formatDay, type HomeRecent } from "../../lib/homeContent";
 
 /*
@@ -20,8 +21,8 @@ const { recent } = Astro.props;
         <p class="type-meta">Past event · {formatDay(recent.event.start)}</p>
         <h3 class="type-h4">{recent.event.title}</h3>
         <p>
-          <a class="link" href="/events">
-            Events archive
+          <a class="link action" href={eventPath(recent.event.id)}>
+            Event details
           </a>
         </p>
       </li>
@@ -41,6 +42,11 @@ const { recent } = Astro.props;
 </Section>
 
 <style>
+  .action {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
   .items {
     list-style: none;
     margin: 0;

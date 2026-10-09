@@ -140,6 +140,9 @@ export function selectPublicEvents(
 const byStartThenId = (a: PublicEvent, b: PublicEvent) =>
   a.start.getTime() - b.start.getTime() || a.id.localeCompare(b.id);
 
+/** The event's own page. Pages are generated for exactly the events `selectPublicEvents` returns. */
+export const eventPath = (id: string) => `/events/${id}`;
+
 /** The instant an event is over: its end, or its start when it has no end. */
 export const endOf = (event: PublicEvent): Date => event.end ?? event.start;
 

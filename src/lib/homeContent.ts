@@ -2,6 +2,12 @@ import type { z } from "astro/zod";
 import { publishablePeople } from "./achievementsContent";
 import { publishedPosts, type PostEntry } from "./blogContent";
 import { TRACKS, selectRoadmaps } from "./learnContent";
+import {
+  selectPublicEvents,
+  splitEvents,
+  type EventsSource,
+  type PublicEvent,
+} from "./eventsContent";
 import { NEEDED_MARKER } from "./needed";
 import type { schemas } from "./schemas";
 
@@ -34,10 +40,6 @@ const isVerified = (entry: Entry<{ status: string }>) => entry.data.status === "
 const real = (value: unknown): value is string =>
   typeof value === "string" && value.trim() !== "" && !NEEDED_MARKER.test(value);
 
-/** A real date: a valid Date, not a marker string. */
-const realDate = (value: unknown): value is Date =>
-  value instanceof Date && !Number.isNaN(value.getTime());
-
 // ---- Introduction --------------------------------------------------------------------------
 
 export function selectIntro(site: Entry<Data<"site">>[]): { description: string } | null {
@@ -50,58 +52,32 @@ export function selectIntro(site: Entry<Data<"site">>[]): { description: string 
 
 // ---- Events --------------------------------------------------------------------------------
 
-export interface HomeEvent {
-  id: string;
-  title: string;
-  type: string;
-  start: Date;
-  end?: Date;
-  timezone: string;
-  venue: string;
-}
+/**
+ * The homepage shows exactly the events the Events pages publish: it uses the one rule in
+ * eventsContent.ts (verified, valid timezone, end not before start, upcoming or past by the
+ * instants). Nothing about an event is validated here, so the homepage cannot show an event that
+ * has no page at /events/<id>.
+ */
+export type HomeEvent = PublicEvent;
 
-function toHomeEvent(entry: Entry<Data<"events">>): HomeEvent | null {
-  const { title, type, start, end, timezone, venue } = entry.data;
-  if (!real(title) || !real(type) || !realDate(start) || !real(timezone) || !real(venue)) {
-    return null;
-  }
-  return {
-    id: entry.id,
-    title,
-    type,
-    start,
-    end: realDate(end) ? end : undefined,
-    timezone,
-    venue,
-  };
-}
+/**
+ * Publication does not depend on articles (they only decide the recap), so none are passed.
+ * The result is the same set `/events` and `/events/[slug]` are generated from.
+ */
+const publicEvents = (events: Entry<Data<"events">>[], now: Date) =>
+  selectPublicEvents(events as unknown as EventsSource["events"], [], now);
 
-const endOf = (event: HomeEvent) => event.end ?? event.start;
-
-function verifiedEvents(events: Entry<Data<"events">>[]): HomeEvent[] {
-  return events
-    .filter(isVerified)
-    .map(toHomeEvent)
-    .filter((event): event is HomeEvent => event !== null);
-}
-
-/** The soonest verified event that has not ended yet, or null. */
+/** The soonest public event that has not ended yet, or null. */
 export function selectNextEvent(events: Entry<Data<"events">>[], now: Date): HomeEvent | null {
-  const upcoming = verifiedEvents(events)
-    .filter((event) => endOf(event) >= now)
-    .sort((a, b) => a.start.getTime() - b.start.getTime() || a.id.localeCompare(b.id));
-  return upcoming[0] ?? null;
+  return splitEvents(publicEvents(events, now), now).upcoming[0] ?? null;
 }
 
-/** The most recent verified event that has ended, or null. */
+/** The most recent public event that has ended, or null. */
 export function selectLatestPastEvent(
   events: Entry<Data<"events">>[],
   now: Date,
 ): HomeEvent | null {
-  const past = verifiedEvents(events)
-    .filter((event) => endOf(event) < now)
-    .sort((a, b) => b.start.getTime() - a.start.getTime() || a.id.localeCompare(b.id));
-  return past[0] ?? null;
+  return splitEvents(publicEvents(events, now), now).past[0] ?? null;
 }
 
 // ---- Posts ---------------------------------------------------------------------------------

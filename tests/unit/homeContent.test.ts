@@ -6,6 +6,7 @@ import {
   selectHomeContent,
   selectIntro,
   selectLatestPost,
+  selectLatestPastEvent,
   selectLearning,
   selectLegacy,
   selectNextEvent,
@@ -13,6 +14,7 @@ import {
   selectRecent,
   type HomeSource,
 } from "../../src/lib/homeContent";
+import { eventPath, selectEventsContent } from "../../src/lib/eventsContent";
 
 /*
   Synthetic records for tests only. They are not club data and never leave this file.
@@ -469,5 +471,121 @@ describe("formatEventDate", () => {
     const text = formatEventDate(day("2030-07-01T10:00:00Z"), "not a timezone");
     expect(text).toMatch(/10:00/);
     expect(text).toMatch(/UTC/);
+  });
+});
+
+// ---- Homepage events use the canonical public event set ------------------------------------
+
+describe("homepage events use the Events publication rule", () => {
+  const publicIds = (events: never[]) =>
+    selectEventsContent({ events, posts: [] }, NOW).all.map((e) => e.id);
+
+  /** Events that must never reach the homepage: each fails the canonical rule for one reason. */
+  const unpublishable = [
+    event("bad-zone", "verified", "2030-07-01T10:00:00Z", { timezone: "not a timezone" }),
+    event("no-zone", "verified", "2030-07-02T10:00:00Z", { timezone: NEEDED }),
+    event("end-before-start", "verified", "2030-07-03T10:00:00Z", {
+      end: day("2030-07-03T08:00:00Z"),
+    }),
+    event("no-title", "verified", "2030-07-04T10:00:00Z", { title: NEEDED }),
+    event("no-venue", "verified", "2030-07-05T10:00:00Z", { venue: "  " }),
+    event("no-type", "verified", "2030-07-06T10:00:00Z", { type: NEEDED }),
+    event("draft", "draft", "2030-07-07T10:00:00Z"),
+    event("past-bad-zone", "verified", "2029-01-01T10:00:00Z", { timezone: "Nowhere/Land" }),
+    event("past-end-before-start", "verified", "2029-02-01T10:00:00Z", {
+      end: day("2029-01-31T10:00:00Z"),
+    }),
+    event("past-draft", "draft", "2029-03-01T10:00:00Z"),
+  ];
+
+  it("never selects an event that /events does not publish, as next or as recent", () => {
+    expect(publicIds(unpublishable)).toEqual([]);
+    expect(selectNextEvent(unpublishable, NOW)).toBeNull();
+    expect(selectRecent(unpublishable, [], NOW)).toBeNull();
+    expect(selectHomeContent({ ...empty, events: unpublishable }, NOW)).toEqual(
+      selectHomeContent(empty, NOW),
+    );
+  });
+
+  it("skips an unpublishable event that would otherwise come first", () => {
+    const events = [
+      ...unpublishable,
+      event("valid-later", "verified", "2030-12-01T10:00:00Z"),
+      event("valid-past", "verified", "2028-01-01T10:00:00Z"),
+    ];
+    expect(selectNextEvent(events, NOW)?.id).toBe("valid-later");
+    expect(selectLatestPastEvent(events, NOW)?.id).toBe("valid-past");
+  });
+
+  it("selects only from the set /events and /events/[slug] are generated from", () => {
+    const events = [
+      ...unpublishable,
+      event("a", "verified", "2030-07-01T10:00:00Z"),
+      event("b", "verified", "2030-09-01T10:00:00Z"),
+      event("old", "verified", "2029-05-01T10:00:00Z"),
+      event("older", "verified", "2028-05-01T10:00:00Z"),
+    ];
+    const pages = new Set(publicIds(events));
+    const content = selectHomeContent({ ...empty, events }, NOW);
+    expect(content.nextEvent && pages.has(content.nextEvent.id)).toBe(true);
+    expect(content.recent?.event && pages.has(content.recent.event.id)).toBe(true);
+    expect(content.nextEvent?.id).toBe("a");
+    expect(content.recent?.event?.id).toBe("old");
+  });
+
+  it("agrees with the Events page split: next is the first upcoming, recent the first past", () => {
+    const events = [
+      event("u2", "verified", "2030-08-01T10:00:00Z"),
+      event("u1", "verified", "2030-07-01T10:00:00Z"),
+      event("p1", "verified", "2030-05-01T10:00:00Z"),
+      event("p2", "verified", "2030-04-01T10:00:00Z"),
+    ];
+    const { upcoming, past } = selectEventsContent({ events, posts: [] }, NOW);
+    expect(selectNextEvent(events, NOW)).toEqual(upcoming[0]);
+    expect(selectLatestPastEvent(events, NOW)).toEqual(past[0]);
+  });
+
+  it("links to the event's own page, which is generated for it", () => {
+    const events = [
+      event("next-one", "verified", "2030-07-01T10:00:00Z"),
+      event("last-one", "verified", "2029-07-01T10:00:00Z"),
+    ];
+    const routes = selectEventsContent({ events, posts: [] }, NOW).all.map((e) => eventPath(e.id));
+    const content = selectHomeContent({ ...empty, events }, NOW);
+    expect(routes).toContain(eventPath(content.nextEvent?.id ?? ""));
+    expect(routes).toContain(eventPath(content.recent?.event?.id ?? ""));
+    expect(eventPath("next-one")).toBe("/events/next-one");
+  });
+
+  it("keeps an event in progress as the next event, ordering deterministic with id ties", () => {
+    const running = event("running", "verified", "2030-06-15T09:00:00Z", {
+      end: day("2030-06-15T18:00:00Z"),
+    });
+    expect(selectNextEvent([running], NOW)?.id).toBe("running");
+    const a = event("a", "verified", "2030-07-01T10:00:00Z");
+    const b = event("b", "verified", "2030-07-01T10:00:00Z");
+    expect(selectNextEvent([b, a], NOW)?.id).toBe("a");
+    expect(selectNextEvent([a, b], NOW)?.id).toBe("a");
+  });
+
+  it("carries the event's recorded timezone, so the written time matches the Events pages", () => {
+    const next = selectNextEvent([event("a", "verified", "2030-07-01T10:00:00Z")], NOW);
+    expect(next?.timezone).toBe("Asia/Kolkata");
+    expect(formatEventDate(next?.start ?? NOW, next?.timezone ?? "")).toMatch(/15:30/);
+  });
+
+  it("keeps the empty state: no events means no Next event and no Recent event", () => {
+    expect(selectNextEvent([], NOW)).toBeNull();
+    expect(selectLatestPastEvent([], NOW)).toBeNull();
+    expect(selectHomeContent(empty, NOW).nextEvent).toBeNull();
+    expect(selectHomeContent(empty, NOW).recent).toBeNull();
+  });
+
+  it("does not let an article change which event is selected", () => {
+    const events = [event("e", "verified", "2029-01-01T10:00:00Z", { relatedPost: "p" })];
+    const withPost = selectRecent(events, [post("p", "verified", "2030-01-01")], NOW);
+    const without = selectRecent(events, [], NOW);
+    expect(withPost?.event?.id).toBe("e");
+    expect(without?.event?.id).toBe("e");
   });
 });
