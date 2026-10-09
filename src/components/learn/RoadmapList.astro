@@ -1,0 +1,56 @@
+---
+import Section from "../home/Section.astro";
+import { describeReview, type Roadmap } from "../../lib/learnContent";
+
+/*
+  The published study roadmaps, in the brief's track order. Only tracks with a verified, valid
+  roadmap appear, and each links to its own page, so no link points at a page that is not
+  generated. Each shows when it was last reviewed (and by whom, if the reviewer may be named).
+*/
+interface Props {
+  roadmaps: Roadmap[];
+}
+const { roadmaps } = Astro.props;
+---
+
+<Section id="roadmaps" kicker="Study roadmaps" title="Learning paths">
+  <ul class="roadmaps">
+    {roadmaps.map((roadmap) => (
+      <li>
+        <h3 class="type-h3">
+          <a class="title" href={`/learn/roadmaps/${roadmap.track}`}>
+            {roadmap.trackLabel}
+          </a>
+        </h3>
+        <p>{roadmap.title}</p>
+        <p class="type-meta">{describeReview(roadmap)}</p>
+      </li>
+    ))}
+  </ul>
+</Section>
+
+<style>
+  .roadmaps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .roadmaps > li {
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .roadmaps > li > * + * {
+    margin-top: var(--space-2);
+  }
+  .title {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    color: var(--text-primary);
+    text-decoration-color: var(--border-ui);
+  }
+  .title:hover {
+    color: var(--text-accent);
+  }
+</style>

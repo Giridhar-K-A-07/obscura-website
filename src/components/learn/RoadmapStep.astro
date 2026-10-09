@@ -1,0 +1,68 @@
+---
+import type { RoadmapStep } from "../../lib/learnContent";
+
+/*
+  One step of a roadmap: what to learn, why, and any linked resources. The step is a list item
+  of the roadmap's ordered list, so the browser supplies the number from the item's position.
+  The "Resources" label appears only when the step has links. Links are external https URLs.
+*/
+interface Props {
+  step: RoadmapStep;
+}
+const { step } = Astro.props;
+---
+
+<li class="step" value={step.number}>
+  <div class="body flow">
+    <h2 class="type-h3">{step.title}</h2>
+    <div>
+      <p class="type-label">Why</p>
+      <p>{step.why}</p>
+    </div>
+    {step.resources.length > 0 && (
+      <div>
+        <p class="type-label">Resources</p>
+        <ul class="links">
+          {step.resources.map((link) => (
+            <li>
+              <a class="link action" href={link.url} rel="noopener noreferrer">
+                {link.title}
+                <span class="type-meta"> (external site)</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
+</li>
+
+<style>
+  .step {
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .step::marker {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: var(--text-h3);
+    color: var(--text-accent);
+  }
+  .body {
+    --flow-space: var(--space-3);
+    padding-left: var(--space-2);
+  }
+  .links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .action {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+  .action span {
+    margin-left: var(--space-1); /* inline-flex drops the space before the label */
+  }
+</style>

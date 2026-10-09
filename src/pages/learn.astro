@@ -1,13 +1,43 @@
 ---
-import SectionPage from "../layouts/SectionPage.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import LearnIntro from "../components/learn/LearnIntro.astro";
+import RoadmapList from "../components/learn/RoadmapList.astro";
+import PrototypeNotice from "../components/home/PrototypeNotice.astro";
+import Section from "../components/home/Section.astro";
+import SiteFooter from "../components/home/SiteFooter.astro";
+import { loadLearnContent } from "../lib/learnData";
+
+/*
+  Resource & Learning Hub (Master Brief P5, §8.4). The roadmap list and the link to downloads
+  render only when there is content for them (src/lib/learnContent.ts); with none, the page is its
+  introduction. There are no club facts in this file. Still `noindex`: there is no verified launch
+  content yet.
+*/
+const { roadmaps, downloads } = await loadLearnContent();
 ---
 
-<SectionPage
-  title="Resource & Learning Hub"
-  kicker="Learn"
-  summary="Study roadmaps for new members, plus cheat sheets, code templates and practice datasets."
-  needed={[
-    "content, owner and last-reviewed date for each of the four study roadmaps",
-    "cheat sheets, code templates and datasets, with their sources and licences",
-  ]}
-/>
+<BaseLayout
+  title="Resource & Learning Hub — OBSCURA"
+  description="Resource & Learning Hub. Design prototype; not verified club content."
+  noindex
+>
+  <PrototypeNotice />
+  <main id="main" tabindex="-1">
+    <LearnIntro
+      kicker="Learn"
+      title="Resource & Learning Hub"
+      lead="Study roadmaps for new members, plus cheat sheets, code templates and practice datasets."
+    />
+    {roadmaps.length > 0 && <RoadmapList roadmaps={roadmaps} />}
+    {downloads.length > 0 && (
+      <Section id="downloads" kicker="Downloads" title="Cheat Sheets & Datasets">
+        <p>
+          <a class="btn" href="/learn/downloads">
+            Browse downloads
+          </a>
+        </p>
+      </Section>
+    )}
+  </main>
+  <SiteFooter />
+</BaseLayout>

@@ -340,6 +340,15 @@ describe("project contributors (consent)", () => {
 });
 
 describe("learning", () => {
+  const goodRoadmap = (id: string, track: string, extra: Record<string, unknown> = {}) =>
+    resource(id, "verified", {
+      kind: "roadmap",
+      track,
+      lastReviewed: day("2030-03-01"),
+      steps: [{ title: "Test step", why: "Test reason", resources: [] }],
+      ...extra,
+    });
+
   it("is null without verified resources, so the section is hidden", () => {
     expect(selectLearning([resource("r", "draft")])).toBeNull();
     expect(selectLearning([])).toBeNull();
@@ -354,19 +363,15 @@ describe("learning", () => {
     ]);
   });
 
-  it("lists only tracks that have a verified roadmap", () => {
+  it("lists only tracks that have a published roadmap, linked to the on-site page", () => {
     const resources = [
-      resource("a", "verified", {
-        kind: "roadmap",
-        track: "python",
-        link: "https://example.com/p",
-      }),
+      goodRoadmap("a", "python"),
       resource("b", "draft", { kind: "roadmap", track: "sql" }),
       resource("c", "verified", { kind: "cheat-sheet" }),
     ];
     const learning = selectLearning(resources);
     expect(learning?.tracks.map((t) => t.id)).toEqual(["python"]);
-    expect(learning?.tracks[0].roadmap.link).toBe("https://example.com/p");
+    expect(learning?.tracks[0].roadmap.href).toBe("/learn/roadmaps/python");
   });
 
   it("is null when only non-roadmap resources are verified", () => {
@@ -378,21 +383,24 @@ describe("learning", () => {
     expect(selectLearning(resources)).toBeNull();
   });
 
-  it("is null when the only roadmaps are drafts", () => {
+  it("is null when the only roadmaps are drafts, or are not publishable", () => {
     const resources = [
       resource("a", "draft", { kind: "roadmap", track: "sql" }),
       resource("b", "verified", { kind: "cheat-sheet" }),
+      resource("c", "verified", { kind: "roadmap", track: "python", steps: [] }),
     ];
     expect(selectLearning(resources)).toBeNull();
   });
 
-  it("renders with only that track when one verified roadmap exists", () => {
-    const resources = [
-      resource("a", "verified", { kind: "roadmap", track: "sql" }),
-      resource("b", "verified", { kind: "dataset" }),
-    ];
+  it("renders with only that track when one published roadmap exists", () => {
+    const resources = [goodRoadmap("a", "sql"), resource("b", "verified", { kind: "dataset" })];
     const learning = selectLearning(resources);
     expect(learning?.tracks.map((t) => t.label)).toEqual(["SQL"]);
+  });
+
+  it("applies the same rule through the whole homepage selection", () => {
+    const source: HomeSource = { ...empty, resources: [goodRoadmap("a", "python")] };
+    expect(selectHomeContent(source, NOW).learning?.tracks.map((t) => t.id)).toEqual(["python"]);
   });
 });
 

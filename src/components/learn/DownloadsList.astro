@@ -1,0 +1,39 @@
+---
+import Section from "../home/Section.astro";
+import DownloadItem from "./DownloadItem.astro";
+import type { DownloadGroup } from "../../lib/learnContent";
+
+/*
+  Verified downloads grouped by kind, in a fixed order, alphabetical within a group (the order
+  carries no meaning). Rendered only when there is at least one; a group with no items is absent.
+*/
+interface Props {
+  groups: DownloadGroup[];
+}
+const { groups } = Astro.props;
+---
+
+{groups.map((group) => (
+  <Section id={group.kind} kicker="Downloads" title={group.label}>
+    <ul class="items">
+      {group.items.map((item) => (
+        <li>
+          <DownloadItem item={item} />
+        </li>
+      ))}
+    </ul>
+  </Section>
+))}
+
+<style>
+  .items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .items > li {
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+</style>
