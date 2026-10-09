@@ -1,11 +1,11 @@
 ---
 import FoundersBadge from "./FoundersBadge.astro";
-import MemberProfile from "./MemberProfile.astro";
+import TeamGroups from "./TeamGroups.astro";
 import type { LegacyTerm } from "../../lib/legacyContent";
 
 /*
   One term on the line: its academic year on the rail, then its name, summary and Executive
-  Committee grouped by team. An entry is rendered only for a verified term. The founding term
+  Committee grouped by team (see TeamGroups), with a link to the term's own page when it has one. An entry is rendered only for a verified term. The founding term
   carries the Founders' Badge.
 */
 interface Props {
@@ -22,20 +22,14 @@ const { term } = Astro.props;
     {term.isFounding && <FoundersBadge academicYear={term.academicYear} />}
     <h3 class="type-h2">{term.name}</h3>
     {term.summary && <p class="measure">{term.summary}</p>}
-    {term.teams.map((team) => (
-      <section class="team" aria-labelledby={`team-${term.id}-${team.id}`}>
-        <h4 class="type-h4" id={`team-${term.id}-${team.id}`}>
-          {team.name}
-        </h4>
-        <ul class="people">
-          {team.members.map((member) => (
-            <li>
-              <MemberProfile member={member} />
-            </li>
-          ))}
-        </ul>
-      </section>
-    ))}
+    <TeamGroups term={term} level={4} />
+    {term.hasPage && (
+      <p>
+        <a class="link action" href={`/legacy/${term.id}`}>
+          Executive Committee page for {term.academicYear}
+        </a>
+      </p>
+    )}
   </div>
 </li>
 
@@ -72,16 +66,10 @@ const { term } = Astro.props;
   .content > * + * {
     margin-top: var(--space-4);
   }
-  .team > * + * {
-    margin-top: var(--space-3);
-  }
-  .people {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: var(--space-3);
-    grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
+  .action {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
   }
 
   /* Desktop: the year sits in a sticky rail to the left of the line. */

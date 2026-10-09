@@ -1,0 +1,37 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import TeamGroups from "../../components/legacy/TeamGroups.astro";
+import TermHeader from "../../components/legacy/TermHeader.astro";
+import PrototypeNotice from "../../components/home/PrototypeNotice.astro";
+import SiteFooter from "../../components/home/SiteFooter.astro";
+import { legacyTermPaths } from "../../lib/legacyContent";
+import { loadLegacyContent } from "../../lib/legacyData";
+
+/*
+  One term's Executive Committee (Master Brief P1.2). A page is generated only for a verified
+  term that has at least one qualifying member (src/lib/legacyContent.ts, `hasPage`), so a term
+  without one has no route; the timeline links to exactly these pages. The URL segment is the term
+  record id. Members are listed by team in the verified teams' order, and only with the consent
+  rules of the Legacy page. Still `noindex`.
+*/
+export async function getStaticPaths() {
+  return legacyTermPaths(await loadLegacyContent());
+}
+
+const { term } = Astro.props;
+---
+
+<BaseLayout
+  title={`${term.name} — The Legacy Line — OBSCURA`}
+  description="A term's Executive Committee. Design prototype; not verified club content."
+  noindex
+>
+  <PrototypeNotice />
+  <main id="main" tabindex="-1">
+    <div class="page section flow" style="--flow-space: var(--space-6)">
+      <TermHeader term={term} />
+      <TeamGroups term={term} level={2} />
+    </div>
+  </main>
+  <SiteFooter />
+</BaseLayout>
