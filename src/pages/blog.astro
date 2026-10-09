@@ -1,13 +1,29 @@
 ---
-import SectionPage from "../layouts/SectionPage.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import BlogIntro from "../components/blog/BlogIntro.astro";
+import PostList from "../components/blog/PostList.astro";
+import PrototypeNotice from "../components/home/PrototypeNotice.astro";
+import SiteFooter from "../components/home/SiteFooter.astro";
+import { loadBlogContent } from "../lib/blogData";
+
+/*
+  Tech Blog & Insights (Master Brief P6, §8.4). The list renders only when there are published
+  posts (src/lib/blogContent.ts); with none, the page is its introduction. There are no club
+  facts in this file. No tag pages, feed or pagination. Still `noindex`: there is no verified
+  launch content yet.
+*/
+const { posts } = await loadBlogContent();
 ---
 
-<SectionPage
-  title="Tech Blog & Insights"
-  kicker="Insights"
-  summary="Student-written articles on data science trends, project breakdowns and event recaps."
-  needed={[
-    "articles, with titles, dates and authors who have consented to be named",
-    "editorial process: who reviews and approves an article before it is published",
-  ]}
-/>
+<BaseLayout
+  title="Tech Blog & Insights — OBSCURA"
+  description="Tech Blog & Insights. Design prototype; not verified club content."
+  noindex
+>
+  <PrototypeNotice />
+  <main id="main" tabindex="-1">
+    <BlogIntro />
+    {posts.length > 0 && <PostList posts={posts} />}
+  </main>
+  <SiteFooter />
+</BaseLayout>

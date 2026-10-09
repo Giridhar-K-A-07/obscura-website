@@ -53,11 +53,15 @@ const event = (
     body,
   );
 
-const post = (id: string, status = "verified", extra: Record<string, unknown> = {}) =>
-  entry(id, { status, title: `Test post ${id}`, date: new Date("2030-01-01"), ...extra });
+const post = (
+  id: string,
+  status = "verified",
+  extra: Record<string, unknown> = {},
+  body = "Test article body.",
+) => entry(id, { status, title: `Test post ${id}`, date: new Date("2030-01-01"), ...extra }, body);
 
 const empty: EventsSource = { events: [], posts: [] };
-const one = (e: never, posts: never[] = []): PublicEvent[] => selectPublicEvents([e], posts);
+const one = (e: never, posts: never[] = []): PublicEvent[] => selectPublicEvents([e], posts, NOW);
 const first = (e: never, posts: never[] = []) => one(e, posts)[0];
 
 describe("zero verified events", () => {
@@ -91,7 +95,7 @@ describe("zero verified events", () => {
       event("ok", "2030-07-01T10:00:00Z"),
       event("draft", "2030-07-02T10:00:00Z", {}, "draft"),
     ];
-    expect(selectPublicEvents(events, []).map((e) => e.id)).toEqual(["ok"]);
+    expect(selectPublicEvents(events, [], NOW).map((e) => e.id)).toEqual(["ok"]);
   });
 });
 
@@ -157,7 +161,7 @@ describe("ordering", () => {
   ];
 
   it("lists upcoming soonest first and past newest first", () => {
-    const { upcoming, past } = splitEvents(selectPublicEvents(source, []), NOW);
+    const { upcoming, past } = splitEvents(selectPublicEvents(source, [], NOW), NOW);
     expect(upcoming.map((e) => e.id)).toEqual(["u-soon", "u-late"]);
     expect(past.map((e) => e.id)).toEqual(["p-new", "p-old"]);
   });
@@ -169,17 +173,16 @@ describe("ordering", () => {
       event("d", "2020-07-01T10:00:00Z"),
       event("c", "2020-07-01T10:00:00Z"),
     ];
-    const { upcoming, past } = splitEvents(selectPublicEvents(tied, []), NOW);
+    const { upcoming, past } = splitEvents(selectPublicEvents(tied, [], NOW), NOW);
     expect(upcoming.map((e) => e.id)).toEqual(["a", "b"]);
     expect(past.map((e) => e.id)).toEqual(["c", "d"]);
   });
 
   it("keeps several events on the same date in time order", () => {
     const sameDay = [event("late", "2030-07-01T15:00:00Z"), event("early", "2030-07-01T09:00:00Z")];
-    expect(splitEvents(selectPublicEvents(sameDay, []), NOW).upcoming.map((e) => e.id)).toEqual([
-      "early",
-      "late",
-    ]);
+    expect(
+      splitEvents(selectPublicEvents(sameDay, [], NOW), NOW).upcoming.map((e) => e.id),
+    ).toEqual(["early", "late"]);
   });
 
   it("is deterministic regardless of input order", () => {
@@ -316,6 +319,51 @@ describe("related article", () => {
     const e = event("a", "2030-07-01T10:00:00Z", { relatedPost: NEEDED });
     expect(first(e, [post("p1")]).relatedPost).toBeUndefined();
   });
+
+  it("links only a PUBLISHED article, so the link always has a page", () => {
+    const future = post("p1", "verified", { date: new Date("2031-01-01") });
+    const bodiless = post("p1", "verified", {}, "   ");
+    const marker = post("p1", "verified", {}, NEEDED);
+    const unsafe = post("p1", "verified", {}, "<script>alert(1)</script>");
+    for (const unpublished of [future, bodiless, marker, unsafe]) {
+      expect(first(withRelated, [unpublished]).relatedPost).toBeUndefined();
+    }
+  });
+});
+
+describe("one recap, never two", () => {
+  const recapBody = "Test event recap.";
+  const withBody = (extra: Record<string, unknown> = {}) =>
+    event("a", "2030-01-01T10:00:00Z", extra, "verified", recapBody);
+
+  it("suppresses the event's own recap when a published article is its recap", () => {
+    const e = first(withBody({ relatedPost: "p1" }), [post("p1")]);
+    expect(e.relatedPost).toEqual({ id: "p1", title: "Test post p1" });
+    expect(e.hasRecap).toBe(false);
+  });
+
+  it("keeps the event's own recap when the related article is not published", () => {
+    for (const unpublished of [
+      post("p1", "draft"),
+      post("p1", "verified", { date: new Date("2031-01-01") }),
+      post("p1", "verified", {}, ""),
+    ]) {
+      const e = first(withBody({ relatedPost: "p1" }), [unpublished]);
+      expect(e.relatedPost).toBeUndefined();
+      expect(e.hasRecap).toBe(true);
+    }
+    expect(first(withBody({ relatedPost: "missing" }), [post("p1")]).hasRecap).toBe(true);
+  });
+
+  it("keeps the event's own recap when it has no related article at all", () => {
+    expect(first(withBody(), [post("p1")]).hasRecap).toBe(true);
+  });
+
+  it("shows no recap for an event with neither a body nor an article", () => {
+    const e = first(event("a", "2030-01-01T10:00:00Z"), []);
+    expect(e.hasRecap).toBe(false);
+    expect(e.relatedPost).toBeUndefined();
+  });
 });
 
 describe("filters", () => {
@@ -327,6 +375,7 @@ describe("filters", () => {
       event("h-2028", "2028-04-01T10:00:00Z", { type: "Hackathon" }),
     ],
     [],
+    NOW,
   );
 
   it("slugifies types", () => {
@@ -405,7 +454,7 @@ describe("filters", () => {
   });
 
   it("skips a type with no URL-safe characters but keeps its year and the event itself", () => {
-    const odd = selectPublicEvents([event("a", "2030-03-01T10:00:00Z", { type: "!!!" })], []);
+    const odd = selectPublicEvents([event("a", "2030-03-01T10:00:00Z", { type: "!!!" })], [], NOW);
     expect(filterCombinations(odd).map(filterPath)).toEqual(["year/2030"]);
     expect(filterOptions(odd).types).toEqual([]);
   });

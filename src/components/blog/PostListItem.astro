@@ -1,0 +1,57 @@
+---
+import { formatDay, type PublicPost } from "../../lib/blogContent";
+
+/*
+  One article in the index: title (linking to the article), date, reading time, optional byline
+  and tags. A byline appears only for authors who may be named; with none, there is no byline.
+*/
+interface Props {
+  post: PublicPost;
+}
+const { post } = Astro.props;
+---
+
+<article class="post">
+  <p class="type-meta">
+    <time datetime={post.date.toISOString().slice(0, 10)}>{formatDay(post.date)}</time>
+    {" · "}
+    {post.readingMinutes} min read
+    {post.authors.length > 0 && <> · {post.authors.join(", ")}</>}
+  </p>
+  <h3 class="type-h3">
+    <a class="title" href={`/blog/${post.id}`}>
+      {post.title}
+    </a>
+  </h3>
+  {post.tags.length > 0 && (
+    <ul class="tags" aria-label="Tags">
+      {post.tags.map((tag) => (
+        <li class="badge">{tag}</li>
+      ))}
+    </ul>
+  )}
+</article>
+
+<style>
+  .post > * + * {
+    margin-top: var(--space-2);
+  }
+  .title {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    color: var(--text-primary);
+    text-decoration-color: var(--border-ui);
+  }
+  .title:hover {
+    color: var(--text-accent);
+  }
+  .tags {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+</style>

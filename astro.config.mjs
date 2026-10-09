@@ -10,6 +10,23 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   output: "static",
   integrations: [react(), mdx()],
+  markdown: {
+    // Code highlighting runs at build time (Shiki, built into Astro): no client JavaScript. The
+    // css-variables theme takes its colours from the site's design tokens (see PostBody.astro),
+    // so no new colours are introduced. Long lines scroll inside the block, which is made
+    // keyboard-focusable so it can be scrolled without a mouse.
+    shikiConfig: {
+      theme: "css-variables",
+      wrap: false,
+      transformers: [
+        {
+          pre(node) {
+            node.properties.tabindex = 0;
+          },
+        },
+      ],
+    },
+  },
   vite: {
     plugins: [tailwindcss()],
   },

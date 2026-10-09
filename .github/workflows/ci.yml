@@ -23,4 +23,5 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run check:needed
+      - run: npm run check:posts
       - run: npm run build

@@ -1,0 +1,34 @@
+---
+import Section from "../home/Section.astro";
+import PostListItem from "./PostListItem.astro";
+import type { PublicPost } from "../../lib/blogContent";
+
+/* Published articles, newest first. Rendered only when there is at least one. */
+interface Props {
+  posts: PublicPost[];
+}
+const { posts } = Astro.props;
+---
+
+<Section id="articles" kicker="Blog" title="Articles">
+  <ul class="list">
+    {posts.map((post) => (
+      <li>
+        <PostListItem post={post} />
+      </li>
+    ))}
+  </ul>
+</Section>
+
+<style>
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .list > li {
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+</style>

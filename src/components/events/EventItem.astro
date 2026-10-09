@@ -4,8 +4,8 @@ import type { PublicEvent } from "../../lib/eventsContent";
 
 /*
   One event in a list. Title, date, type and venue always appear. The description appears for
-  upcoming events. For past events, links to the recap, photos, slides and repositories appear
-  only for those that exist, so no empty label is ever shown.
+  upcoming events. For past events, links to the recap (or the recap article), photos, slides and
+  repositories appear only for those that exist, so no empty label is ever shown.
 */
 interface Props {
   event: PublicEvent;
@@ -14,17 +14,18 @@ interface Props {
 const { event, state } = Astro.props;
 const href = `/events/${event.id}`;
 const extras = [
-  event.hasRecap && { label: "Recap", anchor: "recap" },
+  event.relatedPost && { label: "Recap article", href: `/blog/${event.relatedPost.id}` },
+  event.hasRecap && { label: "Recap", href: `${href}#recap` },
   event.photos.length > 0 && {
     label: event.photos.length === 1 ? "Photo" : "Photos",
-    anchor: "photos",
+    href: `${href}#photos`,
   },
-  event.slides.length > 0 && { label: "Slides", anchor: "slides" },
+  event.slides.length > 0 && { label: "Slides", href: `${href}#slides` },
   event.repositories.length > 0 && {
     label: event.repositories.length === 1 ? "Repository" : "Repositories",
-    anchor: "repositories",
+    href: `${href}#repositories`,
   },
-].filter((item): item is { label: string; anchor: string } => item !== false);
+].filter((item): item is { label: string; href: string } => item !== false && item !== undefined);
 ---
 
 <article class="event">
@@ -41,7 +42,7 @@ const extras = [
     <ul class="extras" aria-label={`More from ${event.title}`}>
       {extras.map((item) => (
         <li>
-          <a class="link action" href={`${href}#${item.anchor}`}>
+          <a class="link action" href={item.href}>
             {item.label}
           </a>
         </li>

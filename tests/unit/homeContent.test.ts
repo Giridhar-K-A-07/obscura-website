@@ -41,8 +41,26 @@ const event = (id: string, status: string, start: string, extra: Record<string, 
     ...extra,
   });
 
-const post = (id: string, status: string, date: string, extra: Record<string, unknown> = {}) =>
-  rec(id, { status, title: `Test post ${id}`, date: day(date), authors: [], tags: [], ...extra });
+const post = (
+  id: string,
+  status: string,
+  date: string,
+  extra: Record<string, unknown> = {},
+  body: string | undefined = "Test article body.",
+) =>
+  ({
+    id,
+    data: {
+      source: "test",
+      status,
+      title: `Test post ${id}`,
+      date: day(date),
+      authors: [],
+      tags: [],
+      ...extra,
+    },
+    body,
+  }) as never;
 
 const project = (id: string, status: string, name: string, extra: Record<string, unknown> = {}) =>
   rec(id, {
@@ -193,6 +211,36 @@ describe("recent", () => {
   it("is null when there is neither", () => {
     expect(selectRecent([], [], NOW)).toBeNull();
     expect(selectLatestPost([post("d", "draft", "2030-01-01")], NOW)).toBeNull();
+  });
+});
+
+describe("recent uses the shared publication rule", () => {
+  const latest = (posts: never[]) => selectRecent([], posts, NOW)?.post?.id;
+
+  it("shows a published article", () => {
+    expect(latest([post("p", "verified", "2030-01-01")])).toBe("p");
+  });
+
+  it("never shows a post the blog would not publish", () => {
+    const unpublished = [
+      post("draft", "draft", "2030-01-01"),
+      post("future", "verified", "2031-01-01"),
+      post("bodiless", "verified", "2030-01-01", {}, ""),
+      post("blank", "verified", "2030-01-01", {}, "   \n"),
+      post("marker", "verified", "2030-01-01", {}, NEEDED),
+      post("unsafe", "verified", "2030-01-01", {}, "<script>alert(1)</script>"),
+      post("badlink", "verified", "2030-01-01", {}, "[x](javascript:alert(1))"),
+    ];
+    expect(latest(unpublished)).toBeUndefined();
+    expect(selectRecent([], unpublished, NOW)).toBeNull();
+  });
+
+  it("skips an unpublished newer post and shows the newest published one", () => {
+    const posts = [
+      post("new-but-bodiless", "verified", "2030-05-01", {}, ""),
+      post("older", "verified", "2030-01-01"),
+    ];
+    expect(latest(posts)).toBe("older");
   });
 });
 

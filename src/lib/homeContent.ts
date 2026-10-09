@@ -1,5 +1,6 @@
 import type { z } from "astro/zod";
 import { publishablePeople } from "./achievementsContent";
+import { publishedPosts, type PostEntry } from "./blogContent";
 import { TRACKS, selectRoadmaps } from "./learnContent";
 import { NEEDED_MARKER } from "./needed";
 import type { schemas } from "./schemas";
@@ -111,15 +112,10 @@ export interface HomePost {
   date: Date;
 }
 
-/** The newest verified article already published (not dated in the future), or null. */
-export function selectLatestPost(posts: Entry<Data<"posts">>[], now: Date): HomePost | null {
-  const published: HomePost[] = [];
-  for (const post of posts.filter(isVerified)) {
-    const { title, date } = post.data;
-    if (real(title) && realDate(date) && date <= now) published.push({ id: post.id, title, date });
-  }
-  published.sort((a, b) => b.date.getTime() - a.date.getTime() || a.id.localeCompare(b.id));
-  return published[0] ?? null;
+/** The newest published article (the rule in blogContent.ts), or null. */
+export function selectLatestPost(posts: PostEntry[], now: Date): HomePost | null {
+  const latest = publishedPosts(posts, now)[0];
+  return latest ? { id: latest.id, title: latest.title, date: latest.date } : null;
 }
 
 export interface HomeRecent {
@@ -130,7 +126,7 @@ export interface HomeRecent {
 /** Latest past event and latest article. Null when there is neither. */
 export function selectRecent(
   events: Entry<Data<"events">>[],
-  posts: Entry<Data<"posts">>[],
+  posts: PostEntry[],
   now: Date,
 ): HomeRecent | null {
   const event = selectLatestPastEvent(events, now);
@@ -264,7 +260,7 @@ export function selectLearning(resources: Entry<Data<"resources">>[]): HomeLearn
 export interface HomeSource {
   site: Entry<Data<"site">>[];
   events: Entry<Data<"events">>[];
-  posts: Entry<Data<"posts">>[];
+  posts: PostEntry[];
   terms: Entry<Data<"terms">>[];
   projects: Entry<Data<"projects">>[];
   people: Entry<Data<"people">>[];

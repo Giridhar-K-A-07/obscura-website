@@ -1,0 +1,53 @@
+---
+import { formatDay, type PublicPost } from "../../lib/blogContent";
+
+/*
+  Header of one article: the one h1, then the byline (only authors who may be named, and nothing
+  if there are none), the date, the computed reading time and the tags.
+*/
+interface Props {
+  post: PublicPost;
+}
+const { post } = Astro.props;
+---
+
+<header class="head flow">
+  <p>
+    <a class="link back" href="/blog">
+      All articles
+    </a>
+  </p>
+  <h1 class="type-display">{post.title}</h1>
+  <p class="type-meta">
+    {post.authors.length > 0 && <>By {post.authors.join(", ")} · </>}
+    <time datetime={post.date.toISOString().slice(0, 10)}>{formatDay(post.date)}</time>
+    {" · "}
+    {post.readingMinutes} min read
+  </p>
+  {post.tags.length > 0 && (
+    <ul class="tags" aria-label="Tags">
+      {post.tags.map((tag) => (
+        <li class="badge">{tag}</li>
+      ))}
+    </ul>
+  )}
+</header>
+
+<style>
+  .head {
+    --flow-space: var(--space-3);
+  }
+  .back {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+  .tags {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+</style>

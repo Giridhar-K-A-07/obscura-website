@@ -1,0 +1,61 @@
+---
+import type { PublicPost } from "../../lib/blogContent";
+
+/*
+  Where an article points: its event (a link, since events have pages) and its project (plain
+  text, since there is no project page). Each appears only if it resolved to a public event or a
+  published project. Nothing is shown otherwise.
+*/
+interface Props {
+  post: PublicPost;
+}
+const { post } = Astro.props;
+---
+
+{(post.relatedEvent || post.relatedProject) && (
+  <aside class="related" aria-label="Related">
+    <dl>
+      {post.relatedEvent && (
+        <div>
+          <dt class="type-label">Event</dt>
+          <dd>
+            <a class="link action" href={`/events/${post.relatedEvent.id}`}>
+              {post.relatedEvent.title}
+            </a>
+          </dd>
+        </div>
+      )}
+      {post.relatedProject && (
+        <div>
+          <dt class="type-label">Project</dt>
+          <dd>{post.relatedProject.name}</dd>
+        </div>
+      )}
+    </dl>
+  </aside>
+)}
+
+<style>
+  .related {
+    padding-block: var(--space-4);
+    border-block: 1px solid var(--border-subtle);
+  }
+  dl {
+    display: grid;
+    gap: var(--space-3) var(--space-5);
+    margin: 0;
+  }
+  dd {
+    margin: var(--space-1) 0 0;
+  }
+  .action {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+  @media (min-width: 641px) {
+    dl {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

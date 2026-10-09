@@ -1,0 +1,46 @@
+---
+import { render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PostBody from "../../components/blog/PostBody.astro";
+import PostHeader from "../../components/blog/PostHeader.astro";
+import RelatedLinks from "../../components/blog/RelatedLinks.astro";
+import PrototypeNotice from "../../components/home/PrototypeNotice.astro";
+import SiteFooter from "../../components/home/SiteFooter.astro";
+import { postPaths } from "../../lib/blogContent";
+import { loadBlogContent } from "../../lib/blogData";
+
+/*
+  One article. A page is generated only for a PUBLISHED post (src/lib/blogContent.ts), so draft,
+  future-dated, bodiless or unsafe posts have no route, and neither the homepage nor an event can
+  link to a missing page. The URL slug is the record id. The body is rendered at build time; no
+  client-side JavaScript. Still `noindex`.
+*/
+export async function getStaticPaths() {
+  const { posts } = await loadBlogContent();
+  return postPaths(posts);
+}
+
+const { post } = Astro.props;
+const { entries } = await loadBlogContent();
+const entry = entries.get(post.id);
+if (!entry) throw new Error(`Published post "${post.id}" has no collection entry`);
+const { Content } = await render(entry);
+---
+
+<BaseLayout
+  title={`${post.title} — Tech Blog & Insights — OBSCURA`}
+  description="Article. Design prototype; not verified club content."
+  noindex
+>
+  <PrototypeNotice />
+  <main id="main" tabindex="-1">
+    <article class="page-narrow section flow" style="--flow-space: var(--space-6)">
+      <PostHeader post={post} />
+      <RelatedLinks post={post} />
+      <PostBody>
+        <Content />
+      </PostBody>
+    </article>
+  </main>
+  <SiteFooter />
+</BaseLayout>
