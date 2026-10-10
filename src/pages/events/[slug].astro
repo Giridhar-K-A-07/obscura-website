@@ -1,17 +1,20 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { render } from "astro:content";
+import AddToCalendar from "../../components/events/AddToCalendar.astro";
 import EventAssets from "../../components/events/EventAssets.astro";
 import PrototypeNotice from "../../components/home/PrototypeNotice.astro";
 import SiteFooter from "../../components/home/SiteFooter.astro";
+import { offersCalendar } from "../../lib/eventsCalendar";
 import { classify, describeWhen } from "../../lib/eventsContent";
 import { loadEventsContent } from "../../lib/eventsData";
 
 /*
   One event. A page is generated only for a verified, valid event (src/lib/eventsContent.ts), so
   draft and unverified records never get a route. The URL slug is the record id. Every block
-  renders only when it has verified content. Not built: RSVP, countdown, calendar export, a photo
-  lightbox. Those wait on club decisions (Master Brief §15) and are follow-ups. Still `noindex`.
+  renders only when it has verified content. An upcoming event links to its static calendar file
+  (/events/<id>.ics). Not built: RSVP, countdown, a live calendar feed, a photo lightbox. Those wait
+  on club decisions (Master Brief §15) and are follow-ups. Still `noindex`.
 */
 export async function getStaticPaths() {
   const { all } = await loadEventsContent();
@@ -86,6 +89,8 @@ const Content = event.hasRecap && entry ? (await render(entry)).Content : null;
           <dd>{event.venue}</dd>
         </div>
       </dl>
+
+      {offersCalendar(event, now) && <AddToCalendar id={event.id} />}
 
       {event.description && <p class="type-lead measure">{event.description}</p>}
 
