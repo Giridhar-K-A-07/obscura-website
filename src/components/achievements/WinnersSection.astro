@@ -103,6 +103,9 @@ const { winners } = Astro.props;
     align-items: center;
     min-height: var(--target-min);
   }
+  .action span {
+    margin-left: var(--space-1); /* inline-flex drops the space before the label */
+  }
   @media (min-width: 641px) {
     .facts {
       grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));

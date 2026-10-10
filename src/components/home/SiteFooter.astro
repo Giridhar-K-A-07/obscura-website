@@ -1,5 +1,6 @@
 ---
 import { loadFooterContent } from "../../lib/footerData";
+import { siteMode } from "../../lib/siteMode";
 
 /*
   Site footer. Contact and GitHub appear only when the verified site record has them (see
@@ -13,7 +14,7 @@ const { email, github } = await loadFooterContent();
   <div class="page grid">
     <div class="flow">
       <p class="mark">OBSCURA</p>
-      {!email && !github && (
+      {siteMode.prototype && !email && !github && (
         <p class="type-meta measure">
           Prototype footer. Contact, social and legal details are not yet confirmed.
         </p>

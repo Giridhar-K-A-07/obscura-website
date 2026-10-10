@@ -14,16 +14,17 @@ interface Props {
 const { projects } = Astro.props;
 
 const links = (project: PublicProject) => [
-  { label: `Source repository for ${project.name} (external site)`, href: project.repository },
+  { label: `Source repository for ${project.name}`, href: project.repository, external: true },
   ...(project.liveDemo
-    ? [{ label: `Live demo of ${project.name} (external site)`, href: project.liveDemo }]
+    ? [{ label: `Live demo of ${project.name}`, href: project.liveDemo, external: true }]
     : []),
   ...project.datasets.map((href, index) => ({
     label:
       project.datasets.length === 1
-        ? `Dataset for ${project.name} (external site)`
-        : `Dataset ${index + 1} for ${project.name} (external site)`,
+        ? `Dataset for ${project.name}`
+        : `Dataset ${index + 1} for ${project.name}`,
     href,
+    external: true,
   })),
 ];
 ---

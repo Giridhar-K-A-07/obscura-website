@@ -1,8 +1,13 @@
 // Fails when a blog post (content/posts/**/*.md|mdx) or an event recap (content/events/**/*.md|mdx)
 // contains a construct that is not allowed in published articles: scripts and other active HTML, event-handler attributes, javascript:/data:
 // links, links that are not https / site paths / in-page anchors, images without alt text, images
-// that are not https or site paths, and MDX imports, exports or client directives (posts ship no
-// client-side JavaScript). Code blocks and inline code are not scanned: showing such code is fine.
+// that are not https or site paths, MDX imports, exports or client directives (posts ship no
+// client-side JavaScript), and a level-1 heading in the body (the page's title is its one h1, so
+// body headings start at ##). Code blocks and inline code are not scanned: showing such code is fine.
+// The h1 rule here is a fast text check for author feedback. It cannot see every nested list or quote
+// form, so the authority is the Markdown renderer: scripts/no-body-h1.mjs, a Sätteri plugin that
+// fails the render for any depth-1 heading in the parsed tree, and for JavaScript in an MDX body
+// (see body-processor.mjs); check-body-structure.mjs compiles every body with it, `.md` and `.mdx`.
 // Run with: npm run check:posts
 //
 // The same `findUnsafe` function is used by the site build (src/lib/blogContent.ts), so a post
@@ -14,7 +19,7 @@ import { fileURLToPath } from "node:url";
 
 const POST_FILE = /\.(md|mdx)$/;
 /** Content folders whose Markdown/MDX bodies are rendered on the site. YAML records have no body. */
-const BODY_FOLDERS = ["posts", "events"];
+export const BODY_FOLDERS = ["posts", "events"];
 
 /** Removes the YAML front matter, if any. */
 export function stripFrontmatter(text) {
@@ -50,6 +55,12 @@ const DANGEROUS_SCHEME =
 const MDX_MODULE =
   /^(import\s+[\w{*"'][^\n]*\sfrom\s+["'][^"']+["']|import\s+["'][^"']+["']|export\s+(const|let|var|function|default|async|class)\b)/gm;
 const CLIENT_DIRECTIVE = /\bclient:(load|idle|visible|media|only)\b/g;
+// A level-1 heading would be a second h1 on the page: ATX ("# Title", also inside a block quote or
+// list item), setext (a line followed by a line of "="), or an <h1> tag. Indented code (4+ spaces)
+// is not a heading, and fenced or inline code was already removed.
+const ATX_H1 = /^ {0,3}(?:(?:>[ \t]?)+ {0,3})?(?:[-*+][ \t]+)?#(?=[ \t]|$)[^\n]*/gm;
+const SETEXT_H1 = /^[^\n]*\S[^\n]*\n {0,3}=+[ \t]*$/gm;
+const HTML_H1 = /<\s*h1\b/gi;
 
 const MD_INLINE = /(!?)\[([^\]]*)\]\(\s*<?([^)\s>]*)>?(?:\s+(?:"[^"]*"|'[^']*'))?\s*\)/g;
 const MD_DEFINITION = /^ {0,3}\[[^\]]+\]:\s*<?(\S+?)>?(?:\s|$)/gm;
@@ -78,6 +89,9 @@ export function findUnsafe(body) {
   for (const m of text.matchAll(DANGEROUS_SCHEME)) add("dangerous-url-scheme", m[0]);
   for (const m of text.matchAll(MDX_MODULE)) add("mdx-import-export", m[0]);
   for (const m of text.matchAll(CLIENT_DIRECTIVE)) add("client-directive", m[0]);
+  for (const m of text.matchAll(ATX_H1)) add("body-h1", `${m[0]} (use ## for body headings)`);
+  for (const m of text.matchAll(SETEXT_H1)) add("body-h1", `${m[0]} (use ## for body headings)`);
+  for (const m of text.matchAll(HTML_H1)) add("body-h1", `${m[0]} (use ## for body headings)`);
 
   for (const m of text.matchAll(MD_INLINE)) {
     const [whole, bang, alt, url] = m;
@@ -107,10 +121,10 @@ export function findUnsafe(body) {
   return problems;
 }
 
-function* postFiles(directory) {
+export function* bodyFiles(directory) {
   for (const entry of readdirSync(directory)) {
     const path = join(directory, entry);
-    if (statSync(path).isDirectory()) yield* postFiles(path);
+    if (statSync(path).isDirectory()) yield* bodyFiles(path);
     else if (POST_FILE.test(entry)) yield path;
   }
 }
@@ -124,7 +138,7 @@ export function findPostViolations(root) {
   for (const name of BODY_FOLDERS) {
     let files;
     try {
-      files = [...postFiles(join(root, name))];
+      files = [...bodyFiles(join(root, name))];
     } catch {
       continue; // no such folder: nothing to check
     }

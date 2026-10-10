@@ -5,7 +5,9 @@
   the site's serif. Code highlighting is done at build time by Shiki; its colours come from the
   existing design tokens through the variables below, so there is no new palette. Code blocks
   scroll sideways inside themselves (and are keyboard-focusable, see astro.config.mjs); tables
-  and images never widen the page.
+  scroll inside a focusable, labelled wrapper; images never widen the page. The page's title is
+  its one h1, so body headings start at h2 (a depth-1 heading fails the render, see
+  scripts/no-body-h1.mjs; check-posts.mjs gives the same message early).
 */
 ---
 
@@ -92,13 +94,31 @@
     background: var(--surface-raised);
     overflow-wrap: anywhere;
   }
-  /* Tables scroll inside themselves, so a wide table never widens the page. */
+  /*
+    A wide table scrolls inside its wrapper, so it never widens the page. The wrapper is added at
+    build time (scripts/scrollable-tables.mjs): a focusable, labelled region, so the
+    scrolling works from the keyboard. The <table> itself stays a real table.
+  */
+  .prose :global(.table-scroll) {
+    max-width: 100%;
+    overflow-x: auto;
+  }
   .prose :global(table) {
+    border-collapse: collapse;
+    font-size: var(--text-small);
+  }
+  .prose :global(.table-scroll > table) {
+    min-width: 100%;
+    width: max-content;
+  }
+  /*
+    A table the plugin did not wrap (raw HTML in Markdown, or a JSX <table> in MDX) scrolls itself,
+    as every table did before the wrapper existed, so it can never widen the page.
+  */
+  .prose :global(table:not(.table-scroll > table)) {
     display: block;
     max-width: 100%;
     overflow-x: auto;
-    border-collapse: collapse;
-    font-size: var(--text-small);
   }
   .prose :global(th),
   .prose :global(td) {
