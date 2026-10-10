@@ -1,14 +1,21 @@
 ---
-/* Thin notice that distinguishes this prototype from verified club content. */
+import { siteMode } from "../../lib/siteMode";
+
+/*
+  Thin notice that distinguishes this prototype from verified club content. It is shown only while
+  the site is a prototype (src/lib/siteMode.ts), so launching removes it from every page at once.
+*/
 ---
 
-<div class="notice" role="note">
-  <p class="page">
-    <strong>Design prototype.</strong> No verified club content exists yet, so sections appear only
-    when verified content is available. Colours and fonts are provisional. Nothing here is verified
-    club content.
-  </p>
-</div>
+{siteMode.showPrototypeNotice && (
+  <div class="notice" role="note">
+    <p class="page">
+      <strong>Design prototype.</strong> No verified club content exists yet, so sections appear
+      only when verified content is available. Colours and fonts are provisional. Nothing here is
+      verified club content.
+    </p>
+  </div>
+)}
 
 <style>
   .notice {

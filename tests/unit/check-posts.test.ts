@@ -13,7 +13,8 @@ const rules = (body: string) => findUnsafe(body).map((p: { rule: string }) => p.
 
 describe("allowed constructs", () => {
   it("allows plain prose, headings, lists, tables and blockquotes", () => {
-    const body = "# Title\n\nSome text.\n\n- a\n- b\n\n| x | y |\n|---|---|\n| 1 | 2 |\n\n> quote";
+    const body =
+      "## Title\n\n### Part\n\nSome text.\n\n- a\n- b\n\n| x | y |\n|---|---|\n| 1 | 2 |\n\n> quote";
     expect(findUnsafe(body)).toEqual([]);
   });
 
@@ -275,5 +276,92 @@ describe("check:posts also covers event bodies", () => {
     expect(problems.every((p: string) => !p.includes("ok.md"))).toBe(true);
     expect(problems.some((p: string) => p.startsWith("posts") && p.includes("p.md"))).toBe(true);
     expect(problems.some((p: string) => p.startsWith("events") && p.includes("e.md"))).toBe(true);
+  });
+});
+
+describe("body headings: the page's title is the one h1", () => {
+  it("allows ## and deeper headings, in any case of spacing", () => {
+    const body =
+      "## Section\n\n### Part\n\n#### Detail\n\n##### More\n\n###### Last\n\n  ## Indented a little";
+    expect(rules(body)).toEqual([]);
+  });
+
+  it("rejects an ATX level-1 heading", () => {
+    expect(rules("Intro.\n\n# Second title\n\nText.")).toEqual(["body-h1"]);
+    expect(rules("#\n")).toEqual(["body-h1"]);
+    expect(rules("   # Slightly indented")).toEqual(["body-h1"]);
+    expect(rules("#\tTab after")).toEqual(["body-h1"]);
+  });
+
+  it("rejects a level-1 heading inside a block quote or a list item", () => {
+    expect(rules("> # Quoted title")).toEqual(["body-h1"]);
+    expect(rules("> > # Nested quote")).toEqual(["body-h1"]);
+    expect(rules("- # Listed title")).toEqual(["body-h1"]);
+  });
+
+  it("rejects a setext level-1 heading and an <h1> tag", () => {
+    expect(rules("Second title\n============\n\nText.")).toEqual(["body-h1"]);
+    expect(rules("Title\n=\n")).toEqual(["body-h1"]);
+    expect(rules("<h1>Second title</h1>")).toContain("body-h1");
+    expect(rules("<H1 class='x'>Second title</H1>")).toContain("body-h1");
+  });
+
+  it("does not mistake other text for a level-1 heading", () => {
+    expect(rules("#hashtag without a space")).toEqual([]);
+    expect(rules("A line with a # inside it.")).toEqual([]);
+    expect(rules("Issue #12 is fixed.")).toEqual([]);
+    expect(rules("## Heading\n\n===")).toEqual([]);
+    expect(rules("<h10>not a heading</h10> and <h2>h2</h2>")).toEqual([]);
+    expect(rules("    # four spaces is indented code, not a heading")).toEqual([]);
+  });
+
+  it("does not scan code: fenced blocks, tildes and inline code may show an h1", () => {
+    const body = [
+      "Use `# Title` in Markdown.",
+      "```markdown",
+      "# A title in a code block",
+      "```",
+      "~~~md",
+      "Setext",
+      "======",
+      "~~~",
+      "```html",
+      "<h1>x</h1>",
+      "```",
+    ].join("\n");
+    expect(findUnsafe(body)).toEqual([]);
+  });
+
+  it("reports the heading and says how to fix it", () => {
+    const [problem] = findUnsafe("# Second title");
+    expect(problem.rule).toBe("body-h1");
+    expect(problem.detail).toContain("Second title");
+    expect(problem.detail).toContain("##");
+  });
+
+  it("keeps every other rule working alongside it", () => {
+    const problems = rules("# Title\n\n<script>x</script>\n\n[a](http://example.com)");
+    expect(problems).toEqual(["blocked-html-tag", "body-h1", "unsafe-link"]);
+  });
+
+  it("is reported by the folder check for posts and events, after front matter", () => {
+    const folders = [];
+    const root = mkdtempSync(join(tmpdir(), "obscura-h1-"));
+    folders.push(root);
+    for (const [path, text] of Object.entries({
+      "posts/a.md": "---\ntitle: T\n---\n# Second title\n",
+      "posts/ok.md": "---\ntitle: T\n---\n## Fine\n",
+      "events/e.mdx": "---\ntitle: T\n---\nTitle\n=====\n",
+    })) {
+      const full = join(root, path);
+      mkdirSync(join(full, ".."), { recursive: true });
+      writeFileSync(full, text);
+    }
+    const problems = findPostViolations(root);
+    rmSync(root, { recursive: true, force: true });
+    expect(problems).toHaveLength(2);
+    expect(problems.every((p: string) => p.includes("body-h1"))).toBe(true);
+    expect(problems.some((p: string) => p.includes("a.md"))).toBe(true);
+    expect(problems.some((p: string) => p.includes("e.mdx"))).toBe(true);
   });
 });

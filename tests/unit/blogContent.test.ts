@@ -127,6 +127,17 @@ describe("publication rule", () => {
     expect(ids(withPosts(unsafe.map((body, i) => post(`p${i}`, {}, body))))).toEqual([]);
   });
 
+  it("does not publish a post whose body has a second h1, and publishes one with ## headings", () => {
+    const withH1 = "Intro.\n\n# Another title\n\nText.";
+    const setext = "Another title\n=============\n\nText.";
+    const html = "<h1>Another title</h1>";
+    for (const body of [withH1, setext, html]) expect(isPublishableBody(body)).toBe(false);
+    expect(ids(withPosts([post("h1", {}, withH1)]))).toEqual([]);
+    const fine = "Intro.\n\n## Section\n\n### Part\n\nText.";
+    expect(isPublishableBody(fine)).toBe(true);
+    expect(ids(withPosts([post("ok", {}, fine)]))).toEqual(["ok"]);
+  });
+
   it("accepts a body with safe links, an image with alt text, and code that shows unsafe markup", () => {
     const body = [
       "Read [the docs](https://example.com/docs) or [another page](/events).",

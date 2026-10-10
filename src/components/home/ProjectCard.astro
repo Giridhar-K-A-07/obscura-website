@@ -7,6 +7,8 @@
 interface Link {
   label: string;
   href: string;
+  /** True for a link to another site: " (external site)" follows the label, in the quiet style. */
+  external?: boolean;
 }
 interface Props {
   name?: string;
@@ -42,6 +44,7 @@ const showContributors = contributors.length > 0 || Astro.slots.has("contributor
         <li>
           <a class="link" href={link.href}>
             {link.label}
+            {link.external && <span class="type-meta"> (external site)</span>}
           </a>
         </li>
       ))}
@@ -77,5 +80,8 @@ const showContributors = contributors.length > 0 || Astro.slots.has("contributor
     display: inline-flex;
     align-items: center;
     min-height: var(--target-min);
+  }
+  .links a span {
+    margin-left: var(--space-1); /* inline-flex drops the space before the label */
   }
 </style>

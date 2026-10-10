@@ -5,7 +5,8 @@
   the site's serif. Code highlighting is done at build time by Shiki; its colours come from the
   existing design tokens through the variables below, so there is no new palette. Code blocks
   scroll sideways inside themselves (and are keyboard-focusable, see astro.config.mjs); tables
-  and images never widen the page.
+  scroll inside a focusable, labelled wrapper; images never widen the page. The page's title is
+  its one h1, so body headings start at h2 (enforced by scripts/check-posts.mjs).
 */
 ---
 
@@ -92,13 +93,20 @@
     background: var(--surface-raised);
     overflow-wrap: anywhere;
   }
-  /* Tables scroll inside themselves, so a wide table never widens the page. */
-  .prose :global(table) {
-    display: block;
+  /*
+    A wide table scrolls inside its wrapper, so it never widens the page. The wrapper is added at
+    build time (scripts/rehype-scrollable-tables.mjs): a focusable, labelled region, so the
+    scrolling works from the keyboard. The <table> itself stays a real table.
+  */
+  .prose :global(.table-scroll) {
     max-width: 100%;
     overflow-x: auto;
+  }
+  .prose :global(table) {
     border-collapse: collapse;
     font-size: var(--text-small);
+    min-width: 100%;
+    width: max-content;
   }
   .prose :global(th),
   .prose :global(td) {

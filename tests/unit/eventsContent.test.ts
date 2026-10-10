@@ -524,6 +524,12 @@ describe("event body safety (the same rule as blog posts)", () => {
     });
   }
 
+  it("does not publish an event whose body has a second h1, and keeps ## headings", () => {
+    expect(published("Recap.\n\n# Another title")).toEqual([]);
+    expect(published("Another title\n=====")).toEqual([]);
+    expect(published("Recap.\n\n## Section\n\nText.")[0].hasRecap).toBe(true);
+  });
+
   it("does not publish an unsafe event even when a published article replaces its recap", () => {
     const unsafe = "Recap.\n\n<script>alert(1)</script>";
     expect(published(unsafe, { relatedPost: "p1" }, [post("p1")])).toEqual([]);
