@@ -3,14 +3,41 @@ import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import mdx from "@astrojs/mdx";
 import tailwindcss from "@tailwindcss/vite";
+import { fileURLToPath } from "node:url";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { bodyProcessor } from "./scripts/body-processor.mjs";
+import { sitemapXml } from "./src/lib/crawlers.ts";
+
+// The sitemap, written after the build. It exists only when the site is launched and `site` is a
+// usable production URL; in the prototype (the default) nothing is written (src/lib/crawlers.ts).
+/** @returns {import("astro").AstroIntegration} */
+const sitemap = () => {
+  /** @type {import("astro").AstroConfig["site"]} */
+  let site;
+  return {
+    name: "obscura-sitemap",
+    hooks: {
+      "astro:config:done": ({ config }) => {
+        site = config.site;
+      },
+      "astro:build:done": ({ dir, pages }) => {
+        const xml = sitemapXml(
+          site,
+          pages.map((page) => page.pathname),
+        );
+        if (xml) writeFileSync(join(fileURLToPath(dir), "sitemap.xml"), xml);
+      },
+    },
+  };
+};
 
 // Static output, deployed to Vercel (docs/decisions/0001-site-stack.md).
 // `site` is left unset on purpose:
 // [[NEEDED: production site URL — domain and hosting constraints, Master Brief §15 C7]]
 export default defineConfig({
   output: "static",
-  integrations: [react(), mdx()],
+  integrations: [react(), mdx(), sitemap()],
   markdown: {
     // The one Markdown/MDX processor for every article and event body (Astro 7's Sätteri, with two
     // plugins added; see scripts/body-processor.mjs). A second page-level h1, or JavaScript in an MDX
