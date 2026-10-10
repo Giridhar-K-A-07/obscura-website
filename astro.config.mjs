@@ -3,9 +3,7 @@ import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import mdx from "@astrojs/mdx";
 import tailwindcss from "@tailwindcss/vite";
-import { satteri } from "@astrojs/markdown-satteri";
-import noBodyH1 from "./scripts/no-body-h1.mjs";
-import scrollableTables from "./scripts/scrollable-tables.mjs";
+import { bodyProcessor } from "./scripts/body-processor.mjs";
 
 // Static output, deployed to Vercel (docs/decisions/0001-site-stack.md).
 // `site` is left unset on purpose:
@@ -14,10 +12,11 @@ export default defineConfig({
   output: "static",
   integrations: [react(), mdx()],
   markdown: {
-    // Astro 7's Markdown processor (the default, with two plugins added). Both apply to Markdown and
-    // MDX: a second page-level h1 in a body fails the render (scripts/no-body-h1.mjs), and each table
-    // is wrapped in a keyboard-focusable, labelled scroll container (scripts/scrollable-tables.mjs).
-    processor: satteri({ mdastPlugins: [noBodyH1], hastPlugins: [scrollableTables] }),
+    // The one Markdown/MDX processor for every article and event body (Astro 7's Sätteri, with two
+    // plugins added; see scripts/body-processor.mjs). A second page-level h1, or JavaScript in an MDX
+    // body, fails the render, and each table is wrapped in a keyboard-focusable, labelled scroll
+    // region. `npm run check:posts` compiles every body with this same processor.
+    processor: bodyProcessor(),
     // Code highlighting runs at build time (Shiki, built into Astro): no client JavaScript. The
     // css-variables theme takes its colours from the site's design tokens (see PostBody.astro),
     // so no new colours are introduced. Long lines scroll inside the block, which is made

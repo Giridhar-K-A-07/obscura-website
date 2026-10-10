@@ -6,7 +6,8 @@
 // body headings start at ##). Code blocks and inline code are not scanned: showing such code is fine.
 // The h1 rule here is a fast text check for author feedback. It cannot see every nested list or quote
 // form, so the authority is the Markdown renderer: scripts/no-body-h1.mjs, a Sätteri plugin that
-// fails the render for any depth-1 heading in the parsed tree (see astro.config.mjs).
+// fails the render for any depth-1 heading in the parsed tree, and for JavaScript in an MDX body
+// (see body-processor.mjs); check-body-structure.mjs compiles every body with it, `.md` and `.mdx`.
 // Run with: npm run check:posts
 //
 // The same `findUnsafe` function is used by the site build (src/lib/blogContent.ts), so a post

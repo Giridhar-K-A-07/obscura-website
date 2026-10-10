@@ -174,7 +174,8 @@ describe("MDX", () => {
 
 describe("it protects both blog posts and events", () => {
   it("is a plugin of the one Markdown processor that renders every body", () => {
-    expect(readFileSync("astro.config.mjs", "utf8")).toMatch(
+    expect(readFileSync("astro.config.mjs", "utf8")).toMatch(/processor:\s*bodyProcessor\(\)/);
+    expect(readFileSync("scripts/body-processor.mjs", "utf8")).toMatch(
       /satteri\(\{\s*mdastPlugins:\s*\[noBodyH1\]/,
     );
     const config = readFileSync("src/content.config.ts", "utf8");

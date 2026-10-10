@@ -74,8 +74,9 @@ describe("scrollable tables", () => {
   });
 
   it("is registered for Markdown and MDX, and the table is no longer made scrollable itself", () => {
-    expect(readFileSync("astro.config.mjs", "utf8")).toMatch(
-      /processor:\s*satteri\(\{[^}]*hastPlugins:\s*\[scrollableTables\]/,
+    expect(readFileSync("astro.config.mjs", "utf8")).toMatch(/processor:\s*bodyProcessor\(\)/);
+    expect(readFileSync("scripts/body-processor.mjs", "utf8")).toMatch(
+      /satteri\(\{[^}]*hastPlugins:\s*\[scrollableTables\]/,
     );
     const css = readFileSync("src/components/blog/PostBody.astro", "utf8");
     expect(css).toContain(".table-scroll");
