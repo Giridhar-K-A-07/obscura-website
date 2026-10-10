@@ -41,6 +41,14 @@ export function parseSiteUrl(site: string | URL | null | undefined): URL | undef
 }
 
 /**
+ * Whether a path has a "." or ".." segment, written plainly or with a percent-encoded dot ("%2e",
+ * any case, alone or mixed such as ".%2E"). The URL constructor would resolve such a segment and
+ * silently change the path, so it is refused instead.
+ */
+const hasDotSegment = (path: string): boolean =>
+  path.split("/").some((segment) => [".", ".."].includes(segment.replace(/%2e/gi, ".")));
+
+/**
  * A page's route path in the form the build emits it: it starts with "/" and ends with "/" (the
  * site builds one folder per page). Undefined for anything that is not a plain local path.
  */
@@ -49,8 +57,7 @@ export function pagePath(pathname: string | null | undefined): string | undefine
     return undefined;
   }
   if (/%2f|%5c/i.test(pathname)) return undefined;
-  const segments = pathname.split("/").slice(1);
-  if (segments.some((segment) => segment === "." || segment === "..")) return undefined;
+  if (hasDotSegment(pathname)) return undefined;
   return pathname.endsWith("/") ? pathname : `${pathname}/`;
 }
 
@@ -81,6 +88,6 @@ export function assetUrl(
     return undefined;
   }
   if (/%2f|%5c/i.test(path) || path.endsWith("/")) return undefined;
-  if (path.split("/").some((segment) => segment === "." || segment === "..")) return undefined;
+  if (hasDotSegment(path)) return undefined;
   return join(base, path);
 }

@@ -51,6 +51,11 @@ describe("pagePath normalizes a route to the form the build emits", () => {
     expect(pagePath("/blog/intro-to-python-3.12")).toBe("/blog/intro-to-python-3.12/");
   });
 
+  it("does not mistake a longer name containing an encoded dot for a dot segment", () => {
+    expect(pagePath("/a/v1%2e2/")).toBe("/a/v1%2e2/");
+    expect(pagePath("/a/...b/")).toBe("/a/...b/");
+  });
+
   it("refuses anything that is not a plain local path", () => {
     for (const bad of [
       undefined,
@@ -66,6 +71,14 @@ describe("pagePath normalizes a route to the form the build emits", () => {
       "/a\\b/",
       "/a%2Fb/",
       "/a%5cb/",
+      "/a/%2e%2e/b/",
+      "/a/%2e/b/",
+      "/a/%2E%2E/b/",
+      "/a/%2E/b/",
+      "/a/.%2e/b/",
+      "/a/%2e./b/",
+      "/%2e%2e/",
+      "/a/%2e%2E",
       "https://evil.example/",
       "/<script>/",
     ]) {
@@ -94,6 +107,10 @@ describe("absoluteUrl", () => {
     expect(absoluteUrl(SITE, "//evil.example/")).toBeUndefined();
     expect(absoluteUrl(SITE, "/a:b/")).toBe(`${SITE}/a:b/`); // a colon is a path, not a scheme
     expect(absoluteUrl(SITE, "/..//evil.example/")).toBeUndefined();
+    // A percent-encoded dot segment would be resolved by the URL constructor: refused, not rewritten.
+    for (const bad of ["/a/%2e%2e/b/", "/a/%2e/b/", "/a/%2E%2E/b/"]) {
+      expect(absoluteUrl(SITE, bad), bad).toBeUndefined();
+    }
   });
 });
 
@@ -108,6 +125,12 @@ describe("assetUrl", () => {
       "/brand/",
       "//evil.example/a.png",
       "/a/../b.png",
+      "/a/%2e%2e/b.png",
+      "/a/%2e/b.png",
+      "/a/%2E%2E/b.png",
+      "/a/%2E/b.png",
+      "/a/.%2e/b.png",
+      "/%2e%2e/b.png",
       "brand/og.png",
       "/a b.png",
     ]) {
