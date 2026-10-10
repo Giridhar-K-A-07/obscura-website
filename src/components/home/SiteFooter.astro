@@ -1,34 +1,49 @@
 ---
-import Needed from "./Needed.astro";
+import { loadFooterContent } from "../../lib/footerData";
+
+/*
+  Site footer. Contact and GitHub appear only when the verified site record has them (see
+  src/lib/footerContent.ts); with none, only the always-present About and Privacy links remain.
+  No placeholder is ever printed.
+*/
+const { email, github } = await loadFooterContent();
 ---
 
 <footer class="footer">
   <div class="page grid">
     <div class="flow">
       <p class="mark">OBSCURA</p>
-      <p class="type-meta measure">
-        Prototype footer. Contact, social and legal details are not yet confirmed.
-      </p>
+      {!email && !github && (
+        <p class="type-meta measure">
+          Prototype footer. Contact, social and legal details are not yet confirmed.
+        </p>
+      )}
     </div>
     <dl class="fields">
-      <div>
-        <dt class="type-label">Official LinkedIn</dt>
-        <dd>
-          <Needed what="confirm the official LinkedIn page — Master Brief §4.5" />
-        </dd>
-      </div>
-      <div>
-        <dt class="type-label">Contact</dt>
-        <dd>
-          <Needed what="official contact email — Master Brief §15" />
-        </dd>
-      </div>
-      <div>
-        <dt class="type-label">GitHub</dt>
-        <dd>
-          <Needed what="GitHub organisation, if one exists — Master Brief §15" />
-        </dd>
-      </div>
+      {email && (
+        <div>
+          <dt class="type-label">Contact</dt>
+          <dd>
+            <a class="link" href={`mailto:${email}`}>
+              {email}
+            </a>
+          </dd>
+        </div>
+      )}
+      {github && (
+        <div>
+          <dt class="type-label">GitHub</dt>
+          <dd>
+            {github.href ? (
+              <a class="link" href={github.href} rel="noopener noreferrer">
+                {github.label}
+              </a>
+            ) : (
+              github.label
+            )}
+          </dd>
+        </div>
+      )}
       <div>
         <dt class="type-label">About</dt>
         <dd>
@@ -47,9 +62,6 @@ import Needed from "./Needed.astro";
       </div>
     </dl>
   </div>
-  <p class="page type-meta legal">
-    <Needed what="copyright holder and year" />
-  </p>
 </footer>
 
 <style>
@@ -73,10 +85,6 @@ import Needed from "./Needed.astro";
   }
   dd {
     margin: var(--space-1) 0 0;
-  }
-  .legal {
-    margin-top: var(--space-6);
-    display: block;
   }
   @media (min-width: 641px) {
     .fields {

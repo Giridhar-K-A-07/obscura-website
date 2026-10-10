@@ -63,12 +63,13 @@ describe("shared shell", () => {
     expect(read("src/components/shell/SiteHeader.astro")).toMatch(/class="brand"\s+href="\/"/);
   });
 
-  it("links About and Privacy from the footer and keeps the unconfirmed-contact markers", () => {
+  it("links About and Privacy from the footer, and prints no [[NEEDED]] placeholder", () => {
     const footer = read("src/components/home/SiteFooter.astro");
     expect(footer).toContain('href="/about"');
     expect(footer).toContain('href="/privacy"');
-    for (const what of ["LinkedIn", "contact email", "GitHub organisation"]) {
-      expect(footer).toContain(what);
-    }
+    expect(footer).not.toContain("Needed");
+    expect(footer).not.toContain("[[NEEDED");
+    // Contact and GitHub come from the verified site record (src/lib/footerContent.ts).
+    expect(footer).toContain("loadFooterContent");
   });
 });
