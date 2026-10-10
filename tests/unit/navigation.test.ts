@@ -72,4 +72,17 @@ describe("shared shell", () => {
     // Contact and GitHub come from the verified site record (src/lib/footerContent.ts).
     expect(footer).toContain("loadFooterContent");
   });
+  it("keeps the primary links, aria-current, and the menu script, and adds the next event", () => {
+    const header = read("src/components/shell/SiteHeader.astro");
+    expect(header).toContain("primaryNav.map");
+    expect(header.match(/aria-current=/g)?.length).toBeGreaterThanOrEqual(3);
+    expect(header).toContain("data-menu");
+    // The next event comes from the canonical selector, not from filtering written in the header.
+    expect(header).toContain("loadMenuEvent");
+    expect(header).toContain("{nextEvent && (");
+    expect(header).not.toContain("getCollection");
+    // The event row follows the primary links, and desktop does not show it.
+    expect(header.indexOf("primaryNav.map")).toBeLessThan(header.indexOf("{nextEvent && ("));
+    expect(header).toMatch(/min-width: 1025px\) \{\s*[^}]*\.next-event \{\s*display: none;/);
+  });
 });
