@@ -1,4 +1,5 @@
 ---
+import { loadMenuEvent } from "../../lib/menuData";
 import { isCurrent, primaryNav } from "../../lib/navigation";
 
 /*
@@ -8,8 +9,12 @@ import { isCurrent, primaryNav } from "../../lib/navigation";
   JavaScript (where the links show inline instead of full-screen). The small script below
   collapses the menu on narrow screens, keeps it open on desktop, closes it on Escape, and makes
   the page behind an open full-screen menu inert.
+  Below the desktop breakpoint the menu also lists the next upcoming event, when there is one
+  (Master Brief §8.2). It is the homepage's Next event (src/lib/menuContent.ts) and has no row
+  when there is none.
 */
 const { pathname } = Astro.url;
+const nextEvent = await loadMenuEvent();
 ---
 
 <header class="site-header">
@@ -39,6 +44,21 @@ const { pathname } = Astro.url;
               </a>
             </li>
           ))}
+          {nextEvent && (
+            <li class="next-event">
+              <a
+                class="link-quiet"
+                href={nextEvent.href}
+                aria-current={isCurrent(nextEvent.href, pathname) ? "page" : undefined}
+              >
+                <span class="next-label">Next event:</span>{" "}
+                <span class="next-title">{nextEvent.title}</span>{" "}
+                <time class="next-date" datetime={nextEvent.datetime}>
+                  {nextEvent.date}
+                </time>
+              </a>
+            </li>
+          )}
         </ul>
       </details>
     </nav>
@@ -132,6 +152,11 @@ const { pathname } = Astro.url;
     text-decoration: underline;
     text-underline-offset: 0.3em;
   }
+  .next-label,
+  .next-date {
+    font-size: var(--text-small);
+    color: var(--text-secondary);
+  }
   /* Below desktop: the open menu fills the viewport; the bar stays on top so it can be closed. */
   @media (max-width: 1024px) {
     .brand,
@@ -159,6 +184,17 @@ const { pathname } = Astro.url;
       font-size: var(--text-h2);
       line-height: 1.2;
       padding-block: var(--space-2);
+    }
+    .links :global(.next-event) {
+      margin-top: var(--space-4);
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--border-subtle);
+    }
+    .links :global(.next-event .link-quiet) {
+      flex-direction: column;
+      align-items: flex-start;
+      font-size: var(--text-h3);
+      min-height: var(--target-min);
     }
     :global(body:has([data-menu][open])) {
       overflow: hidden; /* no page scrolling behind the full-screen menu */
@@ -189,6 +225,17 @@ const { pathname } = Astro.url;
         line-height: 1.4;
         padding-block: 0;
       }
+      .links :global(.next-event) {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: 0;
+      }
+      .links :global(.next-event .link-quiet) {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0 var(--space-2);
+        font-size: var(--text-body);
+      }
       .bar {
         flex-wrap: wrap;
       }
@@ -211,6 +258,10 @@ const { pathname } = Astro.url;
     }
   }
   @media (min-width: 1025px) {
+    /* The next event is for the mobile menu only; desktop shows the inline links. */
+    .next-event {
+      display: none;
+    }
     .menu-toggle {
       display: none;
     }
