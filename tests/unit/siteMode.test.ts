@@ -33,6 +33,13 @@ describe("the site mode switch", () => {
     expect(isNoindex(false)).toBe(true); // the default
   });
 
+  it("keeps the placeholder layout (SectionPage, used by /privacy) out of indexes in every mode", () => {
+    // It shows [[NEEDED]] text, so it is never indexable, even once the prototype switch is off.
+    expect(read("src/layouts/SectionPage.astro")).toMatch(/<BaseLayout[^>]*\bnoindex\b/s);
+    expect(read("src/pages/privacy.astro")).toContain("SectionPage");
+    expect(isNoindex(true, modeFor(false))).toBe(true);
+  });
+
   it("keeps a page that asks to stay out of indexes out in every mode", () => {
     expect(isNoindex(true, modeFor(true))).toBe(true);
     expect(isNoindex(true, modeFor(false))).toBe(true);
@@ -48,12 +55,13 @@ describe("the switch is the only place that decides", () => {
     expect(read("src/components/home/SiteFooter.astro")).toContain("siteMode.prototype");
   });
 
-  it("is not overridden by any page: only the 404 page and the dev preview ask for noindex", () => {
+  it("is not overridden by any page: only the 404 page, the dev preview and the placeholder layout ask for noindex", () => {
     const asks = [...files("src/pages/**/*.astro"), ...astroFiles("src/layouts")].filter(
       (f) => /<BaseLayout[^>]*\bnoindex\b/s.test(read(f)) || /^\s+noindex\s*$/m.test(read(f)),
     );
     // BaseLayout declares the prop itself; the layout file is not a page.
     expect(asks.filter((f) => f !== "src/layouts/BaseLayout.astro").sort()).toEqual([
+      "src/layouts/SectionPage.astro",
       "src/pages/404.astro",
       "src/pages/dev/[preview].astro",
     ]);

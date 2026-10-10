@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { createSatteriMarkdownProcessor } from "@astrojs/markdown-satteri";
 import { describe, expect, it } from "vitest";
 import scrollableTables, { scrollWrapper, tableLabel } from "../../scripts/scrollable-tables.mjs";
 
@@ -74,7 +75,7 @@ describe("scrollable tables", () => {
 
   it("is registered for Markdown and MDX, and the table is no longer made scrollable itself", () => {
     expect(readFileSync("astro.config.mjs", "utf8")).toMatch(
-      /processor:\s*satteri\(\{\s*hastPlugins:\s*\[scrollableTables\]\s*\}\)/,
+      /processor:\s*satteri\(\{[^}]*hastPlugins:\s*\[scrollableTables\]/,
     );
     const css = readFileSync("src/components/blog/PostBody.astro", "utf8");
     expect(css).toContain(".table-scroll");
@@ -82,5 +83,40 @@ describe("scrollable tables", () => {
     const tableRule = /\.prose :global\(table\) \{([^}]*)\}/.exec(css)?.[1] ?? "";
     expect(tableRule).not.toMatch(/display:\s*block/);
     expect(tableRule).not.toMatch(/overflow/);
+  });
+});
+
+describe("tables the plugin does not wrap still cannot widen the page", () => {
+  const render = async (md: string) =>
+    (await createSatteriMarkdownProcessor({ hastPlugins: [scrollableTables] })).render(md, {
+      frontmatter: {},
+    });
+  const css = readFileSync("src/components/blog/PostBody.astro", "utf8");
+
+  it("wraps a Markdown table but not a raw HTML table (a different node)", async () => {
+    const markdown = (await render("| a | b |\n|---|---|\n| 1 | 2 |")).code;
+    expect(markdown).toContain('class="table-scroll"');
+    const raw = (await render("<table><tr><td>wide</td></tr></table>")).code;
+    expect(raw).toContain("<table>");
+    expect(raw).not.toContain("table-scroll");
+  });
+
+  it("gives an unwrapped table the old self-scrolling rule, scoped to tables outside a wrapper", () => {
+    const rule =
+      /\.prose :global\(table:not\(\.table-scroll > table\)\) \{([^}]*)\}/.exec(css)?.[1] ?? "";
+    expect(rule).toMatch(/display:\s*block/);
+    expect(rule).toMatch(/max-width:\s*100%/);
+    expect(rule).toMatch(/overflow-x:\s*auto/);
+  });
+
+  it("leaves a wrapped table's own display and the wrapper's behavior alone", () => {
+    expect(/\.prose :global\(\.table-scroll > table\) \{([^}]*)\}/.exec(css)?.[1]).toMatch(
+      /width:\s*max-content/,
+    );
+    expect(/\.prose :global\(\.table-scroll\) \{([^}]*)\}/.exec(css)?.[1]).toMatch(
+      /overflow-x:\s*auto/,
+    );
+    const generic = /\.prose :global\(table\) \{([^}]*)\}/.exec(css)?.[1] ?? "";
+    expect(generic).not.toMatch(/display:|overflow|width:/);
   });
 });

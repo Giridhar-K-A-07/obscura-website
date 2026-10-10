@@ -4,6 +4,9 @@
 // that are not https or site paths, MDX imports, exports or client directives (posts ship no
 // client-side JavaScript), and a level-1 heading in the body (the page's title is its one h1, so
 // body headings start at ##). Code blocks and inline code are not scanned: showing such code is fine.
+// The h1 rule here is a fast text check for author feedback. It cannot see every nested list or quote
+// form, so the authority is the Markdown renderer: scripts/no-body-h1.mjs, a Sätteri plugin that
+// fails the render for any depth-1 heading in the parsed tree (see astro.config.mjs).
 // Run with: npm run check:posts
 //
 // The same `findUnsafe` function is used by the site build (src/lib/blogContent.ts), so a post
@@ -15,7 +18,7 @@ import { fileURLToPath } from "node:url";
 
 const POST_FILE = /\.(md|mdx)$/;
 /** Content folders whose Markdown/MDX bodies are rendered on the site. YAML records have no body. */
-const BODY_FOLDERS = ["posts", "events"];
+export const BODY_FOLDERS = ["posts", "events"];
 
 /** Removes the YAML front matter, if any. */
 export function stripFrontmatter(text) {
@@ -117,10 +120,10 @@ export function findUnsafe(body) {
   return problems;
 }
 
-function* postFiles(directory) {
+export function* bodyFiles(directory) {
   for (const entry of readdirSync(directory)) {
     const path = join(directory, entry);
-    if (statSync(path).isDirectory()) yield* postFiles(path);
+    if (statSync(path).isDirectory()) yield* bodyFiles(path);
     else if (POST_FILE.test(entry)) yield path;
   }
 }
@@ -134,7 +137,7 @@ export function findPostViolations(root) {
   for (const name of BODY_FOLDERS) {
     let files;
     try {
-      files = [...postFiles(join(root, name))];
+      files = [...bodyFiles(join(root, name))];
     } catch {
       continue; // no such folder: nothing to check
     }
