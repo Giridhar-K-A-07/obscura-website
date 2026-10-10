@@ -1,0 +1,35 @@
+---
+import { buildMetadata } from "../../lib/metadata";
+
+/*
+  The metadata tags in <head>: title, description, canonical, Open Graph, Twitter and favicon. Every
+  decision is in src/lib/metadata.ts; this only renders it. It adds no client JavaScript. Absolute
+  URLs appear only when the build has a production `site` (Astro.site); there is none yet.
+*/
+interface Props {
+  title: string;
+  description?: string;
+  noindex?: boolean;
+}
+
+const { title, description, noindex = false } = Astro.props;
+const meta = buildMetadata({
+  title,
+  description,
+  noindex,
+  pathname: Astro.url.pathname,
+  site: Astro.site,
+});
+---
+
+<title>{meta.title}</title>
+{meta.description && <meta name="description" content={meta.description} />}
+{meta.canonical && <link rel="canonical" href={meta.canonical} />}
+{meta.favicon && <link rel="icon" href={meta.favicon.href} type={meta.favicon.type} />}
+{meta.tags.map((tag) =>
+  tag.attribute === "property" ? (
+    <meta property={tag.key} content={tag.content} />
+  ) : (
+    <meta name={tag.key} content={tag.content} />
+  ),
+)}
