@@ -1,6 +1,7 @@
 import type { z } from "astro/zod";
 import { findUnsafe } from "../../scripts/check-posts.mjs";
 import { publishedPosts, type PostEntry } from "./blogContent";
+import { lifecycleOf } from "./eventLifecycle";
 import { NEEDED_MARKER } from "./needed";
 import type { schemas } from "./schemas";
 
@@ -161,9 +162,13 @@ export const calendarPath = (id: string) => `/events/${id}.ics`;
 /** The instant an event is over: its end, or its start when it has no end. */
 export const endOf = (event: PublicEvent): Date => event.end ?? event.start;
 
-/** Upcoming means it has not ended yet (so an event in progress is still upcoming). */
+/**
+ * Upcoming means it has not ended yet (so an event in progress is still upcoming). The time rule
+ * is the one in eventLifecycle.ts, which the event page's status and countdown also use.
+ */
 export function classify(event: PublicEvent, now: Date): EventState {
-  return endOf(event).getTime() >= now.getTime() ? "upcoming" : "past";
+  const state = lifecycleOf(event.start.getTime(), event.end?.getTime(), now.getTime());
+  return state === "ended" ? "past" : "upcoming";
 }
 
 export interface SplitEvents {

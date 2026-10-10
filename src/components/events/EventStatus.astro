@@ -1,0 +1,109 @@
+---
+import { STATUS_LABEL, lifecycleOf } from "../../lib/eventLifecycle";
+import type { PublicEvent } from "../../lib/eventsContent";
+
+/*
+  The event's status: Upcoming (with a countdown), Happening now, or Ended (Master Brief §8.4).
+  The server-rendered text is the status as of the build, next to the written date and time, so
+  the page is meaningful with no JavaScript; the countdown line is hidden until the script can
+  compute it, so a stale number is never shown. The small script below, which imports the same
+  pure functions, then sets the status from the visitor's clock, updates the countdown only when
+  its text changes (at whole minutes), and moves from countdown to Happening now to Ended. It
+  fetches nothing. The text is not a live region: it is current when read, and does not announce
+  every update. There is no animation, and the state is carried by words, not colour.
+*/
+interface Props {
+  event: PublicEvent;
+  now: Date;
+}
+const { event, now } = Astro.props;
+const start = event.start.getTime();
+const end = event.end?.getTime();
+const state = lifecycleOf(start, end, now.getTime()) ?? "upcoming";
+---
+
+<div
+  class="status"
+  data-event-status
+  data-state={state}
+  data-start={event.start.toISOString()}
+  data-end={event.end?.toISOString()}
+>
+  <p class="label">
+    <span class="type-label">Status</span>
+    <strong data-status-text>{STATUS_LABEL[state]}</strong>
+  </p>
+  <p class="countdown" data-countdown hidden></p>
+</div>
+
+<script>
+  import {
+    STATUS_LABEL,
+    countdownSentence,
+    lifecycleOf,
+    msUntilChange,
+  } from "../../lib/eventLifecycle";
+
+  document.querySelectorAll<HTMLElement>("[data-event-status]").forEach((root) => {
+    const start = Date.parse(root.dataset.start ?? "");
+    const end = root.dataset.end ? Date.parse(root.dataset.end) : undefined;
+    const text = root.querySelector<HTMLElement>("[data-status-text]");
+    const countdown = root.querySelector<HTMLElement>("[data-countdown]");
+    const meta = document.querySelector<HTMLElement>("[data-state-meta]");
+    if (!text || !countdown || Number.isNaN(start)) return;
+    let timer: number | undefined;
+
+    const update = () => {
+      window.clearTimeout(timer);
+      const now = Date.now();
+      const state = lifecycleOf(start, end, now);
+      if (state === null) return; // invalid times: keep the first state
+      root.dataset.state = state;
+      text.textContent = STATUS_LABEL[state];
+      countdown.hidden = state !== "upcoming";
+      if (state === "upcoming") countdown.textContent = countdownSentence(start, now);
+      // The line under the type says "Upcoming event" until the event has ended.
+      if (meta) meta.textContent = state === "ended" ? "Past event" : "Upcoming event";
+      const wait = msUntilChange(start, end, now);
+      if (wait !== null) timer = window.setTimeout(update, wait);
+    };
+
+    // A background tab throttles timers, so catch up as soon as the page is visible again.
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) update();
+    });
+    update();
+  });
+</script>
+
+<style>
+  .status {
+    display: grid;
+    gap: var(--space-1);
+    padding-block: var(--space-3);
+    padding-left: var(--space-4);
+    border-left: 2px solid var(--border-ui);
+  }
+  /* A second, non-colour cue: a heavier bar while it is on. */
+  .status[data-state="in-progress"] {
+    border-left-width: 6px;
+  }
+  .status[data-state="ended"] {
+    border-left-style: dashed;
+  }
+  .label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+  }
+  .label strong {
+    font-family: var(--font-serif);
+    font-size: var(--text-h3);
+    font-weight: 600;
+  }
+  .countdown {
+    margin: 0;
+    color: var(--text-secondary);
+  }
+</style>
