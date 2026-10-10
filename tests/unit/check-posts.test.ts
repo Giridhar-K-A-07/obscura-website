@@ -217,3 +217,63 @@ describe("check:posts over a content folder", () => {
     expect(findPostViolations(root)).toEqual([]);
   });
 });
+
+describe("check:posts also covers event bodies", () => {
+  const folders: string[] = [];
+  const contentRoot = (files: Record<string, string>) => {
+    const root = mkdtempSync(join(tmpdir(), "obscura-events-"));
+    folders.push(root);
+    for (const [path, text] of Object.entries(files)) {
+      const full = join(root, path);
+      mkdirSync(join(full, ".."), { recursive: true });
+      writeFileSync(full, text);
+    }
+    return root;
+  };
+  afterEach(() => {
+    for (const folder of folders.splice(0)) rmSync(folder, { recursive: true, force: true });
+  });
+
+  it("passes with no events folder, an empty one, or YAML-only events", () => {
+    expect(findPostViolations(contentRoot({ "teams/a.yaml": "status: draft\n" }))).toEqual([]);
+    expect(findPostViolations(contentRoot({ "events/.gitkeep": "" }))).toEqual([]);
+    expect(findPostViolations(contentRoot({ "events/a.yaml": "title: <script>\n" }))).toEqual([]);
+  });
+
+  it("passes a safe .md and .mdx event recap, ignoring front matter", () => {
+    const root = contentRoot({
+      "events/a.md": "---\ntitle: Test\n---\nSafe [link](https://example.com).",
+      "events/b.mdx": "---\ntitle: Test\n---\nSafe **text**.",
+    });
+    expect(findPostViolations(root)).toEqual([]);
+  });
+
+  it("reports an unsafe event body by file name and rule, drafts included", () => {
+    const root = contentRoot({
+      "events/bad.md": "---\nstatus: draft\n---\n<script>x</script>",
+      "events/nested/worse.mdx": "---\ntitle: T\n---\nimport X from './x.astro';\n",
+      "events/fine.md": "Fine.",
+    });
+    const problems = findPostViolations(root);
+    expect(problems).toHaveLength(2);
+    expect(
+      problems.some((p: string) => p.includes("bad.md") && p.includes("blocked-html-tag")),
+    ).toBe(true);
+    expect(
+      problems.some((p: string) => p.includes("worse.mdx") && p.includes("mdx-import-export")),
+    ).toBe(true);
+  });
+
+  it("still checks posts, and reports posts and events together", () => {
+    const root = contentRoot({
+      "posts/p.md": "[x](javascript:alert(1))",
+      "events/e.md": "<script>x</script>",
+      "posts/ok.md": "Fine.",
+      "events/ok.md": "Fine.",
+    });
+    const problems = findPostViolations(root);
+    expect(problems.every((p: string) => !p.includes("ok.md"))).toBe(true);
+    expect(problems.some((p: string) => p.startsWith("posts") && p.includes("p.md"))).toBe(true);
+    expect(problems.some((p: string) => p.startsWith("events") && p.includes("e.md"))).toBe(true);
+  });
+});
