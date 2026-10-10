@@ -1,4 +1,5 @@
 import type { z } from "astro/zod";
+import { findUnsafe } from "../../scripts/check-posts.mjs";
 import { publishedPosts, type PostEntry } from "./blogContent";
 import { NEEDED_MARKER } from "./needed";
 import type { schemas } from "./schemas";
@@ -16,6 +17,10 @@ import type { schemas } from "./schemas";
   - an event with a missing or unusable required value (title, type, start, timezone, venue), an
     unrecognised timezone, or an end before its start is not published at all, because its
     time cannot be shown correctly. The record's timezone is never reinterpreted;
+  - a Markdown/MDX body (the recap) must pass the same safety check as a blog post
+    (scripts/check-posts.mjs, `findUnsafe`). An event whose body fails is not published at all,
+    even when a published article replaces its recap, so an unsafe body is never rendered or
+    reachable from any event page, list, calendar file or the homepage;
   - optional details (description, end, recap, photos, slides, repositories, related article)
     appear only when present, verified and well-formed;
   - ordering is deterministic; ties are broken by id.
@@ -42,6 +47,10 @@ const isVerified = (entry: { data: { status: string } }) => entry.data.status ==
 
 const real = (value: unknown): value is string =>
   typeof value === "string" && value.trim() !== "" && !NEEDED_MARKER.test(value);
+
+/** A body with any text in it (a marker counts: it is not shown, but it is still checked). */
+const hasBody = (value: unknown): value is string =>
+  typeof value === "string" && value.trim() !== "";
 
 const realDate = (value: unknown): value is Date =>
   value instanceof Date && !Number.isNaN(value.getTime());
@@ -113,6 +122,9 @@ export function selectPublicEvents(
     // An end that is not a real date is simply absent; an end before the start is a data error.
     const validEnd = realDate(end) ? end : undefined;
     if (validEnd && validEnd < start) continue;
+
+    // Fail closed: a body that is not blank must be safe, whether or not it would be shown.
+    if (hasBody(entry.body) && findUnsafe(entry.body).length > 0) continue;
 
     const related = entry.data.relatedPost;
     const relatedPost = real(related) ? articles.get(related) : undefined;

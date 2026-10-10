@@ -589,3 +589,17 @@ describe("homepage events use the Events publication rule", () => {
     expect(without?.event?.id).toBe("e");
   });
 });
+
+describe("homepage events with an unsafe body", () => {
+  it("never selects an event whose Markdown body fails the safety check", () => {
+    const unsafe = (id: string, start: string) =>
+      ({ ...(event(id, "verified", start) as object), body: "<script>x</script>" }) as never;
+    const events = [
+      unsafe("bad-next", "2030-07-01T10:00:00Z"),
+      unsafe("bad-past", "2029-01-01T10:00:00Z"),
+    ];
+    expect(selectNextEvent(events, NOW)).toBeNull();
+    expect(selectLatestPastEvent(events, NOW)).toBeNull();
+    expect(selectHomeContent({ ...empty, events }, NOW)).toEqual(selectHomeContent(empty, NOW));
+  });
+});

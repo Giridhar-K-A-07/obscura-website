@@ -460,3 +460,12 @@ describe("the Add to calendar link", () => {
     expect(content.past.every((e) => !offersCalendar(e, NOW))).toBe(true);
   });
 });
+
+describe("an event with an unsafe body", () => {
+  it("has no calendar file, because it is not a public event", () => {
+    const unsafe = { ...(record("a") as object), body: "<script>x</script>" } as never;
+    const safe = { ...(record("b") as object), body: "Test recap." } as never;
+    const content = selectEventsContent({ events: [unsafe, safe], posts: [] }, NOW);
+    expect(calendarRoutes(content.all, NOW).map((r) => r.params.slug)).toEqual(["b"]);
+  });
+});

@@ -1,17 +1,20 @@
-// Fails when a blog post (content/posts/**/*.md|mdx) contains a construct that is not allowed in
-// published articles: scripts and other active HTML, event-handler attributes, javascript:/data:
+// Fails when a blog post (content/posts/**/*.md|mdx) or an event recap (content/events/**/*.md|mdx)
+// contains a construct that is not allowed in published articles: scripts and other active HTML, event-handler attributes, javascript:/data:
 // links, links that are not https / site paths / in-page anchors, images without alt text, images
 // that are not https or site paths, and MDX imports, exports or client directives (posts ship no
 // client-side JavaScript). Code blocks and inline code are not scanned: showing such code is fine.
 // Run with: npm run check:posts
 //
 // The same `findUnsafe` function is used by the site build (src/lib/blogContent.ts), so a post
-// that fails here is also never published.
+// that fails here is also never published. The event pages use the same function
+// (src/lib/eventsContent.ts), so an event whose body fails is not published either.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const POST_FILE = /\.(md|mdx)$/;
+/** Content folders whose Markdown/MDX bodies are rendered on the site. YAML records have no body. */
+const BODY_FOLDERS = ["posts", "events"];
 
 /** Removes the YAML front matter, if any. */
 export function stripFrontmatter(text) {
@@ -112,20 +115,24 @@ function* postFiles(directory) {
   }
 }
 
-/** Returns a list of problems found in the posts under `root` (the content folder). */
+/**
+ * Returns a list of problems found in the Markdown/MDX bodies under `root` (the content folder):
+ * blog posts and event recaps, both rendered on the site. A missing folder has nothing to check.
+ */
 export function findPostViolations(root) {
-  const folder = join(root, "posts");
-  let files;
-  try {
-    files = [...postFiles(folder)];
-  } catch {
-    return []; // no posts folder: nothing to check
-  }
   const problems = [];
-  for (const file of files) {
-    const body = stripFrontmatter(readFileSync(file, "utf8"));
-    for (const { rule, detail } of findUnsafe(body)) {
-      problems.push(`${relative(root, file)}: ${rule}: ${detail}`);
+  for (const name of BODY_FOLDERS) {
+    let files;
+    try {
+      files = [...postFiles(join(root, name))];
+    } catch {
+      continue; // no such folder: nothing to check
+    }
+    for (const file of files) {
+      const body = stripFrontmatter(readFileSync(file, "utf8"));
+      for (const { rule, detail } of findUnsafe(body)) {
+        problems.push(`${relative(root, file)}: ${rule}: ${detail}`);
+      }
     }
   }
   return problems;
@@ -138,5 +145,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error(`check:posts failed:\n${problems.map((p) => `  - ${p}`).join("\n")}`);
     process.exit(1);
   }
-  console.log("check:posts passed: no post contains an unsafe construct.");
+  console.log("check:posts passed: no post or event body contains an unsafe construct.");
 }

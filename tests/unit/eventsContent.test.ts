@@ -480,3 +480,79 @@ describe("filters", () => {
     );
   });
 });
+
+describe("event body safety (the same rule as blog posts)", () => {
+  const published = (body?: string, extra: Record<string, unknown> = {}, posts: never[] = []) =>
+    selectPublicEvents([event("a", "2030-07-01T10:00:00Z", extra, "verified", body)], posts, NOW);
+
+  const unsafeBodies: Record<string, string> = {
+    "a script tag": "Recap.\n\n<script>alert(1)</script>",
+    "an iframe": '<iframe src="https://example.com"></iframe>',
+    "an event-handler attribute": '<img src="/a.png" alt="x" onerror="steal()">',
+    "a javascript: link": "[x](javascript:alert(1))",
+    "a data: link": "[x](data:text/html,<b>x</b>)",
+    "an http link": "[x](http://example.com)",
+    "an image without alt text": "![](https://example.com/a.png)",
+    "an image from an unsafe source": "![Alt text](http://example.com/a.png)",
+    "an MDX import": "import Chart from '../components/Chart.astro';\n\nRecap.",
+    "an MDX export": "export const meta = {};\n\nRecap.",
+    "a client directive": "<Chart client:load />",
+  };
+
+  it("accepts a safe body, with links, images, tables and code that only shows unsafe text", () => {
+    const safe = [
+      "Test recap with a [link](https://example.com/a), a [page](/blog/x) and an [anchor](#top).",
+      "",
+      "![A chart](https://example.com/c.png)",
+      "",
+      "| a | b |",
+      "|---|---|",
+      "| 1 | 2 |",
+      "",
+      "```html",
+      "<script>alert(1)</script>",
+      "```",
+    ].join("\n");
+    const [e] = published(safe);
+    expect(e.id).toBe("a");
+    expect(e.hasRecap).toBe(true);
+  });
+
+  for (const [name, body] of Object.entries(unsafeBodies)) {
+    it(`does not publish an event whose body has ${name}`, () => {
+      expect(published(body)).toEqual([]);
+    });
+  }
+
+  it("does not publish an unsafe event even when a published article replaces its recap", () => {
+    const unsafe = "Recap.\n\n<script>alert(1)</script>";
+    expect(published(unsafe, { relatedPost: "p1" }, [post("p1")])).toEqual([]);
+  });
+
+  it("checks a body that also holds a [[NEEDED]] marker, although it would not be shown", () => {
+    expect(published(`${NEEDED}\n\n<script>alert(1)</script>`)).toEqual([]);
+  });
+
+  it("keeps an event with no body, a blank body or a marker-only body as before", () => {
+    for (const body of [undefined, "", "  \n", NEEDED]) {
+      const [e] = published(body);
+      expect(e.id).toBe("a");
+      expect(e.hasRecap).toBe(false);
+    }
+  });
+
+  it("does not let an unsafe event reach the event set, the upcoming list or the past archive", () => {
+    const bad = event("bad", "2030-07-02T10:00:00Z", {}, "verified", "<script>x</script>");
+    const badPast = event("bad-past", "2030-01-02T10:00:00Z", {}, "verified", "[x](javascript:1)");
+    const good = event("good", "2030-07-03T10:00:00Z", {}, "verified", "Test recap.");
+    const content = selectEventsContent({ events: [bad, badPast, good], posts: [] }, NOW);
+    expect(content.all.map((e) => e.id)).toEqual(["good"]);
+    expect(content.upcoming.map((e) => e.id)).toEqual(["good"]);
+    expect(content.past).toEqual([]);
+  });
+
+  it("leaves a draft event with an unsafe body unpublished, as any draft", () => {
+    const draft = event("a", "2030-07-01T10:00:00Z", {}, "draft", "<script>x</script>");
+    expect(selectPublicEvents([draft], [], NOW)).toEqual([]);
+  });
+});
