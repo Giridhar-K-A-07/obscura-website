@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { APPROVED_ASSETS, DESCRIPTION_OVERRIDES } from "../../src/lib/launchMetadata";
 import { buildMetadata, cleanText, resolveDescription } from "../../src/lib/metadata";
+import { PROTOTYPE, siteMode } from "../../src/lib/siteMode";
 
 // A fixture host that only exists in these tests. It is not a club or production address.
 const SITE = "https://metadata-test.example.org";
@@ -277,8 +278,7 @@ describe("metadata is centralized and changes nothing visible", () => {
     }
   });
 
-  it("still shows the Prototype notice in prototype mode, and keeps the prototype default", async () => {
-    const { PROTOTYPE, siteMode } = await import("../../src/lib/siteMode");
+  it("still shows the Prototype notice in prototype mode, and keeps the prototype default", () => {
     expect(PROTOTYPE).toBe(true);
     expect(siteMode.showPrototypeNotice).toBe(true);
     expect(siteMode.noindex).toBe(true);
