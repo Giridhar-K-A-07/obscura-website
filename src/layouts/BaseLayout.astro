@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import PageMeta from "../components/shell/PageMeta.astro";
 import SiteHeader from "../components/shell/SiteHeader.astro";
 import { isNoindex } from "../lib/siteMode";
 
@@ -24,8 +25,7 @@ const { title, description, noindex = false, header = true } = Astro.props;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
-    {description && <meta name="description" content={description} />}
+    <PageMeta title={title} description={description} noindex={noindex} />
     {isNoindex(noindex) && <meta name="robots" content="noindex, nofollow" />}
   </head>
   <body>
