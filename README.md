@@ -15,7 +15,7 @@ Requires Node 22 (`>=22.12.0 <23`, see `.nvmrc`).
 npm ci
 npm run dev      # local dev server
 npm run build    # static production build to dist/
-npm run verify   # format check, lint, type check, tests, [[NEEDED]] check, build
+npm run verify   # format check, lint, type check, tests, [[NEEDED]] check, build, build guard
 ```
 
 ## Content rules
@@ -24,6 +24,13 @@ Content lives in `content/` as YAML (and MDX for long text), validated by Zod sc
 `src/lib/schemas.ts`. Every record needs a `source` and a `status` (`draft` or `verified`).
 Only verified records may be published, and a verified record must not contain a
 `[[NEEDED: ...]]` placeholder. See `content/README.md`.
+
+## Build guard
+
+`npm run check:build` checks the built `dist/` (page structure, metadata, links, the prototype `noindex`
+policy and the first-load JavaScript budget). What it enforces, and what only a deployed-site
+measurement can prove (LCP, CLS, INP, accessibility conformance), is in
+[`docs/quality-guard.md`](docs/quality-guard.md).
 
 ## Design system (provisional)
 

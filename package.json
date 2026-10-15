@@ -18,7 +18,8 @@
     "test": "vitest run",
     "check:needed": "node scripts/check-needed.mjs",
     "check:posts": "node scripts/check-posts.mjs && node scripts/check-body-structure.mjs",
-    "verify": "npm run format:check && npm run lint && npm run check && npm run test && npm run check:needed && npm run check:posts && npm run build"
+    "check:build": "node scripts/check-build.mjs",
+    "verify": "npm run format:check && npm run lint && npm run check && npm run test && npm run check:needed && npm run check:posts && npm run build && npm run check:build"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "0.4.2",
