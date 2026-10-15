@@ -103,6 +103,7 @@ const textAfter = (html, tag) => {
 };
 
 const hostIsLocal = (host) =>
+  host.endsWith(".") || // "localhost." and "foo.test." are the same names with a root dot
   host === "localhost" ||
   /^[\d.]+$/.test(host) ||
   host.startsWith("[") ||
@@ -236,12 +237,12 @@ function checkMetadata(label, route, html, facts, problems) {
   const canonicals = named("link").filter((t) => t.attrs.rel?.toLowerCase() === "canonical");
   if (canonicals.length > 1) problems.push(`${label}: more than one canonical link`);
   const canonical = canonicals[0]?.attrs.href;
+  let validCanonical;
   if (canonicals.length) {
     const reason = canonical ? badAbsoluteUrl(canonical) : "has no href";
     if (reason) problems.push(`${label}: canonical ${reason} (${canonical ?? ""})`);
-    else if (!new URL(canonical).pathname.endsWith(route) || route === "/404") {
-      problems.push(`${label}: canonical ${canonical} is not this page's address (${route})`);
-    }
+    else if (route === "/404") problems.push(`${label}: the 404 page must not have a canonical`);
+    else validCanonical = canonical; // whether it is THIS page's address is checked in checkBuild
   }
 
   const social = (prefix, attr) => {
@@ -306,6 +307,7 @@ function checkMetadata(label, route, html, facts, problems) {
   if (description && og.has("og:description") && og.get("og:description") !== description) {
     problems.push(`${label}: og:description differs from the description meta tag`);
   }
+  return { canonical: validCanonical };
 }
 
 function checkRobots(label, facts, prototype, problems) {
@@ -453,6 +455,38 @@ export function readPrototypeFlag(siteModeSource) {
   return match[1] === "true";
 }
 
+/**
+ * Every canonical must be its page's own address on ONE site. The site is read from the home page:
+ * its canonical must be the bare origin (`https://host/`, because the site has no Astro `base`
+ * and its assets are root-relative), and each other page's canonical must be exactly that origin
+ * plus the page's route. The whole URL is compared, never a suffix, so a foreign host or an extra
+ * path segment fails. The guard cannot know the intended domain (a launch decision, Master Brief
+ * §15 C7); it proves the pages agree with each other. With no canonical anywhere (the prototype,
+ * `site` unset) there is nothing to check.
+ */
+function checkCanonicals(canonicals, hasCanonical, problems) {
+  if (!hasCanonical.size) return;
+  const home = canonicals.get("/");
+  if (!home) {
+    if (!hasCanonical.has("/")) {
+      problems.push(
+        "/: the home page has no canonical link, but other pages do (every page's canonical is checked against the home page's)",
+      );
+    }
+    return; // an invalid home canonical is already reported
+  }
+  const origin = new URL(home).origin;
+  for (const [route, href] of canonicals) {
+    const expected = `${origin}${route}`;
+    if (href !== expected) {
+      problems.push(
+        `${route}: canonical ${href} is not this page's address (expected ${expected}` +
+          `${route === "/" ? ", the bare origin: the site has no base path" : ""})`,
+      );
+    }
+  }
+}
+
 /** Checks a built site. Returns { problems, pages: [{ route, js: { other, hero } }] }. */
 export function checkBuild(dist, { prototype }) {
   const problems = [];
@@ -479,12 +513,17 @@ export function checkBuild(dist, { prototype }) {
         .filter((id) => id !== undefined && id !== ""),
     );
 
+  const canonicals = new Map(); // route -> its valid canonical URL
+  const hasCanonical = new Set(); // routes that have a canonical link of any kind
   for (const file of htmlFiles) {
     const route = routeOf(dist, file);
     const label = route;
     const { html, facts } = read(file);
     checkStructure(label, html, facts, problems);
-    checkMetadata(label, route, html, facts, problems);
+    const { canonical } = checkMetadata(label, route, html, facts, problems);
+    if (canonical) canonicals.set(route, canonical);
+    if (facts.named("link").some((t) => t.attrs.rel?.toLowerCase() === "canonical"))
+      hasCanonical.add(route);
     checkRobots(label, facts, prototype, problems);
     checkLinks(label, dist, route, facts, idsOf, problems);
     const js = measureJs(dist, route, facts, problems, label);
@@ -495,6 +534,8 @@ export function checkBuild(dist, { prototype }) {
     }
     pages.push({ route, js });
   }
+
+  checkCanonicals(canonicals, hasCanonical, problems);
 
   const robotsFile = join(dist, "robots.txt");
   const sitemaps = files.filter((f) => /(^|[\\/])sitemap[^\\/]*\.xml$/.test(f));
@@ -520,13 +561,18 @@ export function checkBuild(dist, { prototype }) {
       problems.push(`${relative(dist, sitemap)}: the prototype must not publish a sitemap`);
     }
   } else {
+    const canonicalUrls = new Set(canonicals.values());
     for (const sitemap of sitemaps) {
       const xml = readFileSync(sitemap, "utf8");
       for (const m of xml.matchAll(/<loc>([^<]*)<\/loc>/g)) {
-        const reason = badAbsoluteUrl(decode(m[1]));
-        if (reason) problems.push(`${relative(dist, sitemap)}: ${decode(m[1])} ${reason}`);
-        else if (!fileFor(dist, new URL(decode(m[1])).pathname)) {
-          problems.push(`${relative(dist, sitemap)}: ${decode(m[1])} is not a built page`);
+        const loc = decode(m[1]);
+        const reason = badAbsoluteUrl(loc);
+        if (reason) problems.push(`${relative(dist, sitemap)}: ${loc} ${reason}`);
+        else if (!canonicalUrls.has(loc)) {
+          // Fail closed: a sitemap URL must be exactly the canonical URL of a built page.
+          problems.push(
+            `${relative(dist, sitemap)}: ${loc} is not the canonical URL of a built page`,
+          );
         }
       }
     }

@@ -127,7 +127,7 @@ describe("metadata", () => {
     `<meta name="twitter:card" content="summary"><meta name="twitter:title" content="T">` +
     `<meta name="twitter:url" content="${SITE}/events/">`;
   const events = (head: string) => ({
-    "index.html": page(),
+    "index.html": page(undefined, `<link rel="canonical" href="${SITE}/">`),
     "events/index.html": page(undefined, head),
   });
 
@@ -241,6 +241,128 @@ describe("metadata", () => {
   });
 });
 
+describe("canonical URLs are each page's own address on one site (whole URL, never a suffix)", () => {
+  const SITE = "https://metadata-test.example.org";
+  const canonical = (url: string) => `<link rel="canonical" href="${url}">`;
+  const site = (home: string, events: string) => ({
+    "index.html": page(undefined, canonical(home)),
+    "events/index.html": page(undefined, canonical(events)),
+  });
+
+  it("accepts every canonical equal to one origin plus the page's route", () => {
+    expect(problemsOf(site(`${SITE}/`, `${SITE}/events/`))).toEqual([]);
+  });
+
+  it("rejects a foreign-origin canonical that merely ends with the route", () => {
+    const problems = problemsOf(site(`${SITE}/`, "https://evil.example.com/anything/events/"));
+    expect(
+      has(
+        problems,
+        "/events/: canonical https://evil.example.com/anything/events/ is not this page's address",
+      ),
+    ).toBe(true);
+    expect(
+      has(
+        problemsOf(site(`${SITE}/`, "https://evil.example.com/events/")),
+        "expected " + SITE + "/events/",
+      ),
+    ).toBe(true);
+    // The reserved form used in reviews is rejected too (by the public-host rule).
+    expect(
+      problemsOf(site(`${SITE}/`, "https://evil.example/anything/events/")).length,
+    ).toBeGreaterThan(0);
+    expect(
+      problemsOf(site("https://evil.example/anything/", `${SITE}/events/`)).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("rejects an extra base path in a page canonical", () => {
+    expect(
+      has(problemsOf(site(`${SITE}/`, `${SITE}/anything/events/`)), "not this page's address"),
+    ).toBe(true);
+  });
+
+  it("rejects a home canonical with an arbitrary slash-terminated path", () => {
+    const problems = problemsOf(site(`${SITE}/anything/`, `${SITE}/anything/events/`));
+    expect(has(problems, "the bare origin")).toBe(true);
+    expect(
+      has(problemsOf(site(`${SITE}/anything/`, `${SITE}/events/`)), "not this page's address"),
+    ).toBe(true);
+  });
+
+  it("rejects pages that disagree on the origin, whichever one is wrong", () => {
+    expect(
+      has(problemsOf(site("https://other.example.org/", `${SITE}/events/`)), "/events/: canonical"),
+    ).toBe(true);
+    expect(
+      has(problemsOf(site(`${SITE}/`, "https://other.example.org/events/")), "/events/: canonical"),
+    ).toBe(true);
+  });
+
+  it("rejects a page canonical when the home page has none (fail closed)", () => {
+    const files = {
+      "index.html": page(),
+      "events/index.html": page(undefined, canonical(`${SITE}/events/`)),
+    };
+    expect(has(problemsOf(files), "the home page has no canonical link")).toBe(true);
+  });
+
+  it("compares the whole URL: a different scheme case, port or trailing slash is not accepted", () => {
+    expect(has(problemsOf(site(`${SITE}/`, `${SITE}/events`)), "not this page's address")).toBe(
+      true,
+    );
+    expect(
+      has(
+        problemsOf(site(`${SITE}/`, `https://metadata-test.example.org:8443/events/`)),
+        "not this page's address",
+      ),
+    ).toBe(true);
+  });
+
+  it("does not allow a canonical on the 404 page", () => {
+    const files = {
+      ...site(`${SITE}/`, `${SITE}/events/`),
+      "404.html": page(undefined, canonical(`${SITE}/404`)),
+    };
+    expect(has(problemsOf(files), "the 404 page must not have a canonical")).toBe(true);
+  });
+
+  it("ties the base-path rule to the Astro config, which sets no `base`", () => {
+    expect(readFileSync("astro.config.mjs", "utf8")).not.toMatch(/^\s*base\s*:/m);
+  });
+});
+
+describe("hosts with a trailing dot are local or reserved too", () => {
+  const SITE = "https://metadata-test.example.org";
+  it.each([
+    "localhost.",
+    "foo.example.",
+    "foo.test.",
+    "foo.invalid.",
+    "metadata-test.example.org.",
+  ])("rejects %s in a canonical, an og:image and a sitemap URL", (host) => {
+    const canonical = `https://${host}/events/`;
+    const head =
+      `<link rel="canonical" href="${canonical}">` +
+      `<meta property="og:title" content="T"><meta property="og:type" content="website">` +
+      `<meta property="og:image" content="https://${host}/a.png"><meta property="og:image:alt" content="x">`;
+    const problems = problemsOf({
+      "index.html": page(undefined, `<link rel="canonical" href="${SITE}/">`),
+      "events/index.html": page(undefined, head),
+    });
+    expect(has(problems, `canonical points at a local or reserved host (${canonical})`)).toBe(true);
+    expect(has(problems, "og:image points at a local or reserved host")).toBe(true);
+    const launch = problemsOf(
+      {
+        "index.html": page(undefined, `<link rel="canonical" href="${SITE}/">`, { robots: false }),
+        "sitemap.xml": `<urlset><url><loc>${canonical}</loc></url></urlset>`,
+      },
+      false,
+    );
+    expect(has(launch, "local or reserved")).toBe(true);
+  });
+});
+
 describe("the prototype policy", () => {
   it("requires noindex, nofollow on every page, once", () => {
     expect(
@@ -316,29 +438,55 @@ describe("the prototype policy", () => {
     ).toBe(true);
   });
 
-  it("in launch mode checks that every sitemap URL is a built page on a public host", () => {
+  describe("in launch mode a sitemap URL must be exactly a built page's canonical URL", () => {
+    const SITE = "https://metadata-test.example.org";
+    const canonical = (path: string) => `<link rel="canonical" href="${SITE}${path}">`;
     const files = {
-      "index.html": page(undefined, "", { robots: false }),
-      "events/index.html": page(undefined, "", { robots: false }),
+      "index.html": page(undefined, canonical("/"), { robots: false }),
+      "events/index.html": page(undefined, canonical("/events/"), { robots: false }),
+      "404.html": page(undefined, "", { robots: false }),
     };
     const sitemap = (urls: string[]) =>
       `<urlset>${urls.map((u) => `<url><loc>${u}</loc></url>`).join("")}</urlset>`;
-    const SITE = "https://metadata-test.example.org";
-    expect(
-      problemsOf({ ...files, "sitemap.xml": sitemap([`${SITE}/`, `${SITE}/events/`]) }, false),
-    ).toEqual([]);
-    expect(
-      has(
-        problemsOf({ ...files, "sitemap.xml": sitemap([`${SITE}/gone/`]) }, false),
-        "is not a built page",
-      ),
-    ).toBe(true);
-    expect(
-      has(
-        problemsOf({ ...files, "sitemap.xml": sitemap(["https://localhost/"]) }, false),
-        "local or reserved",
-      ),
-    ).toBe(true);
+    const launch = (urls: string[]) =>
+      problemsOf({ ...files, "sitemap.xml": sitemap(urls) }, false);
+
+    it("accepts the canonical URLs of built pages", () => {
+      expect(launch([`${SITE}/`, `${SITE}/events/`])).toEqual([]);
+    });
+
+    it("rejects a foreign origin with an otherwise valid built pathname", () => {
+      expect(
+        has(
+          launch(["https://evil.example.com/events/"]),
+          "is not the canonical URL of a built page",
+        ),
+      ).toBe(true);
+      expect(
+        has(launch(["https://evil.example.com/"]), "is not the canonical URL of a built page"),
+      ).toBe(true);
+    });
+
+    it("rejects a URL that is not a canonical: unbuilt, no trailing slash, another port, a noindex page", () => {
+      for (const url of [
+        `${SITE}/gone/`,
+        `${SITE}/events`,
+        `${SITE}:8443/events/`,
+        `${SITE}/404`,
+      ]) {
+        expect(has(launch([url]), "is not the canonical URL of a built page"), url).toBe(true);
+      }
+    });
+
+    it("rejects local hosts", () => {
+      expect(has(launch(["https://localhost/"]), "local or reserved")).toBe(true);
+    });
+
+    it("fails closed: with no canonical on any page, no sitemap URL is accepted", () => {
+      const bare = { "index.html": page(undefined, "", { robots: false }) };
+      const problems = problemsOf({ ...bare, "sitemap.xml": sitemap([`${SITE}/`]) }, false);
+      expect(has(problems, "is not the canonical URL of a built page")).toBe(true);
+    });
   });
 });
 
