@@ -1,0 +1,28 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+kind: "roadmap"
+title: "Demo Machine Learning Roadmap"
+track: "machine-learning"
+lastReviewed: "2099-05-01"
+reviewer: "test-person-05"
+steps:
+  - title: "Frame a prediction problem"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 1"
+        url: "https://example.org/demo/machine-learning/1"
+  - title: "Split data honestly"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 2"
+        url: "https://example.org/demo/machine-learning/2"
+  - title: "Fit a first model"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 3"
+        url: "https://example.org/demo/machine-learning/3"
+  - title: "Measure and compare models"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 4"
+        url: "https://example.org/demo/machine-learning/4"

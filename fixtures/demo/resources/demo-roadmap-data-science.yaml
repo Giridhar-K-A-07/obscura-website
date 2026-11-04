@@ -1,0 +1,33 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+kind: "roadmap"
+title: "Demo Data Science Roadmap"
+track: "data-science"
+lastReviewed: "2099-05-01"
+reviewer: "test-person-05"
+steps:
+  - title: "Describe a dataset"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 1"
+        url: "https://example.org/demo/data-science/1"
+  - title: "Clean and reshape data"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 2"
+        url: "https://example.org/demo/data-science/2"
+  - title: "Explore with charts"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 3"
+        url: "https://example.org/demo/data-science/3"
+  - title: "Test a simple hypothesis"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 4"
+        url: "https://example.org/demo/data-science/4"
+  - title: "Tell the story"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 5"
+        url: "https://example.org/demo/data-science/5"

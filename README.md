@@ -25,6 +25,15 @@ Content lives in `content/` as YAML (and MDX for long text), validated by Zod sc
 Only verified records may be published, and a verified record must not contain a
 `[[NEEDED: ...]]` placeholder. See `content/README.md`.
 
+## Local demo (synthetic data)
+
+`npm run demo` starts the site on synthetic fixtures (`fixtures/demo/`) so every page can be
+previewed and the design reviewed before real content exists. `npm run demo:build` builds it to
+`dist-demo/` and checks it; `npm run demo:preview` serves that build. Every page carries a DEMO
+banner, a `DEMO —` title prefix and `noindex`, the clock is fixed in the year 2099, and nothing in it
+is real. **The demo is local only:** a normal build, CI and any deployment never read the fixtures,
+and the demo build refuses to run in CI or on Vercel. See [`fixtures/demo/README.md`](fixtures/demo/README.md).
+
 ## Build guard
 
 `npm run check:build` checks the built `dist/` (page structure, metadata, links, the prototype `noindex`

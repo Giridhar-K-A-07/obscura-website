@@ -1,0 +1,11 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+name: "Demo Project Delta"
+description: "A synthetic project with two datasets."
+repository: "https://example.org/demo/delta"
+datasets:
+  - "https://example.org/demo/delta-data-1"
+  - "https://example.org/demo/delta-data-2"
+topics:
+  - "clustering"
+contributors: []

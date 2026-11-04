@@ -22,6 +22,10 @@ For every built `.html` page (the route is named in each message):
 | Prototype policy | while `PROTOTYPE` is `true` in `src/lib/siteMode.ts`: every page has exactly one `<meta name="robots" content="noindex, nofollow">`; `robots.txt` exists, disallows everything and has no `Allow` or `Sitemap` line; no `sitemap*.xml` exists. In launch mode a page may be indexable, a robots tag must still be a `noindex` tag, and every sitemap URL must be a public `https` URL that is **exactly the canonical URL of a built page** (a foreign origin, a missing trailing slash, an unbuilt page or a `noindex` page is refused; with no canonicals, none is accepted) |
 | First-party URLs | every local `href`, `src`, `srcset`, `poster`, form `action` and hydrated-island URL resolves to a file in `dist/` (relative URLs are resolved against the page and cannot leave `dist/`); a `#fragment` must match an `id` on the page it names; `javascript:` URLs are refused. External, `mailto:` and `tel:` URLs are not followed |
 
+### Demo builds
+
+`npm run demo:build` writes a synthetic-data build to `dist-demo/` (see `fixtures/demo/README.md`) and runs this guard on it with `OBSCURA_DEMO=1`. In that mode every page must carry exactly one DEMO banner and badge, the `obscura-build` marker and a `DEMO — ` title prefix, and the prototype policy applies whatever `PROTOTYPE` says. In a normal build the opposite is enforced: no page may carry any of those, and `dist/` may contain no `demo/` static files. This keeps synthetic data out of anything that could be deployed.
+
 ### JavaScript budget
 
 **100,000 bytes of gzip (level 9) of first-load JavaScript per page, excluding the hero.** (The brief says 100 KB compressed; 100,000 bytes is the stricter reading. Servers that use Brotli will send less.)

@@ -1,0 +1,11 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+title: "Demo Hackathon Winners"
+competition: "Demo Hackathon"
+date: "2099-03-01"
+result: "First place (demo)"
+people:
+  - "test-person-03"
+  - "test-person-04"
+project: "demo-project-alpha"
+evidenceLink: "https://example.org/demo/evidence-1"

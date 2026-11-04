@@ -1,0 +1,5 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+name: "Test Person 03"
+photo: "/demo/people/silhouette.svg"
+consent: "recorded"

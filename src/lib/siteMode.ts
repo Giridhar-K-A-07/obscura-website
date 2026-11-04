@@ -11,6 +11,8 @@
   Launching also needs real page descriptions, a production URL and the other launch items in the
   Master Brief; this switch is only the place the prototype state lives.
 */
+import { DEMO } from "./demoMode";
+
 export const PROTOTYPE = true;
 
 export interface SiteMode {
@@ -28,7 +30,8 @@ export const modeFor = (prototype: boolean): SiteMode => ({
   showPrototypeNotice: prototype,
 });
 
-export const siteMode: SiteMode = modeFor(PROTOTYPE);
+// A demo build is always a prototype: noindex, the Prototype notice, closed robots, no sitemap.
+export const siteMode: SiteMode = modeFor(PROTOTYPE || DEMO);
 
 /** Whether a page is kept out of search indexes: it asks to be, or the whole site is a prototype. */
 export const isNoindex = (pageNoindex: boolean, mode: SiteMode = siteMode): boolean =>

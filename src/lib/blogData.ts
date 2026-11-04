@@ -1,4 +1,5 @@
 import { getCollection } from "astro:content";
+import { buildNow } from "./demoMode";
 import { selectPublicPosts, type BlogSource, type PostEntry } from "./blogContent";
 import { selectPublicEvents, type EventsSource } from "./eventsContent";
 
@@ -6,7 +7,7 @@ import { selectPublicEvents, type EventsSource } from "./eventsContent";
  * Loads the collections the blog needs and selects the published posts (at build time).
  * `entries` maps each post id to its collection entry so an article page can render the body.
  */
-export async function loadBlogContent(now: Date = new Date()) {
+export async function loadBlogContent(now: Date = buildNow()) {
   const [posts, people, events, projects] = await Promise.all([
     getCollection("posts"),
     getCollection("people"),

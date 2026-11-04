@@ -1,0 +1,53 @@
+---
+/*
+  The demo notice. Rendered by BaseLayout on EVERY page of a demo build (including the 404 page)
+  and never in a normal build. It cannot be dismissed. The top bar says what the data is; the
+  small corner badge stays on screen while scrolling so a screenshot of any part of a page still
+  shows it. The colours are fixed here on purpose: they must not follow a design change.
+*/
+---
+
+<div class="demo-banner" data-demo-banner role="note">
+  <strong>DEMO</strong>
+  <span>Synthetic data for design review. Nothing on this site is real OBSCURA content.</span>
+</div>
+<div class="demo-badge" data-demo-badge aria-hidden="true">
+  DEMO
+</div>
+
+<style>
+  .demo-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.25rem 0.75rem;
+    padding: 0.5rem 1rem;
+    background: #ffd23f;
+    color: #111111;
+    font:
+      600 0.875rem/1.4 system-ui,
+      sans-serif;
+    text-align: center;
+    border-bottom: 3px solid #111111;
+  }
+  .demo-banner strong {
+    letter-spacing: 0.12em;
+  }
+  .demo-badge {
+    position: fixed;
+    left: 0.75rem;
+    bottom: 0.75rem;
+    z-index: 2147483647;
+    padding: 0.25rem 0.625rem;
+    background: #ffd23f;
+    color: #111111;
+    font:
+      700 0.75rem/1.2 system-ui,
+      sans-serif;
+    letter-spacing: 0.14em;
+    border: 2px solid #111111;
+    border-radius: 2px;
+    pointer-events: none;
+  }
+</style>

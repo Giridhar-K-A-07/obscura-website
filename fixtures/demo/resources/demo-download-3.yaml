@@ -1,0 +1,8 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+kind: "code-template"
+title: "Demo Notebook Template"
+link: "https://example.org/demo/download-3"
+licence: "Demo licence (synthetic)"
+format: "Jupyter notebook"
+size: "12 KB"

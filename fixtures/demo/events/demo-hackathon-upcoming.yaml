@@ -1,0 +1,11 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+title: "Demo Hackathon"
+type: "Hackathon"
+start: "2099-07-12T09:30:00+05:30"
+end: "2099-07-13T17:00:00+05:30"
+timezone: "Asia/Kolkata"
+venue: "Demo Venue A"
+description: "A synthetic two-day event used to preview the upcoming state, the countdown and the calendar file."
+speakers:
+  - "Test Speaker 01"

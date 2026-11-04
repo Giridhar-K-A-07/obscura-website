@@ -1,0 +1,9 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+name: "Demo Term B"
+academicYear: "2097–98"
+summary: "The second demo term, with a longer synthetic summary so that wrapping and line length can be judged on narrow and wide screens."
+milestones:
+  - "Demo milestone: a workshop series."
+  - "Demo milestone: a first hackathon."
+  - "Demo milestone: a newsletter."

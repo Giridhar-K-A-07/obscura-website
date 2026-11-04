@@ -1,0 +1,9 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+person: "test-person-08"
+term: "demo-term-c"
+team: "demo-core"
+role: "Chairperson"
+contributions:
+  - "Synthetic contribution text for layout review."
+  - "A second synthetic contribution, a little longer, so a list of two items can be judged."

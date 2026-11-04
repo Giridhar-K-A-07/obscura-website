@@ -665,6 +665,64 @@ describe("first-load JavaScript budget", () => {
   });
 });
 
+describe("demo builds (synthetic data, local only) are labelled; normal builds carry no trace", () => {
+  const BANNER =
+    '<div data-demo-banner role="note"><strong>DEMO</strong></div><div data-demo-badge aria-hidden="true">DEMO</div>';
+  const MARKER = '<meta name="obscura-build" content="demo">';
+  const demoPage = (extraBody = "", head = MARKER, title = "<title>DEMO — T</title>") =>
+    page(`${BANNER}<main id="main"><h1>Title</h1>${extraBody}</main>`, head, { title });
+  const runDemo = (files: Record<string, string | Buffer>, flag = false) =>
+    checkBuild(dist(files), { prototype: flag, demo: true }).problems;
+
+  it("accepts a fully labelled demo page, treating the demo as a prototype whatever the flag says", () => {
+    expect(runDemo({ "index.html": demoPage() })).toEqual([]);
+    expect(runDemo({ "index.html": demoPage() }, false)).toEqual([]);
+  });
+
+  it.each([
+    [
+      "no banner",
+      page('<main id="main"><h1>T</h1></main>', MARKER, { title: "<title>DEMO — T</title>" }),
+      "exactly one DEMO banner",
+    ],
+    [
+      "no badge",
+      demoPage().replace('<div data-demo-badge aria-hidden="true">DEMO</div>', ""),
+      "exactly one DEMO badge",
+    ],
+    ["no marker", demoPage("", ""), "obscura-build"],
+    ["no title prefix", demoPage("", MARKER, "<title>T</title>"), 'start with "DEMO — "'],
+    ["two banners", demoPage("<div data-demo-banner></div>"), "exactly one DEMO banner"],
+  ])("rejects a demo page with %s", (_name, html, message) => {
+    expect(has(runDemo({ "index.html": html }), message)).toBe(true);
+  });
+
+  it("still requires the prototype policy in a demo build (noindex and a closed robots.txt)", () => {
+    const open = demoPage().replace('<meta name="robots" content="noindex, nofollow">', "");
+    expect(has(runDemo({ "index.html": open }), "noindex, nofollow")).toBe(true);
+    expect(
+      has(
+        runDemo({ "index.html": demoPage(), "robots.txt": "User-agent: *\nAllow: /\n" }),
+        "robots.txt",
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects any trace of the demo in a normal build", () => {
+    const normal = (html: string, extra: Record<string, string> = {}) =>
+      problemsOf({ "index.html": html, ...extra });
+    expect(normal(page())).toEqual([]);
+    expect(has(normal(demoPage()), "must not contain a DEMO banner")).toBe(true);
+    expect(has(normal(page(undefined, MARKER)), "demo build marker")).toBe(true);
+    expect(
+      has(normal(page(undefined, "", { title: "<title>DEMO — T</title>" })), "DEMO title"),
+    ).toBe(true);
+    expect(
+      has(normal(page(), { "demo/people/silhouette.svg": "<svg/>" }), "demo static files"),
+    ).toBe(true);
+  });
+});
+
 describe("the command and its wiring", () => {
   const cli = (root: string) =>
     spawnSync(process.execPath, ["scripts/check-build.mjs", root], { encoding: "utf8" });

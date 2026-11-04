@@ -1,0 +1,33 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+kind: "roadmap"
+title: "Demo Python Roadmap"
+track: "python"
+lastReviewed: "2099-05-01"
+reviewer: "test-person-05"
+steps:
+  - title: "Install and run Python"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 1"
+        url: "https://example.org/demo/python/1"
+  - title: "Core data types and loops"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 2"
+        url: "https://example.org/demo/python/2"
+  - title: "Functions and modules"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 3"
+        url: "https://example.org/demo/python/3"
+  - title: "Work with files"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 4"
+        url: "https://example.org/demo/python/4"
+  - title: "Use a data library"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 5"
+        url: "https://example.org/demo/python/5"

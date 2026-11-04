@@ -1,0 +1,9 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+title: "Demo Quiz Finalists"
+competition: "Demo Quiz"
+date: "2097-12-05"
+result: "Finalist (demo)"
+people:
+  - "test-person-07"
+  - "test-person-09"
