@@ -2,6 +2,8 @@
 //   npm run demo           dev server on the fixtures
 //   npm run demo:build     build to dist-demo/, then check it (check-build.mjs in demo mode)
 //   npm run demo:preview   serve dist-demo/
+// Switching between demo and normal mode needs a restart: stop the dev server and start it again
+// with the other command, because the mode is read once, when the server starts.
 // It only sets OBSCURA_DEMO=1 for the child process (so it works the same on Windows, macOS and
 // Linux without a dependency). The demo never runs in CI or on Vercel: see src/lib/demoMode.ts.
 import { spawnSync } from "node:child_process";
@@ -23,5 +25,5 @@ if (!["dev", "build", "preview"].includes(command)) {
 const first = run([astro, command]);
 if (first.status !== 0 || command !== "build") process.exit(first.status ?? 1);
 
-const check = run([join(root, "scripts", "check-build.mjs"), join(root, "dist-demo")]);
+const check = run([join(root, "scripts", "check-build.mjs"), "--demo", join(root, "dist-demo")]);
 process.exit(check.status ?? 1);

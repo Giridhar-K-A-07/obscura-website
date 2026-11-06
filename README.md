@@ -32,7 +32,7 @@ previewed and the design reviewed before real content exists. `npm run demo:buil
 `dist-demo/` and checks it; `npm run demo:preview` serves that build. Every page carries a DEMO
 banner, a `DEMO —` title prefix and `noindex`, the clock is fixed in the year 2099, and nothing in it
 is real. **The demo is local only:** a normal build, CI and any deployment never read the fixtures,
-and the demo build refuses to run in CI or on Vercel. See [`fixtures/demo/README.md`](fixtures/demo/README.md).
+and the demo build refuses to run in CI or on any common build host (Vercel, Netlify, Cloudflare Pages, GitHub Actions, Render, Railway). **Switching between demo and normal mode needs a restart:** stop the dev server and start it again with the other command (`npm run demo` or `npm run dev`), because the mode is read once, when the server starts. See [`fixtures/demo/README.md`](fixtures/demo/README.md).
 
 ## Build guard
 

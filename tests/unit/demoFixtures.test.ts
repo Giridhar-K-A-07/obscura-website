@@ -242,18 +242,97 @@ describe("the fixtures fill every section through the real selectors", () => {
   });
 });
 
-describe("synthetic data stays out of the real content", () => {
-  it("has no fixture record, marker or demo static file under content/ or public/", () => {
+/*
+  Synthetic fixture content must never reach content/. The `source` field is only one signal and
+  can be edited, so the detector below looks for what the fixtures ARE: their ids, their
+  "Test Person NN" names, their demo titles and venues, their example.org contacts, their
+  2090s dates and their own words ("synthetic", "fictional"). A real record has none of these.
+*/
+const TRACES: [string, RegExp][] = [
+  ["a DEMO fixture source", /DEMO fixture/i],
+  ["a synthetic person name", /\bTest (Person|Faculty) \d\d\b/],
+  ["a synthetic person id", /\btest-(person|faculty)-\d\d\b/],
+  ["a fixture record id", /\bdemo-[a-z0-9]+(-[a-z0-9]+)+\b/],
+  [
+    "a demo title or venue",
+    /\bDemo (Venue|Term [ABC]|Core Team|Team (Alpha|Beta)|Project (Alpha|Beta|Gamma|Delta)|Hackathon|Workshop|Session Series|Talk with|Outreach Programme|Career Meet|Opening Ceremony|Skills Workshop|Data Challenge|Quiz|\w+ Roadmap|\w+ Cheat Sheet|Notebook Template|Project Layout|Practice Dataset)/,
+  ],
+  ["an example.org contact", /example\.org/i],
+  ["a demo email", /\bdemo@/i],
+  ["a fake LinkedIn profile", /demo-fixture-not-a-person/],
+  ["a demo static path", /["(\s]\/demo\//],
+  ["a date in the 2090s", /\b209\d\b/],
+  ["the word synthetic or fictional", /\b(synthetic|fictional)\b/i],
+];
+const syntheticTraces = (text: string): string[] =>
+  TRACES.filter(([, pattern]) => pattern.test(text)).map(([name]) => name);
+
+// shortcut: the Faculty team record holds only the name the code requires ("Faculty") and an
+// order, so it has nothing synthetic in its text; it is caught by its file name instead.
+const NO_TEXT_TRACE = new Set(["teams/demo-faculty.yaml"]);
+
+const fixtureFiles = walk(FIXTURES).filter((f) => /\.(ya?ml|md|mdx)$/.test(f));
+const fixtureIds = new Set(
+  fixtureFiles.map((f) => (f.split(sep).pop() as string).replace(/\.[^.]+$/, "")),
+);
+const relFixture = (f: string) => relative(FIXTURES, f).split(sep).join("/");
+
+describe("synthetic data stays out of the real content, even if a fixture is edited or renamed", () => {
+  it("finds no fixture trace in anything under content/ or public/", () => {
     for (const file of [...walk("content"), ...walk("public")]) {
+      const name = relative(".", file).split(sep).join("/");
+      if (name === "content/README.md") continue; // the guide that explains this very rule
       if (/\.(png|jpe?g|svg|ico|webp|avif)$/.test(file)) {
-        expect(relative("public", file).startsWith("demo")).toBe(false);
+        expect(name.startsWith("public/demo"), name).toBe(false);
         continue;
       }
-      const text = readFileSync(file, "utf8");
-      expect(text, file).not.toMatch(/DEMO fixture/);
-      expect(text, file).not.toMatch(/Test (Person|Faculty) \d\d/);
+      expect(syntheticTraces(readFileSync(file, "utf8")), name).toEqual([]);
+      const stem = (file.split(sep).pop() as string).replace(/\.[^.]+$/, "");
+      // `site` is the one id both folders legitimately share; every other fixture id starts demo- or test-.
+      expect(
+        /^(demo|test)-/.test(stem) && fixtureIds.has(stem),
+        `${name} has a fixture file name`,
+      ).toBe(false);
     }
     expect(existsSync("public/demo")).toBe(false);
     expect(existsSync("content/demo")).toBe(false);
+  });
+
+  it("detects every fixture from its text alone, with the source line edited and the file renamed", () => {
+    const undetected: string[] = [];
+    for (const file of fixtureFiles) {
+      const edited = readFileSync(file, "utf8").replace(
+        /^source:.*$/m,
+        'source: "Club announcement, 12 March"',
+      );
+      const rel = relFixture(file);
+      if (syntheticTraces(edited).length === 0 && !NO_TEXT_TRACE.has(rel)) undetected.push(rel);
+    }
+    expect(undetected).toEqual([]);
+  });
+
+  it("names the kind of trace, so a failure says what was copied", () => {
+    const text = [
+      'title: "Demo Hackathon"',
+      'person: "test-person-03"',
+      'link: "https://example.org/x"',
+      'date: "2098-01-01"',
+      'start: "2099-07-12T09:30:00+05:30"',
+      "demo-term-a",
+    ].join("\n");
+    expect(syntheticTraces(text)).toEqual(
+      expect.arrayContaining([
+        "a demo title or venue",
+        "a synthetic person id",
+        "an example.org contact",
+        "a date in the 2090s",
+        "a fixture record id",
+      ]),
+    );
+    expect(syntheticTraces('source: "Club deck p.4"\ndate: "2025-01-25"')).toEqual([]);
+  });
+
+  it("does not flag the real club's own years or ordinary words", () => {
+    expect(syntheticTraces("2024 2025 2026 2030 2089 2100 Core Team demonstration")).toEqual([]);
   });
 });

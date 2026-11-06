@@ -11,8 +11,9 @@
 //    disallows everything and there is no sitemap;
 //  - first-party links: every local href/src/srcset/island URL points at a file that exists in
 //    dist/, and every #fragment points at an id on the page it names;
-//  - demo builds (OBSCURA_DEMO=1, synthetic data, local only): every page carries the DEMO banner,
-//    badge, marker and title prefix; a normal build carries none of them and no demo files;
+//  - demo builds (synthetic data, local only; expected with `--demo` and only in dist-demo/): every
+//    page carries the DEMO banner, badge, marker and title prefix, and every .ics file the DEMO
+//    marker and [DEMO] text; a normal build carries none of them, in any text file, and no demo files;
 //  - JavaScript: the gzip size of the JavaScript a page loads on first load, excluding the hero,
 //    stays within JS_BUDGET_BYTES.
 // It does NOT measure LCP, CLS or INP, and it is not an accessibility audit; those need a real
@@ -23,7 +24,7 @@
 
 import { Buffer } from "node:buffer";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { dirname, join, relative, resolve, sep } from "node:path";
+import { basename, dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
@@ -314,6 +315,47 @@ function checkMetadata(label, route, html, facts, problems) {
 
 const DEMO_TITLE = /^DEMO — /;
 
+/** The only folder a demo build may be written to; a normal build may never be written there. */
+export const DEMO_DIR = "dist-demo";
+const DEMO_CALENDAR_MARKER = "X-OBSCURA-BUILD:DEMO";
+const DEMO_CALENDAR_LABEL = "[DEMO] ";
+/** Text files other than pages that could carry a demo trace if copied into a normal build. */
+const TEXT_FILES = new Set([".ics", ".txt", ".xml", ".json", ".webmanifest"]);
+/** Anything that marks a file as demo output. Read by tooling, so it never appears in real output. */
+const DEMO_TRACES = [
+  DEMO_CALENDAR_MARKER,
+  DEMO_CALENDAR_LABEL,
+  "data-demo-banner",
+  'content="demo"',
+];
+
+/**
+ * Calendar files and other text files. A demo build labels every calendar file (a machine-readable
+ * property plus [DEMO] in the summary and description). A normal build must contain no demo trace
+ * in ANY such file, wherever it sits in the folder, so a demo file copied in cannot hide.
+ */
+function checkTextFiles(dist, files, demo, problems) {
+  for (const file of files) {
+    const ext = extname(file).toLowerCase();
+    if (!TEXT_FILES.has(ext)) continue;
+    const name = relative(dist, file).split(sep).join("/");
+    const text = readFileSync(file, "utf8");
+    if (!demo) {
+      const trace = DEMO_TRACES.find((t) => text.includes(t));
+      if (trace) problems.push(`${name}: a normal build must not contain a demo trace (${trace})`);
+    } else if (ext === ".ics") {
+      const unfolded = text.replace(/\r?\n[ \t]/g, "");
+      const lines = unfolded.split(/\r?\n/);
+      if (!lines.includes(DEMO_CALENDAR_MARKER))
+        problems.push(`${name}: a demo calendar file needs the ${DEMO_CALENDAR_MARKER} property`);
+      if (!lines.some((l) => l.startsWith(`SUMMARY:${DEMO_CALENDAR_LABEL}`)))
+        problems.push(`${name}: a demo calendar file needs a [DEMO] summary`);
+      if (!lines.some((l) => l.startsWith(`DESCRIPTION:${DEMO_CALENDAR_LABEL}`)))
+        problems.push(`${name}: a demo calendar file needs a [DEMO] description`);
+    }
+  }
+}
+
 /**
  * A demo build (synthetic data, local only) must say so on every page, and a normal build must
  * carry no trace of it: no banner, no title prefix, no demo marker, and no demo files.
@@ -531,6 +573,18 @@ export function checkBuild(dist, { prototype: flag, demo = false }) {
   const htmlFiles = files.filter((f) => f.endsWith(".html"));
   if (!htmlFiles.length) return { problems: [`${dist} has no HTML pages`], pages };
 
+  // The expected mode is explicit and must match the folder: demo output lives in dist-demo/ only.
+  const folder = basename(resolve(dist));
+  if (demo && folder !== DEMO_DIR) {
+    problems.push(
+      `${folder}/: a demo build must be written to ${DEMO_DIR}/, never to another folder`,
+    );
+  }
+  if (!demo && folder === DEMO_DIR) {
+    problems.push(`${DEMO_DIR}/: a normal build must not be written to the demo folder`);
+  }
+  checkTextFiles(dist, files, demo, problems);
+
   const cache = new Map();
   const read = (file) => {
     if (!cache.has(file)) {
@@ -620,8 +674,12 @@ export function checkBuild(dist, { prototype: flag, demo = false }) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = dirname(dirname(fileURLToPath(import.meta.url)));
-  const dist = resolve(process.argv[2] ?? join(root, "dist"));
-  const demo = process.env.OBSCURA_DEMO === "1";
+  // The expected mode is stated on the command line (--demo) and checked against the folder. The
+  // OBSCURA_DEMO environment variable is NOT consulted: it must never decide what the guard accepts.
+  const args = process.argv.slice(2);
+  const demo = args.includes("--demo");
+  const folderArg = args.find((a) => !a.startsWith("--"));
+  const dist = resolve(folderArg ?? join(root, demo ? DEMO_DIR : "dist"));
   const flag = readPrototypeFlag(readFileSync(join(root, "src/lib/siteMode.ts"), "utf8"));
   const prototype = flag || demo;
   const { problems, pages } = checkBuild(dist, { prototype: flag, demo });

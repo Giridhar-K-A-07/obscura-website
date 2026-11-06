@@ -24,7 +24,7 @@ For every built `.html` page (the route is named in each message):
 
 ### Demo builds
 
-`npm run demo:build` writes a synthetic-data build to `dist-demo/` (see `fixtures/demo/README.md`) and runs this guard on it with `OBSCURA_DEMO=1`. In that mode every page must carry exactly one DEMO banner and badge, the `obscura-build` marker and a `DEMO — ` title prefix, and the prototype policy applies whatever `PROTOTYPE` says. In a normal build the opposite is enforced: no page may carry any of those, and `dist/` may contain no `demo/` static files. This keeps synthetic data out of anything that could be deployed.
+`npm run demo:build` writes a synthetic-data build to `dist-demo/` (see `fixtures/demo/README.md`) and runs this guard on it with `--demo`. The expected mode is stated on the command line and checked against the folder; the `OBSCURA_DEMO` environment variable is never consulted. A demo build is accepted only in `dist-demo/`, and a normal build is refused there. In demo mode every page must carry exactly one DEMO banner and badge, the `obscura-build` marker and a `DEMO — ` title prefix, every `.ics` file must carry the `X-OBSCURA-BUILD:DEMO` property and `[DEMO]` in its summary and description, and the prototype policy applies whatever `PROTOTYPE` says. In a normal build the opposite is enforced: no page may carry any of those, no `.ics`, `.txt`, `.xml`, `.json` or `.webmanifest` file anywhere in the folder may contain a demo trace, and `dist/` may contain no `demo/` static files. This keeps synthetic data out of anything that could be deployed.
 
 ### JavaScript budget
 

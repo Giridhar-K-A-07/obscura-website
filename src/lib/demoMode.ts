@@ -33,17 +33,30 @@ export const DEMO_PREFIX = "DEMO — ";
 export const demoTitle = (title: string, demo: boolean = DEMO): string =>
   demo && !title.startsWith(DEMO_PREFIX) ? `${DEMO_PREFIX}${title}` : title;
 
+/** Environment variables that mean "a build server": a demo build is refused when any is set. */
+export const HOSTED_ENV = [
+  "CI",
+  "VERCEL",
+  "NETLIFY",
+  "CF_PAGES",
+  "GITHUB_ACTIONS",
+  "GITLAB_CI",
+  "RENDER",
+  "RAILWAY_ENVIRONMENT",
+];
+
 /**
- * Why a demo build must not run here, or null when it may. CI and Vercel never build the demo
- * unless a second variable says so on purpose, for a check that deploys nothing.
+ * Why a demo build must not run here, or null when it may. Build servers never build the demo
+ * unless a second variable says so on purpose, for a check that deploys nothing. Any set value
+ * counts, so CI=false is refused too: the rule fails closed.
  */
 export function demoRefusal(env: Record<string, string | undefined>): string | null {
   if (env.OBSCURA_DEMO !== "1") return null;
-  const hosted = Boolean(env.CI) || Boolean(env.VERCEL);
-  if (hosted && env.OBSCURA_DEMO_ALLOW_CI !== "1") {
+  const host = HOSTED_ENV.find((name) => Boolean(env[name]));
+  if (host && env.OBSCURA_DEMO_ALLOW_CI !== "1") {
     return (
-      "OBSCURA_DEMO=1 is set in a CI or Vercel environment. The demo build holds synthetic data " +
-      "and must never be built or deployed there. Unset OBSCURA_DEMO, or set " +
+      `OBSCURA_DEMO=1 is set in a build-server environment (${host} is set). The demo build holds ` +
+      "synthetic data and must never be built or deployed there. Unset OBSCURA_DEMO, or set " +
       "OBSCURA_DEMO_ALLOW_CI=1 for a check that deploys nothing."
     );
   }
@@ -51,5 +64,8 @@ export function demoRefusal(env: Record<string, string | undefined>): string | n
 }
 
 /** How far the demo clock is from the real one, so a page's script can keep the demo clock. */
-export const clockOffsetMs = (now: Date, real: number = Date.now()): number =>
-  DEMO ? now.getTime() - real : 0;
+export const clockOffsetMs = (
+  now: Date,
+  real: number = Date.now(),
+  demo: boolean = DEMO,
+): number => (demo ? now.getTime() - real : 0);

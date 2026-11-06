@@ -30,8 +30,11 @@ export const modeFor = (prototype: boolean): SiteMode => ({
   showPrototypeNotice: prototype,
 });
 
-// A demo build is always a prototype: noindex, the Prototype notice, closed robots, no sitemap.
-export const siteMode: SiteMode = modeFor(PROTOTYPE || DEMO);
+/** A demo build is always a prototype: noindex, the Prototype notice, closed robots, no sitemap. */
+export const resolveMode = (prototype: boolean, demo: boolean): SiteMode =>
+  modeFor(prototype || demo);
+
+export const siteMode: SiteMode = resolveMode(PROTOTYPE, DEMO);
 
 /** Whether a page is kept out of search indexes: it asks to be, or the whole site is a prototype. */
 export const isNoindex = (pageNoindex: boolean, mode: SiteMode = siteMode): boolean =>

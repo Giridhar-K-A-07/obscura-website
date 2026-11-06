@@ -31,17 +31,22 @@ const page = (
 
 const ROBOTS_CLOSED = "User-agent: *\nDisallow: /\n";
 
-/** Writes files (path -> text|Buffer) under a new dist/ folder and returns its path. */
-const dist = (files: Record<string, string | Buffer>) => {
+/**
+ * Writes files (path -> text|Buffer) under a new build folder and returns its path. With a
+ * `folder` name the build lives in a folder of that name (the guard checks it: dist-demo/ is the
+ * only place a demo build may be written).
+ */
+const dist = (files: Record<string, string | Buffer>, folder = "") => {
   const root = mkdtempSync(join(tmpdir(), "obscura-dist-"));
   folders.push(root);
+  const base = folder ? join(root, folder) : root;
   const full: Record<string, string | Buffer> = { "robots.txt": ROBOTS_CLOSED, ...files };
   for (const [path, content] of Object.entries(full)) {
-    const file = join(root, path);
+    const file = join(base, path);
     mkdirSync(join(file, ".."), { recursive: true });
     writeFileSync(file, content);
   }
-  return root;
+  return base;
 };
 const run = (files: Record<string, string | Buffer>, prototype = true) =>
   checkBuild(dist(files), { prototype });
@@ -672,7 +677,7 @@ describe("demo builds (synthetic data, local only) are labelled; normal builds c
   const demoPage = (extraBody = "", head = MARKER, title = "<title>DEMO — T</title>") =>
     page(`${BANNER}<main id="main"><h1>Title</h1>${extraBody}</main>`, head, { title });
   const runDemo = (files: Record<string, string | Buffer>, flag = false) =>
-    checkBuild(dist(files), { prototype: flag, demo: true }).problems;
+    checkBuild(dist(files, "dist-demo"), { prototype: flag, demo: true }).problems;
 
   it("accepts a fully labelled demo page, treating the demo as a prototype whatever the flag says", () => {
     expect(runDemo({ "index.html": demoPage() })).toEqual([]);
@@ -720,6 +725,137 @@ describe("demo builds (synthetic data, local only) are labelled; normal builds c
     expect(
       has(normal(page(), { "demo/people/silhouette.svg": "<svg/>" }), "demo static files"),
     ).toBe(true);
+  });
+});
+
+describe("the build guard states its mode and checks it against the folder and every file", () => {
+  const BANNER =
+    '<div data-demo-banner role="note"><strong>DEMO</strong></div><div data-demo-badge aria-hidden="true">DEMO</div>';
+  const MARKER = '<meta name="obscura-build" content="demo">';
+  const demoPage = page(`${BANNER}<main id="main"><h1>Title</h1></main>`, MARKER, {
+    title: "<title>DEMO — T</title>",
+  });
+  const DEMO_ICS =
+    "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nX-OBSCURA-BUILD:DEMO\r\nBEGIN:VEVENT\r\nUID:a\r\nSUMMARY:[DEMO] T\r\nDESCRIPTION:[DEMO] Synthetic\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+  const REAL_ICS =
+    "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:a\r\nSUMMARY:T\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+  const demoOutput = (extra: Record<string, string> = {}, folder = "dist-demo") =>
+    dist({ "index.html": demoPage, "events/a.ics": DEMO_ICS, ...extra }, folder);
+  const demoProblems = (path: string) => checkBuild(path, { prototype: true, demo: true }).problems;
+  const normalProblems = (path: string) => checkBuild(path, { prototype: true }).problems;
+
+  it("accepts a labelled demo build in dist-demo/ and a plain normal build", () => {
+    expect(demoProblems(demoOutput())).toEqual([]);
+    expect(
+      normalProblems(dist({ "index.html": page(), "events/a.ics": REAL_ICS }, "dist")),
+    ).toEqual([]);
+  });
+
+  it("rejects a demo build written to the normal dist/ folder, and a normal build in dist-demo/", () => {
+    expect(has(demoProblems(demoOutput({}, "dist")), "must be written to dist-demo/")).toBe(true);
+    // Judged as a normal build, the labelled output in dist/ is rejected page by page too.
+    const asNormal = normalProblems(demoOutput({}, "dist"));
+    expect(has(asNormal, "must not contain a DEMO banner")).toBe(true);
+    expect(has(asNormal, "events/a.ics")).toBe(true);
+    const plain = dist({ "index.html": page() }, "dist-demo");
+    expect(has(normalProblems(plain), "must not be written to the demo folder")).toBe(true);
+  });
+
+  it("requires the machine-readable marker and [DEMO] text in every demo .ics file", () => {
+    const bad = (ics: string) =>
+      demoProblems(demoOutput({ "events/a.ics": ics })).filter((p) => p.includes("a.ics"));
+    expect(bad(DEMO_ICS)).toEqual([]);
+    expect(bad(REAL_ICS).length).toBe(3);
+    expect(bad(DEMO_ICS.replace("X-OBSCURA-BUILD:DEMO\r\n", ""))).toEqual([
+      expect.stringContaining("X-OBSCURA-BUILD:DEMO property"),
+    ]);
+    expect(bad(DEMO_ICS.replace("SUMMARY:[DEMO] ", "SUMMARY:"))).toEqual([
+      expect.stringContaining("[DEMO] summary"),
+    ]);
+    expect(bad(DEMO_ICS.replace("DESCRIPTION:[DEMO] ", "DESCRIPTION:"))).toEqual([
+      expect.stringContaining("[DEMO] description"),
+    ]);
+  });
+
+  it("reads a folded demo summary, so a long [DEMO] title is not a false alarm", () => {
+    const folded = DEMO_ICS.replace("SUMMARY:[DEMO] T", "SUMMARY:[DEMO] A very long\r\n  title");
+    expect(demoProblems(demoOutput({ "events/a.ics": folded }))).toEqual([]);
+  });
+
+  it("finds a demo .ics file anywhere in a normal build, however it got there", () => {
+    for (const where of ["events/a.ics", "a/b/c/d.ics", "calendar.ICS", "x.ics"]) {
+      const problems = normalProblems(dist({ "index.html": page(), [where]: DEMO_ICS }, "dist"));
+      expect(has(problems, "must not contain a demo trace"), where).toBe(true);
+    }
+    // A label alone is enough, with the property removed.
+    const labelOnly = DEMO_ICS.replace("X-OBSCURA-BUILD:DEMO\r\n", "");
+    expect(
+      has(normalProblems(dist({ "index.html": page(), "e.ics": labelOnly }, "dist")), "[DEMO]"),
+    ).toBe(true);
+    // Other text files are checked too.
+    expect(
+      has(
+        normalProblems(dist({ "index.html": page(), "notes.txt": "X-OBSCURA-BUILD:DEMO" }, "dist")),
+        "demo trace",
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("the command takes the mode from --demo, never from the environment", () => {
+  const BANNER =
+    '<div data-demo-banner role="note"><strong>DEMO</strong></div><div data-demo-badge aria-hidden="true">DEMO</div>';
+  const demoPage = page(
+    `${BANNER}<main id="main"><h1>Title</h1></main>`,
+    '<meta name="obscura-build" content="demo">',
+    {
+      title: "<title>DEMO — T</title>",
+    },
+  );
+  const ICS =
+    "BEGIN:VCALENDAR\r\nX-OBSCURA-BUILD:DEMO\r\nBEGIN:VEVENT\r\nSUMMARY:[DEMO] T\r\nDESCRIPTION:[DEMO] x\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+  const out = (folder: string) => dist({ "index.html": demoPage, "e.ics": ICS }, folder);
+  const cli = (args: string[], env: Record<string, string> = {}) =>
+    spawnSync(process.execPath, ["scripts/check-build.mjs", ...args], {
+      encoding: "utf8",
+      env: { ...process.env, ...env },
+    });
+
+  it("passes a labelled demo build in dist-demo/ with --demo, whatever the environment says", () => {
+    const folder = out("dist-demo");
+    for (const env of [{}, { OBSCURA_DEMO: "1" }, { OBSCURA_DEMO: "0" }] as Record<
+      string,
+      string
+    >[]) {
+      const result = cli(["--demo", folder], env);
+      expect(result.status, JSON.stringify(env)).toBe(0);
+      expect(result.stdout).toContain("DEMO build");
+    }
+  });
+
+  it("fails a demo build in dist/ even with --demo and OBSCURA_DEMO=1 (the guard cannot be talked round)", () => {
+    const result = cli(["--demo", out("dist")], { OBSCURA_DEMO: "1" });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("must be written to dist-demo/");
+  });
+
+  it("fails labelled demo output when only OBSCURA_DEMO=1 is set: the environment alone decides nothing", () => {
+    const result = cli([out("dist-demo")], { OBSCURA_DEMO: "1" });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("must not");
+  });
+
+  it("fails labelled demo output in dist/ with no flag and no variable", () => {
+    expect(cli([out("dist")]).status).toBe(1);
+  });
+
+  it("passes a normal build, with or without OBSCURA_DEMO in the environment", () => {
+    const folder = dist(
+      { "index.html": page(), "e.ics": "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n" },
+      "dist",
+    );
+    expect(cli([folder]).status).toBe(0);
+    expect(cli([folder], { OBSCURA_DEMO: "1" }).status).toBe(0);
   });
 });
 
