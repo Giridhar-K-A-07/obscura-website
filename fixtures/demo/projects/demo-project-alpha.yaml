@@ -1,0 +1,14 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+name: "Demo Project Alpha"
+description: "A synthetic project description of a couple of sentences, long enough to show how card text wraps. It stands for a member-built repository."
+repository: "https://example.org/demo/alpha"
+liveDemo: "https://example.org/demo/alpha-live"
+datasets:
+  - "https://example.org/demo/alpha-data"
+topics:
+  - "classification"
+  - "visualisation"
+contributors:
+  - "test-person-03"
+  - "test-person-04"

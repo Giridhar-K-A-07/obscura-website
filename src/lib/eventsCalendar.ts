@@ -69,18 +69,25 @@ export function utcStamp(date: Date): string {
   return date.toISOString().replace(/[-:]|\.\d{3}/g, "");
 }
 
+/** A calendar file from a demo build (synthetic data, local only) carries this property and prefix. */
+export const DEMO_CALENDAR_MARKER = "X-OBSCURA-BUILD:DEMO";
+export const DEMO_CALENDAR_LABEL = "[DEMO] ";
+
 /** The calendar entry's UID. It comes from the record id alone and must never change once published. */
 export const calendarUid = (id: string) => `obscura-event-${id}`;
 
 /**
  * The .ics text for one public event. `now` is the DTSTAMP and is injected, so the rest of the
  * output is deterministic. `DTEND` appears only when the end is later than the start.
+ * In a demo build (`demo`) the file is labelled so it can never pass for a real event: a
+ * machine-readable X-OBSCURA-BUILD:DEMO property, a [DEMO] summary and a [DEMO] description.
  */
-export function buildEventCalendar(event: PublicEvent, now: Date): string {
+export function buildEventCalendar(event: PublicEvent, now: Date, demo = false): string {
   const rows = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//OBSCURA//OBSCURA//EN",
+    ...(demo ? [DEMO_CALENDAR_MARKER] : []),
     "BEGIN:VEVENT",
     `UID:${escapeText(calendarUid(event.id))}`,
     `DTSTAMP:${utcStamp(now)}`,
@@ -89,9 +96,16 @@ export function buildEventCalendar(event: PublicEvent, now: Date): string {
   if (event.end && event.end.getTime() > event.start.getTime()) {
     rows.push(`DTEND:${utcStamp(event.end)}`);
   }
-  rows.push(`SUMMARY:${escapeText(event.title)}`);
+  rows.push(`SUMMARY:${escapeText((demo ? DEMO_CALENDAR_LABEL : "") + event.title)}`);
   rows.push(`LOCATION:${escapeText(event.venue)}`);
-  if (event.description) rows.push(`DESCRIPTION:${escapeText(event.description)}`);
+  if (demo) {
+    const note = `${DEMO_CALENDAR_LABEL}Synthetic data for design review. Not a real OBSCURA event.`;
+    rows.push(
+      `DESCRIPTION:${escapeText(event.description ? `${note} ${event.description}` : note)}`,
+    );
+  } else if (event.description) {
+    rows.push(`DESCRIPTION:${escapeText(event.description)}`);
+  }
   rows.push("END:VEVENT", "END:VCALENDAR");
   return rows.map(foldLine).join(CRLF) + CRLF;
 }

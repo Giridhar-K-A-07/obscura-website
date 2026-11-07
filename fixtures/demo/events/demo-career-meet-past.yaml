@@ -1,0 +1,8 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+title: "Demo Career Meet"
+type: "Career meet"
+start: "2098-11-14T11:00:00+05:30"
+timezone: "Asia/Kolkata"
+venue: "Demo Venue A"
+description: "A synthetic past event with a start time and no end time, to preview that layout."

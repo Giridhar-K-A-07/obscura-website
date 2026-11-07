@@ -1,10 +1,13 @@
 import { readdirSync } from "node:fs";
 import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
+import { DEMO } from "./lib/demoMode";
 import { schemas } from "./lib/schemas";
 
 // Content lives in /content (not in src/) as plain YAML, Markdown and MDX files.
 // Collections are empty until verified content exists; see content/README.md.
+// A demo build (OBSCURA_DEMO=1, see src/lib/demoMode.ts) reads the synthetic fixtures instead.
+const CONTENT_ROOT = DEMO ? "./fixtures/demo" : "./content";
 const dataFiles = "**/*.{yaml,yml}";
 const documentFiles = "**/*.{yaml,yml,md,mdx}";
 
@@ -26,6 +29,13 @@ const quietGlob = (options: Parameters<typeof glob>[0]) => {
   return {
     ...loader,
     load: async (context: Parameters<typeof loader.load>[0]) => {
+      // The content store is cached between runs. Never let entries from one mode survive into
+      // the other: a demo entry must not appear in a normal build, or the reverse.
+      const mode = DEMO ? "demo" : "content";
+      if (context.meta.get("obscura-content-root") !== mode) {
+        context.store.clear();
+        context.meta.set("obscura-content-root", mode);
+      }
       if (!hasFiles(String(options.base), String(options.pattern))) {
         context.store.clear();
         return;
@@ -41,7 +51,7 @@ const collection = <Name extends keyof typeof schemas>(
   pattern: string = dataFiles,
 ) =>
   defineCollection({
-    loader: quietGlob({ pattern, base: `./content/${directory}` }),
+    loader: quietGlob({ pattern, base: `${CONTENT_ROOT}/${directory}` }),
     schema: schemas[name],
   });
 

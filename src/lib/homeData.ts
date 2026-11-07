@@ -1,11 +1,12 @@
 import { getCollection } from "astro:content";
+import { buildNow } from "./demoMode";
 import { selectHomeContent, type HomeContent, type HomeSource } from "./homeContent";
 
 /**
  * Loads the collections the homepage needs and selects what is publishable.
  * Selection is static: it runs at build time, so "upcoming" is as of the last build.
  */
-export async function loadHomeContent(now: Date = new Date()): Promise<HomeContent> {
+export async function loadHomeContent(now: Date = buildNow()): Promise<HomeContent> {
   const [site, events, posts, terms, projects, people, resources] = await Promise.all([
     getCollection("site"),
     getCollection("events"),

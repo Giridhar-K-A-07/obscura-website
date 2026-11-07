@@ -11,6 +11,9 @@
 //    disallows everything and there is no sitemap;
 //  - first-party links: every local href/src/srcset/island URL points at a file that exists in
 //    dist/, and every #fragment points at an id on the page it names;
+//  - demo builds (synthetic data, local only; expected with `--demo` and only in dist-demo/): every
+//    page carries the DEMO banner, badge, marker and title prefix, and every .ics file the DEMO
+//    marker and [DEMO] text; a normal build carries none of them, in any text file, and no demo files;
 //  - JavaScript: the gzip size of the JavaScript a page loads on first load, excluding the hero,
 //    stays within JS_BUDGET_BYTES.
 // It does NOT measure LCP, CLS or INP, and it is not an accessibility audit; those need a real
@@ -21,7 +24,7 @@
 
 import { Buffer } from "node:buffer";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { dirname, join, relative, resolve, sep } from "node:path";
+import { basename, dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
@@ -310,6 +313,76 @@ function checkMetadata(label, route, html, facts, problems) {
   return { canonical: validCanonical };
 }
 
+const DEMO_TITLE = /^DEMO — /;
+
+/** The only folder a demo build may be written to; a normal build may never be written there. */
+export const DEMO_DIR = "dist-demo";
+const DEMO_CALENDAR_MARKER = "X-OBSCURA-BUILD:DEMO";
+const DEMO_CALENDAR_LABEL = "[DEMO] ";
+/** Text files other than pages that could carry a demo trace if copied into a normal build. */
+const TEXT_FILES = new Set([".ics", ".txt", ".xml", ".json", ".webmanifest"]);
+/** Anything that marks a file as demo output. Read by tooling, so it never appears in real output. */
+const DEMO_TRACES = [
+  DEMO_CALENDAR_MARKER,
+  DEMO_CALENDAR_LABEL,
+  "data-demo-banner",
+  'content="demo"',
+];
+
+/**
+ * Calendar files and other text files. A demo build labels every calendar file (a machine-readable
+ * property plus [DEMO] in the summary and description). A normal build must contain no demo trace
+ * in ANY such file, wherever it sits in the folder, so a demo file copied in cannot hide.
+ */
+function checkTextFiles(dist, files, demo, problems) {
+  for (const file of files) {
+    const ext = extname(file).toLowerCase();
+    if (!TEXT_FILES.has(ext)) continue;
+    const name = relative(dist, file).split(sep).join("/");
+    const text = readFileSync(file, "utf8");
+    if (!demo) {
+      const trace = DEMO_TRACES.find((t) => text.includes(t));
+      if (trace) problems.push(`${name}: a normal build must not contain a demo trace (${trace})`);
+    } else if (ext === ".ics") {
+      const unfolded = text.replace(/\r?\n[ \t]/g, "");
+      const lines = unfolded.split(/\r?\n/);
+      if (!lines.includes(DEMO_CALENDAR_MARKER))
+        problems.push(`${name}: a demo calendar file needs the ${DEMO_CALENDAR_MARKER} property`);
+      if (!lines.some((l) => l.startsWith(`SUMMARY:${DEMO_CALENDAR_LABEL}`)))
+        problems.push(`${name}: a demo calendar file needs a [DEMO] summary`);
+      if (!lines.some((l) => l.startsWith(`DESCRIPTION:${DEMO_CALENDAR_LABEL}`)))
+        problems.push(`${name}: a demo calendar file needs a [DEMO] description`);
+    }
+  }
+}
+
+/**
+ * A demo build (synthetic data, local only) must say so on every page, and a normal build must
+ * carry no trace of it: no banner, no title prefix, no demo marker, and no demo files.
+ */
+function checkDemo(label, html, facts, demo, problems) {
+  const banners = facts.open.filter((t) => "data-demo-banner" in t.attrs);
+  const badges = facts.open.filter((t) => "data-demo-badge" in t.attrs);
+  const marker = facts.meta("name", "obscura-build");
+  const title = facts.named("title")[0];
+  const titleText = title ? textAfter(html, title) : "";
+  if (demo) {
+    if (banners.length !== 1) problems.push(`${label}: a demo page needs exactly one DEMO banner`);
+    if (badges.length !== 1) problems.push(`${label}: a demo page needs exactly one DEMO badge`);
+    if (!marker.some((t) => t.attrs.content === "demo"))
+      problems.push(`${label}: a demo page needs <meta name="obscura-build" content="demo">`);
+    if (!DEMO_TITLE.test(titleText))
+      problems.push(`${label}: the demo <title> must start with "DEMO — "`);
+  } else {
+    if (banners.length || badges.length)
+      problems.push(`${label}: a normal build must not contain a DEMO banner`);
+    if (marker.length)
+      problems.push(`${label}: a normal build must not carry the demo build marker`);
+    if (DEMO_TITLE.test(titleText))
+      problems.push(`${label}: a normal build must not have a DEMO title`);
+  }
+}
+
 function checkRobots(label, facts, prototype, problems) {
   const robots = facts.meta("name", "robots");
   if (robots.length > 1) problems.push(`${label}: more than one robots meta tag`);
@@ -488,7 +561,9 @@ function checkCanonicals(canonicals, hasCanonical, problems) {
 }
 
 /** Checks a built site. Returns { problems, pages: [{ route, js: { other, hero } }] }. */
-export function checkBuild(dist, { prototype }) {
+export function checkBuild(dist, { prototype: flag, demo = false }) {
+  // A demo build is always a prototype, whatever PROTOTYPE says (src/lib/siteMode.ts).
+  const prototype = flag || demo;
   const problems = [];
   const pages = [];
   if (!existsSync(dist) || !statSync(dist).isDirectory()) {
@@ -497,6 +572,18 @@ export function checkBuild(dist, { prototype }) {
   const files = walk(dist);
   const htmlFiles = files.filter((f) => f.endsWith(".html"));
   if (!htmlFiles.length) return { problems: [`${dist} has no HTML pages`], pages };
+
+  // The expected mode is explicit and must match the folder: demo output lives in dist-demo/ only.
+  const folder = basename(resolve(dist));
+  if (demo && folder !== DEMO_DIR) {
+    problems.push(
+      `${folder}/: a demo build must be written to ${DEMO_DIR}/, never to another folder`,
+    );
+  }
+  if (!demo && folder === DEMO_DIR) {
+    problems.push(`${DEMO_DIR}/: a normal build must not be written to the demo folder`);
+  }
+  checkTextFiles(dist, files, demo, problems);
 
   const cache = new Map();
   const read = (file) => {
@@ -524,6 +611,7 @@ export function checkBuild(dist, { prototype }) {
     if (canonical) canonicals.set(route, canonical);
     if (facts.named("link").some((t) => t.attrs.rel?.toLowerCase() === "canonical"))
       hasCanonical.add(route);
+    checkDemo(label, html, facts, demo, problems);
     checkRobots(label, facts, prototype, problems);
     checkLinks(label, dist, route, facts, idsOf, problems);
     const js = measureJs(dist, route, facts, problems, label);
@@ -536,6 +624,10 @@ export function checkBuild(dist, { prototype }) {
   }
 
   checkCanonicals(canonicals, hasCanonical, problems);
+
+  if (!demo && files.some((f) => relative(dist, f).split(sep)[0] === "demo")) {
+    problems.push("demo/: a normal build must not contain the demo static files");
+  }
 
   const robotsFile = join(dist, "robots.txt");
   const sitemaps = files.filter((f) => /(^|[\\/])sitemap[^\\/]*\.xml$/.test(f));
@@ -582,9 +674,15 @@ export function checkBuild(dist, { prototype }) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = dirname(dirname(fileURLToPath(import.meta.url)));
-  const dist = resolve(process.argv[2] ?? join(root, "dist"));
-  const prototype = readPrototypeFlag(readFileSync(join(root, "src/lib/siteMode.ts"), "utf8"));
-  const { problems, pages } = checkBuild(dist, { prototype });
+  // The expected mode is stated on the command line (--demo) and checked against the folder. The
+  // OBSCURA_DEMO environment variable is NOT consulted: it must never decide what the guard accepts.
+  const args = process.argv.slice(2);
+  const demo = args.includes("--demo");
+  const folderArg = args.find((a) => !a.startsWith("--"));
+  const dist = resolve(folderArg ?? join(root, demo ? DEMO_DIR : "dist"));
+  const flag = readPrototypeFlag(readFileSync(join(root, "src/lib/siteMode.ts"), "utf8"));
+  const prototype = flag || demo;
+  const { problems, pages } = checkBuild(dist, { prototype: flag, demo });
   if (problems.length) {
     console.error(`check:build failed:\n${problems.map((p) => `  - ${p}`).join("\n")}`);
     process.exit(1);
@@ -594,6 +692,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     `check:build passed: ${pages.length} pages. Most first-load JavaScript excluding the hero: ` +
       `${heaviest.js.other} of ${JS_BUDGET_BYTES} bytes gzip (${heaviest.route}); ` +
       `hero-only JavaScript, not budgeted: ${Math.max(...pages.map((p) => p.js.hero))} bytes gzip. ` +
-      `Mode: ${prototype ? "prototype (noindex)" : "launched"}.`,
+      `Mode: ${demo ? "DEMO build (synthetic data, local only)" : prototype ? "prototype (noindex)" : "launched"}.`,
   );
 }

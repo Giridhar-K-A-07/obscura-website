@@ -1,0 +1,28 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+kind: "roadmap"
+title: "Demo SQL Roadmap"
+track: "sql"
+lastReviewed: "2099-05-01"
+reviewer: "test-person-05"
+steps:
+  - title: "Select and filter rows"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 1"
+        url: "https://example.org/demo/sql/1"
+  - title: "Join tables"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 2"
+        url: "https://example.org/demo/sql/2"
+  - title: "Group and summarise"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 3"
+        url: "https://example.org/demo/sql/3"
+  - title: "Write a readable query"
+    why: "Synthetic reasoning text for layout review: why this step comes at this point in the sequence."
+    resources:
+      - title: "Demo reading for step 4"
+        url: "https://example.org/demo/sql/4"

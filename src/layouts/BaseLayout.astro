@@ -1,7 +1,9 @@
 ---
 import "../styles/global.css";
+import DemoBanner from "../components/shell/DemoBanner.astro";
 import PageMeta from "../components/shell/PageMeta.astro";
 import SiteHeader from "../components/shell/SiteHeader.astro";
+import { DEMO } from "../lib/demoMode";
 import { isNoindex } from "../lib/siteMode";
 
 interface Props {
@@ -27,12 +29,14 @@ const { title, description, noindex = false, header = true } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <PageMeta title={title} description={description} noindex={noindex} />
     {isNoindex(noindex) && <meta name="robots" content="noindex, nofollow" />}
+    {DEMO && <meta name="obscura-build" content="demo" />}
   </head>
   <body>
     {/* Pages must provide <main id="main" tabindex="-1">. */}
     <a class="skip-link" href="#main">
       Skip to main content
     </a>
+    {DEMO && <DemoBanner />}
     {header && <SiteHeader />}
     <slot />
   </body>

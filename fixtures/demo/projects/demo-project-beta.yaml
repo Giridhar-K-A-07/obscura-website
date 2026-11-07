@@ -1,0 +1,10 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+name: "Demo Project Beta"
+description: "A synthetic project with a repository only."
+repository: "https://example.org/demo/beta"
+datasets: []
+topics:
+  - "forecasting"
+contributors:
+  - "test-person-06"

@@ -1,0 +1,13 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+name: "Demo Project Gamma"
+description: "A synthetic project with a live demo and no dataset."
+repository: "https://example.org/demo/gamma"
+liveDemo: "https://example.org/demo/gamma-live"
+datasets: []
+topics:
+  - "natural language"
+  - "visualisation"
+contributors:
+  - "test-person-09"
+  - "test-person-10"

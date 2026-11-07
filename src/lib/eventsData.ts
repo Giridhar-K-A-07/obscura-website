@@ -1,4 +1,5 @@
 import { getCollection } from "astro:content";
+import { buildNow } from "./demoMode";
 import { selectEventsContent, type EventsContent, type EventsSource } from "./eventsContent";
 
 /**
@@ -6,7 +7,7 @@ import { selectEventsContent, type EventsContent, type EventsSource } from "./ev
  * time). `entries` maps each event id to its collection entry so a detail page can render the
  * recap (the Markdown body).
  */
-export async function loadEventsContent(now: Date = new Date()) {
+export async function loadEventsContent(now: Date = buildNow()) {
   const [events, posts] = await Promise.all([getCollection("events"), getCollection("posts")]);
   // Astro validates each record against its schema on load; the loader wrapper in
   // content.config.ts does not carry those types through, so they are restated here.

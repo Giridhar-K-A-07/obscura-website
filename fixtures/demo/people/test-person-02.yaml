@@ -1,0 +1,6 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+name: "Test Person 02"
+photo: "/demo/people/silhouette.svg"
+consent: "recorded"
+linkedin: "https://www.linkedin.com/in/demo-fixture-not-a-person-02"

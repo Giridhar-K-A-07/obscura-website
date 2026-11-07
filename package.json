@@ -19,6 +19,9 @@
     "check:needed": "node scripts/check-needed.mjs",
     "check:posts": "node scripts/check-posts.mjs && node scripts/check-body-structure.mjs",
     "check:build": "node scripts/check-build.mjs",
+    "demo": "node scripts/demo.mjs dev",
+    "demo:build": "node scripts/demo.mjs build",
+    "demo:preview": "node scripts/demo.mjs preview",
     "verify": "npm run format:check && npm run lint && npm run check && npm run test && npm run check:needed && npm run check:posts && npm run build && npm run check:build"
   },
   "dependencies": {

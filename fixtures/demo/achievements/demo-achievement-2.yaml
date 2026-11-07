@@ -1,0 +1,9 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+title: "Demo Data Challenge"
+competition: "Demo Data Challenge"
+date: "2098-09-12"
+result: "Runner-up (demo)"
+people:
+  - "test-person-06"
+evidenceLink: "https://example.org/demo/evidence-2"

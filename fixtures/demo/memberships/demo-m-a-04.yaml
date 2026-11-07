@@ -1,0 +1,8 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+person: "test-person-04"
+term: "demo-term-a"
+team: "demo-beta"
+role: "Member"
+contributions:
+  - "Synthetic contribution text for layout review."

@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { DEMO } from "../../lib/demoMode";
 import { calendarRoutes, buildEventCalendar } from "../../lib/eventsCalendar";
 import { loadEventsContent } from "../../lib/eventsData";
 
@@ -13,6 +14,6 @@ export async function getStaticPaths() {
 }
 
 export const GET: APIRoute = ({ props }) =>
-  new Response(buildEventCalendar(props.event, props.now), {
+  new Response(buildEventCalendar(props.event, props.now, DEMO), {
     headers: { "Content-Type": "text/calendar; charset=utf-8" },
   });

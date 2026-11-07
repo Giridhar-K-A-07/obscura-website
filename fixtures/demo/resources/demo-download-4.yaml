@@ -1,0 +1,7 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+kind: "code-template"
+title: "Demo Project Layout"
+link: "https://example.org/demo/download-4"
+licence: "Demo licence (synthetic)"
+format: "ZIP archive"

@@ -1,4 +1,5 @@
 ---
+import { clockOffsetMs } from "../../lib/demoMode";
 import { STATUS_LABEL, lifecycleOf } from "../../lib/eventLifecycle";
 import type { PublicEvent } from "../../lib/eventsContent";
 
@@ -20,6 +21,8 @@ const { event, now } = Astro.props;
 const start = event.start.getTime();
 const end = event.end?.getTime();
 const state = lifecycleOf(start, end, now.getTime()) ?? "upcoming";
+// Zero except in a demo build, where the page keeps the demo clock (src/lib/demoMode.ts).
+const clockOffset = clockOffsetMs(now);
 ---
 
 <div
@@ -28,6 +31,7 @@ const state = lifecycleOf(start, end, now.getTime()) ?? "upcoming";
   data-state={state}
   data-start={event.start.toISOString()}
   data-end={event.end?.toISOString()}
+  data-clock-offset={clockOffset || undefined}
 >
   <p class="label">
     <span class="type-label">Status</span>
@@ -47,6 +51,7 @@ const state = lifecycleOf(start, end, now.getTime()) ?? "upcoming";
   document.querySelectorAll<HTMLElement>("[data-event-status]").forEach((root) => {
     const start = Date.parse(root.dataset.start ?? "");
     const end = root.dataset.end ? Date.parse(root.dataset.end) : undefined;
+    const offset = Number(root.dataset.clockOffset ?? 0) || 0;
     const text = root.querySelector<HTMLElement>("[data-status-text]");
     const countdown = root.querySelector<HTMLElement>("[data-countdown]");
     const meta = document.querySelector<HTMLElement>("[data-state-meta]");
@@ -55,7 +60,7 @@ const state = lifecycleOf(start, end, now.getTime()) ?? "upcoming";
 
     const update = () => {
       window.clearTimeout(timer);
-      const now = Date.now();
+      const now = Date.now() + offset;
       const state = lifecycleOf(start, end, now);
       if (state === null) return; // invalid times: keep the first state
       root.dataset.state = state;

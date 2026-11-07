@@ -1,0 +1,8 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+kind: "cheat-sheet"
+title: "Demo Pandas Cheat Sheet"
+link: "https://example.org/demo/download-1"
+licence: "Demo licence (synthetic)"
+format: "PDF"
+size: "0.4 MB"

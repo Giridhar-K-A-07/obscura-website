@@ -1,0 +1,8 @@
+status: "verified"
+source: "DEMO fixture: synthetic data for design review only"
+name: "Demo Term C"
+academicYear: "2098–99"
+summary: "The current demo term."
+milestones:
+  - "Demo milestone: an outreach event."
+  - "Demo milestone: a career meet."

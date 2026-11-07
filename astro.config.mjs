@@ -3,11 +3,13 @@ import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import mdx from "@astrojs/mdx";
 import tailwindcss from "@tailwindcss/vite";
+import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { bodyProcessor } from "./scripts/body-processor.mjs";
 import { sitemapXml } from "./src/lib/crawlers.ts";
+import { DEMO, demoRefusal } from "./src/lib/demoMode.ts";
 
 // The sitemap, written after the build. It exists only when the site is launched and `site` is a
 // usable production URL; in the prototype (the default) nothing is written (src/lib/crawlers.ts).
@@ -32,11 +34,18 @@ const sitemap = () => {
   };
 };
 
+// A demo build (synthetic data, local only) must never run in CI or on Vercel.
+const refusal = demoRefusal(process.env);
+if (refusal) throw new Error(refusal);
+
 // Static output, deployed to Vercel (docs/decisions/0001-site-stack.md).
 // `site` is left unset on purpose:
 // [[NEEDED: production site URL — domain and hosting constraints, Master Brief §15 C7]]
 export default defineConfig({
   output: "static",
+  // A demo build writes to its own folder and serves its own static files (src/lib/demoMode.ts).
+  outDir: DEMO ? "./dist-demo" : "./dist",
+  publicDir: DEMO ? "./fixtures/demo/public" : "./public",
   integrations: [react(), mdx(), sitemap()],
   markdown: {
     // The one Markdown/MDX processor for every article and event body (Astro 7's Sätteri, with two
