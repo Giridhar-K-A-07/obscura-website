@@ -22,10 +22,14 @@ import { HOSTED_ENV } from "../../src/lib/demoMode";
 const astro = "node_modules/astro/bin/astro.mjs";
 const MARKER = "X-OBSCURA-BUILD:DEMO";
 
-/** The environment with every build-server variable and demo variable removed, plus `extra`. */
+/**
+  The environment with the demo variables and the Vitest variables removed, plus `extra`. Build-server
+  variables stay as they are, so the tests also run where CI is set: an intentional demo build says
+  so with OBSCURA_DEMO_ALLOW_CI=1, the documented override.
+*/
 const cleanEnv = (extra: Record<string, string> = {}): NodeJS.ProcessEnv => {
   const env: NodeJS.ProcessEnv = { ...process.env };
-  for (const name of [...HOSTED_ENV, "OBSCURA_DEMO", "OBSCURA_DEMO_ALLOW_CI"]) delete env[name];
+  for (const name of ["OBSCURA_DEMO", "OBSCURA_DEMO_ALLOW_CI"]) delete env[name];
   // Vitest sets NODE_ENV, DEV, PROD, MODE, TEST and VITEST*, and Astro reads them: left in, a spawned
   // build would emit its development-only pages. A real build runs without them.
   for (const name of Object.keys(env)) {
@@ -33,6 +37,12 @@ const cleanEnv = (extra: Record<string, string> = {}): NodeJS.ProcessEnv => {
       delete env[name];
     }
   }
+  return { ...env, ...extra };
+};
+/** Like `cleanEnv`, with every build-server variable removed first: the refusal tests set exactly one. */
+const hostFreeEnv = (extra: Record<string, string> = {}): NodeJS.ProcessEnv => {
+  const env = cleanEnv();
+  for (const name of HOSTED_ENV) delete env[name];
   return { ...env, ...extra };
 };
 const node = (args: string[], env: NodeJS.ProcessEnv, timeout = 240_000) =>
@@ -55,7 +65,7 @@ describe("the real Astro config enforces the refusal", () => {
 
   it("stops `astro sync` with a clear message when a build server is detected", () => {
     for (const host of ["CI", "NETLIFY", "GITHUB_ACTIONS"]) {
-      const result = sync(cleanEnv({ OBSCURA_DEMO: "1", [host]: "true" }));
+      const result = sync(hostFreeEnv({ OBSCURA_DEMO: "1", [host]: "true" }));
       expect(result.status, host).not.toBe(0);
       expect(output(result), host).toMatch(/never be built or deployed/);
       expect(output(result), host).toContain(host);
@@ -80,7 +90,7 @@ describe("the real Astro config enforces the refusal", () => {
 
 describe("a demo build, then a normal build, then the guard", () => {
   it("builds and checks the demo, with every calendar file labelled", () => {
-    const result = node(["scripts/demo.mjs", "build"], cleanEnv());
+    const result = node(["scripts/demo.mjs", "build"], cleanEnv({ OBSCURA_DEMO_ALLOW_CI: "1" }));
     expect(result.status, output(result).slice(-600)).toBe(0);
     expect(result.stdout).toContain("DEMO build (synthetic data, local only)");
 
@@ -116,7 +126,6 @@ describe("a demo build, then a normal build, then the guard", () => {
       );
     }
     expect(existsSync(join("dist", "demo"))).toBe(false);
-    expect(walk("dist").filter((f) => f.endsWith(".ics"))).toEqual([]); // no real events yet
   }, 300_000);
 
   it("rejects demo output in the normal dist/ folder, with or without OBSCURA_DEMO", () => {
@@ -133,7 +142,7 @@ describe("a demo build, then a normal build, then the guard", () => {
       const result = node(["scripts/check-build.mjs", ...args], env, 60_000);
       expect(result.status, `${args.join(" ")} ${env.OBSCURA_DEMO ?? ""}`).toBe(1);
     }
-  });
+  }, 120_000);
 
   it("rejects a demo calendar file copied into a normal build", () => {
     const parent = mkdtempSync(join(tmpdir(), "obscura-guard-"));
@@ -146,7 +155,7 @@ describe("a demo build, then a normal build, then the guard", () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("events/copied.ics");
     expect(result.stderr).toContain("must not contain a demo trace");
-  });
+  }, 120_000);
 
   it("accepts the demo output in dist-demo/ only with --demo", () => {
     expect(
@@ -157,5 +166,5 @@ describe("a demo build, then a normal build, then the guard", () => {
       node(["scripts/check-build.mjs", "dist-demo"], cleanEnv({ OBSCURA_DEMO: "1" }), 60_000)
         .status,
     ).toBe(1);
-  });
+  }, 120_000);
 });

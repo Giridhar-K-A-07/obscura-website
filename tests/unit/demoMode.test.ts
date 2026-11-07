@@ -107,7 +107,11 @@ describe("a demo build is a prototype even when PROTOTYPE is false", () => {
     expect(sitemapXml(SITE, ["events/"], launched)).toContain("<loc>");
   });
 
-  it("uses the same resolver for the real mode", () => {
+  it("wires the real mode through the resolver with DEMO", () => {
+    // While PROTOTYPE is true the value alone cannot show DEMO is passed in, so check the wiring.
+    expect(read("src/lib/siteMode.ts")).toMatch(
+      /export const siteMode: SiteMode = resolveMode\(PROTOTYPE, DEMO\);/,
+    );
     expect(siteMode).toEqual(resolveMode(PROTOTYPE, DEMO));
   });
 });
