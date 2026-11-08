@@ -37,11 +37,11 @@ For every built `.html` page (the route is named in each message):
 
 ## What it does not prove (left for the deployed site)
 
-These need a real browser on a deployed site, on a mid-range phone and a 4G profile (Master Brief §11.3). They are launch-checklist items, not automated here:
+These need a real browser on a deployed site, on a mid-range phone and a 4G profile (Master Brief §11.3). They are launch-checklist items, not automated here. (The separate browser QA suite, `npm run test:e2e`, runs the built pages in a real browser for correctness, navigation, motion preferences and axe accessibility rules: see `docs/decisions/0002-browser-testing.md`. It is not a performance measurement and not a conformance audit.)
 
 - **LCP ≤ 2.5 s**, **CLS ≤ 0.1**, **INP ≤ 200 ms**. Static output cannot show any of them.
 - Real-device and slow-network behaviour, caching and compression headers actually served, image and font delivery (there are none yet).
-- WCAG 2.2 AA conformance. The guard checks a few structural facts above; it is **not an accessibility audit**. It does not check colour contrast, focus visibility, keyboard operation, heading order, link and control names, reduced-motion behaviour, or screen-reader output. Those need an audit with a tool such as axe plus manual keyboard and screen-reader testing on the deployed site.
+- WCAG 2.2 AA conformance. The guard checks a few structural facts above; it is **not an accessibility audit**. It does not check colour contrast, focus visibility, keyboard operation, heading order, link and control names, reduced-motion behaviour, or screen-reader output. The browser QA suite covers the automatable part of those with axe, keyboard and motion tests (`docs/decisions/0003-accessibility-automation.md`); the rest needs manual keyboard and screen-reader testing on the deployed site.
 - Production URL, canonical/sitemap activation, `.ics` Content-Type, social-preview rendering, and calendar import.
 
 ## Scope of the CI run

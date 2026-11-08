@@ -41,6 +41,27 @@ policy and the first-load JavaScript budget). What it enforces, and what only a 
 measurement can prove (LCP, CLS, INP, accessibility conformance), is in
 [`docs/quality-guard.md`](docs/quality-guard.md).
 
+## Browser QA
+
+`npm run test:e2e` opens the **built** site in a real browser (Playwright, Chromium) and checks every
+page of both builds at a desktop and a phone size: structure and metadata, navigation and the phone
+menu, keyboard focus, reduced motion, the prototype `noindex` policy, no demo content in the normal
+build, DEMO labelling in the demo build, and WCAG 2.2 AA with axe. It reads `dist/` and `dist-demo/`
+and builds nothing, so build both first. One-time setup downloads the browser (about 120 MB):
+
+```sh
+npx playwright install chromium
+npm run build
+npm run demo:build
+npm run test:e2e
+```
+
+Playwright and axe are development dependencies only; nothing is added to the site. CI runs this in
+its own `browser-qa` job. Why, and how the demo build stays out of deployments, is in
+[`docs/decisions/0002-browser-testing.md`](docs/decisions/0002-browser-testing.md),
+[`0003`](docs/decisions/0003-accessibility-automation.md) and
+[`0004`](docs/decisions/0004-demo-build-testing.md).
+
 ## Design system (provisional)
 
 Tokens and primitives live in `src/styles/` (`tokens.css`, `base.css`, `components.css`). All colours

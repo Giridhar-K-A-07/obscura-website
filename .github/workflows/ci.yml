@@ -26,3 +26,33 @@ jobs:
       - run: npm run check:posts
       - run: npm run build
       - run: npm run check:build
+
+  # Browser QA (docs/decisions/0002-browser-testing.md): Playwright and axe on the BUILT site, normal
+  # build and demo build, at desktop and phone sizes. It runs alone so a browser problem is visible on
+  # its own; `verify` above is unchanged. Nothing here deploys or uploads build output.
+  browser-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # The demo build (synthetic data, local only) refuses to run on a build server. The documented
+      # override is given to this ONE step and nowhere else (docs/decisions/0004-demo-build-testing.md);
+      # tests/unit/ciWorkflow.test.ts fails if it appears anywhere else.
+      - name: Build the demo (local-only synthetic site; never deployed or uploaded)
+        run: npm run demo:build
+        env:
+          OBSCURA_DEMO_ALLOW_CI: "1"
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      # Only the Playwright report, and only when the job fails. Never dist/ or dist-demo/.
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

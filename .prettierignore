@@ -1,5 +1,7 @@
 dist/
 dist-demo/
+playwright-report/
+test-results/
 .astro/
 .vercel/
 node_modules/
