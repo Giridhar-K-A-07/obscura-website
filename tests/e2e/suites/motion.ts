@@ -6,13 +6,12 @@ export function motionSuite(mode: SiteMode) {
   const hydrated = () => !document.querySelector("astro-island[ssr]");
 
   test.describe(`${mode} build: motion`, () => {
-    test("with reduced motion the hero canvas stays still and offers no animation to pause", async ({
-      browser,
-      baseURL,
-    }) => {
-      const context = await browser.newContext({ baseURL, reducedMotion: "reduce" });
-      try {
-        const page = await context.newPage();
+    // The preference is set on the project's own page (desktop or Pixel 7), so the console and
+    // request watcher in the shared fixtures applies here too.
+    test.describe("with reduced motion", () => {
+      test.use({ reducedMotion: "reduce" });
+
+      test("the hero canvas stays still and offers no animation to pause", async ({ page }) => {
         await page.goto("/");
         await page.waitForFunction(hydrated);
         const canvas = page.locator(".hero-canvas");
@@ -21,18 +20,13 @@ export function motionSuite(mode: SiteMode) {
         await expect(canvas.locator(".drift")).toHaveCSS("animation-name", "none");
         // The global safety net in base.css: no smooth scrolling.
         await expect(page.locator("html")).toHaveCSS("scroll-behavior", "auto");
-      } finally {
-        await context.close();
-      }
+      });
     });
 
-    test("without that preference the canvas drifts and the pause control stops it", async ({
-      browser,
-      baseURL,
-    }) => {
-      const context = await browser.newContext({ baseURL, reducedMotion: "no-preference" });
-      try {
-        const page = await context.newPage();
+    test.describe("without that preference", () => {
+      test.use({ reducedMotion: "no-preference" });
+
+      test("the canvas drifts and the pause control stops it", async ({ page }) => {
         await page.goto("/");
         const canvas = page.locator(".hero-canvas");
         await expect(canvas).toHaveAttribute("data-motion", "on");
@@ -46,9 +40,7 @@ export function motionSuite(mode: SiteMode) {
 
         await page.getByRole("button", { name: "Play animation" }).click();
         await expect(canvas).toHaveAttribute("data-running", "true");
-      } finally {
-        await context.close();
-      }
+      });
     });
 
     test("the list of links beside the canvas works without the canvas", async ({ page }) => {

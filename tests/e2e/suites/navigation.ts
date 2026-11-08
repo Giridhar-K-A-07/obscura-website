@@ -44,7 +44,8 @@ export function navigationSuite(mode: SiteMode) {
       const explore = page.getByRole("navigation", { name: "Explore OBSCURA" });
       const hrefs = await explore
         .getByRole("link")
-        .evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""));
+        // `href` as a property is the absolute address, whatever form the attribute is written in.
+        .evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).href));
       expect(hrefs.length).toBeGreaterThan(3);
       for (const href of hrefs) {
         const response = await page.request.get(href);
@@ -120,15 +121,11 @@ export function navigationSuite(mode: SiteMode) {
       await expect(page.locator("main")).toHaveJSProperty("inert", false);
     });
 
-    test("with JavaScript off the header links are all present and work", async ({
-      browser,
-      baseURL,
-      isMobile,
-    }) => {
-      test.skip(isMobile, "the no-JavaScript layout is the desktop one");
-      const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
-      try {
-        const page = await context.newPage();
+    test.describe("with JavaScript off", () => {
+      test.use({ javaScriptEnabled: false });
+
+      test("the header links are all present and work", async ({ page, isMobile }) => {
+        test.skip(isMobile, "the no-JavaScript layout is the desktop one");
         await page.goto("/");
         const nav = page.getByRole("navigation", { name: "Primary" });
         for (const { label } of PRIMARY) {
@@ -136,9 +133,7 @@ export function navigationSuite(mode: SiteMode) {
         }
         await nav.getByRole("link", { name: "Legacy", exact: true }).click();
         await expect(page).toHaveURL(/\/legacy\/?$/);
-      } finally {
-        await context.close();
-      }
+      });
     });
   });
 }

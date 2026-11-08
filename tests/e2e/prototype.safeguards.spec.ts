@@ -1,5 +1,5 @@
 import { expect, test } from "./support/fixtures";
-import { BUILD_DIR, builtRoutes, isNotFoundPage } from "./support/site";
+import { BUILD_DIR, builtRoutes } from "./support/site";
 
 /** Demo content must never reach the normal build: this is what a visitor to dist/ would get. */
 const DEMO_TRACE =
@@ -9,7 +9,6 @@ test.describe("prototype build: no demo content", () => {
   test("no served page carries a demo marker or any synthetic text", async ({ request }) => {
     const found: string[] = [];
     for (const route of builtRoutes(BUILD_DIR.prototype)) {
-      if (isNotFoundPage(route)) continue;
       const html = await (await request.get(route)).text();
       const match = DEMO_TRACE.exec(html);
       if (match) found.push(`${route}: ${match[0]}`);

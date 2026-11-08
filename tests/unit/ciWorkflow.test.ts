@@ -49,6 +49,21 @@ describe("the CI workflow keeps the demo build local-only", () => {
     expect(mentions).toHaveLength(1);
   });
 
+  it("names the override once in the parsed workflow and sets no other OBSCURA variable", () => {
+    // The parsed file has no comments, so this sees every key, value and command line.
+    const parsed = JSON.stringify(workflow);
+    expect(parsed.match(new RegExp(OVERRIDE, "g"))).toHaveLength(1);
+    expect(parsed.replaceAll(OVERRIDE, "")).not.toMatch(/OBSCURA_/);
+  });
+
+  it("passes no environment on to later steps", () => {
+    for (const { job, step } of steps) {
+      expect(step.run ?? "", `${job}: ${step.name ?? step.run}`).not.toMatch(
+        /GITHUB_ENV|GITHUB_OUTPUT|GITHUB_PATH|::set-env/,
+      );
+    }
+  });
+
   it("never builds or previews the demo in the verify job", () => {
     for (const { job, step } of steps.filter(({ job }) => job === "verify")) {
       expect(`${step.run ?? ""} ${job}`, step.run).not.toMatch(/demo|OBSCURA_DEMO/);

@@ -18,7 +18,9 @@ const HOST = "127.0.0.1";
 
 const projects = (mode: SiteMode, port: number) => {
   const baseURL = `http://${HOST}:${port}`;
-  const ignore = mode === "demo" ? /prototype\..*\.spec\.ts$/ : /demo\..*\.spec\.ts$/;
+  // Matched on the file name only, so a folder name on the machine can never hide a test.
+  const ignore =
+    mode === "demo" ? /[\\/]prototype\.[^\\/]*\.spec\.ts$/ : /[\\/]demo\.[^\\/]*\.spec\.ts$/;
   return [
     {
       name: `${mode}-desktop`,

@@ -47,7 +47,7 @@ test.describe("demo build: labelling and the demo clock", () => {
     await page.goto("/events/demo-hackathon-upcoming/");
     const hrefs = await page
       .locator('a[href$=".ics"]')
-      .evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""));
+      .evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).href));
     expect(hrefs.length).toBeGreaterThan(0);
     for (const href of hrefs) {
       const response = await page.request.get(href);

@@ -1,4 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
+import type { Page, TestInfo } from "@playwright/test";
 import type { Result } from "axe-core";
 import { expect, test } from "../support/fixtures";
 import {
@@ -32,22 +33,37 @@ export function formatViolations(route: string, violations: Result[]): string {
 /** axe-core on every built page, in the project's own viewport (desktop and phone). */
 export function accessibilitySuite(mode: SiteMode) {
   test.describe(`${mode} build: accessibility (axe, WCAG 2.2 AA)`, () => {
+    const scan = async (page: Page, label: string, testInfo: TestInfo) => {
+      // Let the hero island hydrate first, so the scanned DOM is the one a visitor gets.
+      await page.waitForFunction(() => !document.querySelector("astro-island[ssr]"));
+      const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+      if (violations.length > 0) {
+        await testInfo.attach("axe-violations.json", {
+          body: JSON.stringify(violations, null, 2),
+          contentType: "application/json",
+        });
+      }
+      expect(violations.length, formatViolations(label, violations)).toBe(0);
+    };
+
     for (const route of builtRoutes(BUILD_DIR[mode])) {
       test(`${route} has no WCAG A/AA violations`, async ({ page, watch }, testInfo) => {
         if (isNotFoundPage(route)) watch.allow(/status of 404/);
         await page.goto(requestPath(route));
-        // Let the hero island hydrate first, so the scanned DOM is the one a visitor gets.
-        await page.waitForFunction(() => !document.querySelector("astro-island[ssr]"));
-
-        const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-        if (violations.length > 0) {
-          await testInfo.attach("axe-violations.json", {
-            body: JSON.stringify(violations, null, 2),
-            contentType: "application/json",
-          });
-        }
-        expect(violations.length, formatViolations(route, violations)).toBe(0);
+        await scan(page, route, testInfo);
       });
     }
+
+    // The closed menu is hidden from the scan above, so the open one is scanned on its own.
+    test("the open phone menu has no WCAG A/AA violations", async ({
+      page,
+      isMobile,
+    }, testInfo) => {
+      test.skip(!isMobile, "the full-screen menu is the phone layout");
+      await page.goto("/");
+      await page.locator("summary.menu-toggle").click();
+      await expect(page.locator("[data-menu]")).toHaveAttribute("open", "");
+      await scan(page, "/ (phone menu open)", testInfo);
+    });
   });
 }

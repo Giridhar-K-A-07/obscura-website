@@ -38,7 +38,7 @@ Constraints that apply:
 ### 3.1 What runs, and against what
 
 - The tests read the **built** output, never the development server: `npm run build` produces `dist/` and `npm run demo:build` produces `dist-demo/`. The tests never build anything.
-- A small static server for the tests ([`tests/e2e/support/serve.mjs`](../../tests/e2e/support/serve.mjs), no dependencies) serves each folder on its own loopback port (4331 for `dist/`, 4332 for `dist-demo/`). It serves files only, redirects a folder address to its trailing slash, answers a missing file with the build's own `404.html` and status 404, and cannot read outside the folder.
+- A small static server for the tests ([`tests/e2e/support/serve.mjs`](../../tests/e2e/support/serve.mjs), no dependencies) serves each folder on its own loopback port (4331 for `dist/`, 4332 for `dist-demo/`). It serves files only, redirects a folder address to its trailing slash, answers a missing file with the build's own `404.html` and status 404, and cannot read outside the folder, not even through a symbolic link. Its behaviour (content types, redirects, 404s, path traversal, links, bad input) is covered by `tests/integration/staticServer.test.ts`.
 - Four Playwright projects cover both builds at both sizes: `prototype-desktop`, `prototype-mobile`, `demo-desktop` and `demo-mobile`. Desktop is Chromium at 1280 × 800. Phone is the Pixel 7 device profile (a narrow viewport, touch, mobile user agent).
 - The list of pages is **read from the built folder**, so a new page is covered automatically and a missing page cannot be forgotten. Per-page tests cover every built page; flows (navigation, menu, keyboard, motion) cover representative routes.
 
@@ -56,7 +56,7 @@ Constraints that apply:
 
 - Locally: `npm run build && npm run demo:build && npm run test:e2e`.
 - In CI: a separate `browser-qa` job in `.github/workflows/ci.yml`, so a browser problem is visible on its own and the existing `verify` job is unchanged. It is not part of `npm run verify`, because installing a browser is too heavy for the everyday gate.
-- Two workers, one retry in CI, traces kept on failure. The HTML report is uploaded only when the job fails, and contains no build output.
+- Two workers, one retry in CI, traces kept on failure. The HTML report is uploaded only when the job fails, and the job stops after 20 minutes. The report is not the build folder, but its traces can include page content, so it is kept for 7 days only (see [0004](0004-demo-build-testing.md)).
 
 ## 4. Consequences
 

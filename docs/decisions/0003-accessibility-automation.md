@@ -28,12 +28,12 @@ Those checks need a rendered page. The leadership demo and the visual identity w
 
 **Option A: axe-core through `@axe-core/playwright`, as a development dependency, on every built page.** Manual audits (D) remain required and are not replaced.
 
-- **Scope.** One axe scan for every built page of both builds (the 404 page included), at both the desktop and the phone viewport: 11 pages × 2 viewports on the normal build, and 46 pages × 2 viewports on the demo build. The page list comes from the built folder, so a new page is scanned without editing a test.
+- **Scope.** One axe scan for every built page of both builds (the 404 page included), at both the desktop and the phone viewport: 11 pages × 2 viewports on the normal build, and 46 pages × 2 viewports on the demo build. The open phone menu, which is hidden in the page scans, is scanned on its own on each build. The page list comes from the built folder, so a new page is scanned without editing a test.
 - **Standard.** The rule tags are `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` and `wcag22aa`: the WCAG 2.2 AA target of the Master Brief, which includes levels A and AA of 2.0 and 2.1. Best-practice rules and AAA rules are not part of the gate.
 - **Hydrated DOM.** The scan waits until the hero island has hydrated, so it checks the DOM a visitor ends up with, not only the server-rendered HTML.
 - **Zero violations.** A violation fails the test. There is no baseline file and no rule is disabled. If a future change makes a violation unavoidable, the test names the rule and element and the right response is to fix the page or to record a narrow, reasoned exemption in the test with a comment and a link to the issue.
 - **Clear reports.** A failure prints, for each violation, the rule id, its impact, the help text, the help URL, and up to five element selectors with axe's failure summary. The full JSON is attached to the test result.
-- **Beyond axe, the browser tests also check** what automated rules cannot easily decide: the skip link is the first keyboard stop and moves focus into `main`; every Tab stop along the home page has a visible focus outline; the phone menu locks the page behind it and returns focus on Escape; the header works with JavaScript off; reduced motion removes animation and the pause control appears otherwise (see [0002](0002-browser-testing.md)).
+- **Beyond axe, the browser tests also check** what automated rules cannot easily decide: the skip link is the first keyboard stop and moves focus into `main`; each of the first eight Tab stops on the home page has a visible focus outline; the phone menu locks the page behind it and returns focus on Escape; the header works with JavaScript off; reduced motion removes animation and the pause control appears otherwise (see [0002](0002-browser-testing.md)).
 
 ## 4. Consequences
 
