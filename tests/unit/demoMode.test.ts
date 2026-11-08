@@ -241,7 +241,10 @@ describe("the wiring keeps synthetic data out of normal builds", () => {
     }
     expect(read("scripts/demo.mjs")).toContain('OBSCURA_DEMO: "1"');
     expect(read("scripts/demo.mjs")).toContain('"--demo"');
-    expect(read(".github/workflows/ci.yml")).not.toMatch(/OBSCURA_DEMO|demo/i);
+    // CI builds the demo only with the documented override, on one step (tests/unit/ciWorkflow.test.ts):
+    // the workflow itself never turns demo mode on.
+    const workflow = read(".github/workflows/ci.yml").replaceAll("OBSCURA_DEMO_ALLOW_CI", "");
+    expect(workflow).not.toMatch(/OBSCURA_DEMO/);
   });
 
   it("shows the banner on every page through the layout, and it cannot be dismissed", () => {

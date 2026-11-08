@@ -895,8 +895,18 @@ describe("the command and its wiring", () => {
     const ci = readFileSync(".github/workflows/ci.yml", "utf8");
     expect(ci.indexOf("npm run build")).toBeGreaterThan(-1);
     expect(ci.indexOf("npm run check:build")).toBeGreaterThan(ci.indexOf("npm run build"));
-    expect(Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }).join(" ")).not.toMatch(
+    // The guard itself needs no dependency: it imports only Node's own modules.
+    const imports = [
+      ...readFileSync("scripts/check-build.mjs", "utf8").matchAll(/from "([^"]+)"/g),
+    ];
+    for (const [, specifier] of imports) expect(specifier, specifier).toMatch(/^node:/);
+    // Browser tooling (browser QA, docs/decisions/0002-browser-testing.md) is development-only and
+    // never a production dependency; no other crawler or DOM library is used.
+    expect(Object.keys(pkg.dependencies).join(" ")).not.toMatch(
       /lighthouse|playwright|puppeteer|axe|parse5|jsdom|cheerio/,
+    );
+    expect(Object.keys(pkg.devDependencies).join(" ")).not.toMatch(
+      /lighthouse|puppeteer|parse5|jsdom|cheerio/,
     );
   });
 
