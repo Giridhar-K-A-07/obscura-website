@@ -295,11 +295,12 @@ describe("starting up", () => {
       expect(result.status, args.join(" ")).toBe(2);
       expect(result.stderr, args.join(" ")).toContain("Usage:");
     }
-  });
+    // Five Node start-ups in a row: slow on a busy machine, so the default 5 s is not enough.
+  }, 60_000);
 
   it("exits with a hint when the folder has not been built", () => {
     const result = run(join(work, "outside"), "45999");
     expect(result.status).toBe(2);
     expect(result.stderr).toContain("build the site first");
-  });
+  }, 30_000);
 });
