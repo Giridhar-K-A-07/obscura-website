@@ -39,7 +39,7 @@ The approved hybrid direction asks for a "futuristic" atmosphere, "experimental 
 | Direction asks for | Master Brief says | What this document does |
 |---|---|---|
 | A dark, futuristic atmosphere | §6.3: avoid generic "tech club" tropes (glowing circuit boards, binary rain, neon gradients on everything) | Reads "futuristic" as **precise and instrument-like** (viewfinder framing, fine rules, depth of field), not as sci-fi decoration. |
-| A restrained electric accent | §7.1: one accent, "projected light"; §6.3: no acid-green or neon accent on black | Proposes a **small set of cool, saturated-but-not-neon accents** to test (section 3). Exactly one is used per concept. |
+| A restrained electric accent | §7.1: one accent, "projected light"; §6.3: no acid-green or neon accent on black | Uses the Brief's single pale accent (A1) as the rule. More saturated candidates (A2 to A4) are shown only as labelled alternatives that need the owner's approval (section 3.4). Exactly one accent is used per design. |
 | Experimental creative-technology details | §7.3: no monospace for labels, dates or metadata as decoration; headings in sentence case, with OBSCURA as the only all-caps text | Keeps both rules. Creative-tech character comes from layout, framing, motion and real data, not from mono labels or capitalised eyebrows. Relaxing either rule is listed as a decision that needs approval. |
 | A distinctive hero with abstract graphics | §7.5: the hero uses real data only; §13: no invented facts | Abstract graphics are allowed as **atmosphere**. Anything that looks like data must be computed from real records. |
 
@@ -139,7 +139,7 @@ In one sentence: *a calm dark chamber with an editorial voice, where a few exact
 - Neutrals for text and surfaces that stay quiet and slightly cool.
 - No second accent colour unless a semantic need appears (for example chart categories, which need their own tested palette: Brief §7.1).
 
-**Exploratory (what "restrained electric" means).** Saturated enough to feel alive on near-black, cool in hue, and used in small amounts (roughly one accent element in view at a time, apart from links in body text). Not neon, not acid green, and not a gradient fill across large areas.
+**Exploratory (what "restrained electric" means).** Cool in hue and used in small amounts (roughly one accent element in view at a time, apart from links in body text), so it reads as light on near-black. Not neon, not acid green, and not a gradient fill across large areas. How saturated it may be is limited by the accent rule in section 3.4: the Brief's single pale accent is in force until the owner approves a change.
 
 ### 3.2 Foundation options
 
@@ -165,18 +165,20 @@ The UI border also has to clear 3:1 against the raised surfaces it sits on: `#6B
 
 ### 3.4 Accent candidates to explore
 
-| Candidate | Value | On F1 | On F2 | As a fill, with page-colour text on it | Notes |
-|---|---|---|---|---|---|
-| **A1. Aperture (baseline)** | `#BCCDFF` | 12.48 | 12.15 | 12.48 | Pale periwinkle from the Brief and `tokens.css`. Softest option. |
-| **A2. Electric periwinkle** | `#8FA8FF` | 8.64 | 8.41 | 8.64 | More saturated than A1, stays in the same family |
-| **A3. Ultraviolet** | `#A58BFF` | 7.25 | 7.06 | 7.25 | Violet shift; most distinct from typical blue-tech palettes |
-| **A4. Cold cyan** | `#7FD6FF` | 12.15 | 11.83 | 12.15 | Brightest; risks reading as generic tech blue |
+| Candidate | Value | Status | On F1 | On F2 | As a fill, with page-colour text on it | Notes |
+|---|---|---|---|---|---|---|
+| **A1. Aperture (baseline)** | `#BCCDFF` | **In force** (Brief §7.1) | 12.48 | 12.15 | 12.48 | Pale periwinkle from the Brief and `tokens.css`. Softest option. |
+| **A2. Electric periwinkle** | `#8FA8FF` | Alternative; **needs owner approval** | 8.64 | 8.41 | 8.64 | More saturated than A1, stays in the same family |
+| **A3. Ultraviolet** | `#A58BFF` | Alternative; **needs owner approval** | 7.25 | 7.06 | 7.25 | Violet shift; most distinct from typical blue-tech palettes |
+| **A4. Cold cyan** | `#7FD6FF` | Alternative; **needs owner approval** | 12.15 | 11.83 | 12.15 | Brightest; risks reading as generic tech blue |
 
-**Exploratory rules for whichever is chosen:**
+**Accent rule (Decided).** The Master Brief's single pale accent (§7.1, A1) stays in force unless the project owner explicitly approves changing it. Concepts must respect it. A2 to A4 may be shown only as clearly labelled alternatives that ask for that approval; they are never treated as approved, never made the default, and never described as the chosen accent. Approving one means updating the Brief (section 13.3).
 
-- **One accent per concept.** Do not mix two candidates in one design.
+**Exploratory rules for whichever accent is used:**
+
+- **One accent per design.** Do not mix two candidates in one design. A concept that also shows an alternative accent shows it as a separate, labelled version, not mixed into the first.
 - The accent is for: the focus ring, links, the primary button, the active navigation item, and the "revealed" element of the hero. Not for body text, large backgrounds or decorative gradients.
-- Text set in the accent must meet 4.5:1 on the surface it sits on. All four candidates do on F1 and F2.
+- Text set in the accent must meet 4.5:1 on the surface it sits on. All four candidates do on F1 and F2 as computed here.
 - Gradients: at most one soft gradient per screen, from the foundation toward a slightly lighter or accent-tinted foundation, never across the accent itself. No rainbow or multi-hue gradients.
 - Glow: none on text or controls. A diffuse light behind the hero focal element is the only glow allowed, and it must not reduce text contrast.
 - Never rely on colour alone: status, selection and errors also use text, shape or an icon.
@@ -337,6 +339,7 @@ These components are shared across pages, so they set the site's character. They
 - No horizontal scrolling at any width (checked by the browser QA suite).
 - The hero headline must stay legible and unobstructed at 360 px, with the actions reachable without scrolling past the canvas.
 - Large display type scales with `clamp()`; test the longest title at the smallest width.
+- At 1920 px (wide desktop) the content width stays capped and the extra space stays empty; the hero must not stretch awkwardly or leave its focal point stranded.
 - Imagery uses responsive sizes with explicit dimensions to avoid layout shift.
 - Hover effects are an enhancement only; every hover reveal has a focus and tap equivalent.
 
@@ -414,26 +417,27 @@ An exploration of **2 to 3 homepage design concepts** that interpret this docume
 - The **same eight homepage sections in the same order**, with the empty-state rule.
 - The **same navigation labels** (Legacy · Events · Achievements · Projects · Learn · Blog).
 - A working **hero** with a pause control, a static reduced-motion frame, a link list alternative and a simplified phone version.
-- Desktop, tablet and phone layouts.
+- Layouts at four checkpoints: **mobile (360 px), tablet (768 px), standard desktop (1280 px) and wide desktop (1920 px)**. The comparison in section 12.5 covers all four.
 - Shown on the **demo build** (synthetic data, local only) so every section is populated. Real or invented club facts are never used.
 
 ### 12.3 What each concept should explore
 
 The three concepts should differ on purpose, within the approved hybrid direction. These are suggested starting points, not fixed designs.
 
-| Concept | Leans toward | Foundation | Accent | Type | Hero |
+| Concept | Leans toward | Foundation | Accent (A1 is in force) | Type | Hero |
 |---|---|---|---|---|---|
-| **Concept A: Editorial chamber** | Editorial | F1 navy-black | A1 or A2 | T1 serif display | The existing network canvas, framed with restraint; strongest typography |
-| **Concept B: Instrument** | Creative technology | F2 neutral charcoal | A3 or A4 | T2 sans display | Viewfinder framing, a stronger focus-pull reveal, more visible structure |
-| **Concept C: Hybrid** | Balance of both | Either | A2 | T3 mixed | A middle path: editorial headings with one or two precise technical details |
+| **Concept A: Editorial chamber** | Editorial | F1 navy-black | A1 | T1 serif display | The existing network canvas, framed with restraint; strongest typography |
+| **Concept B: Instrument** | Creative technology | F2 neutral charcoal | A1; optional labelled alternative A3 or A4 | T2 sans display | Viewfinder framing, a stronger focus-pull reveal, more visible structure |
+| **Concept C: Hybrid** | Balance of both | Either | A1; optional labelled alternative A2 | T3 mixed | A middle path: editorial headings with one or two precise technical details |
 
-Each concept states which accent, foundation and typeface pairing it uses and why. A concept may deviate with a stated reason.
+Each concept states which foundation and typeface pairing it uses and why, and may deviate on those with a stated reason. The accent is not open to deviation: the main version of every concept uses A1 (section 3.4). A more saturated alternative (A2 to A4) may be added as one extra, clearly labelled version that asks for the owner's approval; it is never the default view of the concept.
 
 ### 12.4 Constraints on the exploration
 
 - Reuse the existing design system and components where possible; one styling system.
 - No new dependency without a justification (`CLAUDE.md` §3).
 - Keep `PROTOTYPE`, noindex, the prototype notice, the demo banner, the demo badge and all demo safeguards unchanged.
+- Respect the accent rule in section 3.4: the Brief's single pale accent unless the owner explicitly approves otherwise.
 - Do not change real content, schemas, routes or navigation.
 - Do not commit exploration screenshots to the public repository. Review them locally.
 - Do not share a public preview. Any shared preview needs access control first (decision D5).
@@ -450,17 +454,17 @@ Each concept is scored on the same criteria so the comparison is fair. The proje
 | Hierarchy | Is the focal point obvious on each screen, in the first five seconds? |
 | Restraint | Is any effect, glow, gradient or motion unnecessary? |
 | Legibility | Is text comfortable to read on dark, at body size, on a phone? |
-| Mobile quality | Does the phone layout feel designed, not squeezed? |
+| Responsive quality | Does the layout feel designed, not squeezed or stretched, at **mobile (360 px), tablet (768 px), standard desktop (1280 px) and wide desktop (1920 px)**? |
 | Accessibility | Does it keep zero axe violations, visible focus and reduced-motion behaviour? |
-| Performance | Hero JavaScript against the 100 KB provisional ceiling; non-hero JavaScript against the budget; any heavy effects? |
+| Performance | What is the **measured** hero-only gzip size, in bytes, from the concept's own build? How does it compare with the **proposed** 100 KB ceiling, which is a proposal and **not an enforced build check** (section 10.1)? Is non-hero JavaScript within the **enforced** 100,000-byte budget? Are there heavy effects? |
 | Sustainability | Can the system grow to the other pages (Legacy, Events, Achievements, Projects, Learn, Blog) without redesign? |
 | Honesty | Does it look good with only the hero populated, and avoid implying facts that are not true? |
 
 ### 12.6 Evidence each concept provides
 
-- Screenshots at 360, 768 and 1280 px (kept local).
+- Screenshots at **360 px (mobile), 768 px (tablet), 1280 px (standard desktop) and 1920 px (wide desktop)**, kept local.
 - `npm run verify` and the browser QA suite results.
-- Hero-only gzip size and non-hero gzip size from `check:build`.
+- The **actual measured** hero-only gzip size, in bytes, and the non-hero gzip size, both read from `npm run check:build` on that concept's build. Estimates do not count. State the hero figure as a measurement against the proposed 100 KB ceiling, and say plainly that `check:build` reports the hero size but does not yet enforce a hero limit; only the non-hero budget is enforced.
 - A short note on which parts are reusable shared components and which are page-specific.
 - A list of what is still provisional (colours, fonts, logo).
 
@@ -482,13 +486,14 @@ Each concept is scored on the same criteria so the comparison is fair. The proje
 | 10 | D2: the logo is a clean typographic placeholder, not presented as official | Roadmap decision |
 | 11 | D5: no Vercel preview is shared until authentication exists | Roadmap decision |
 | 12 | PR #30 is documentation only; PR #31 is a draft exploration that is not merged | Project owner |
+| 13 | The Master Brief's single pale accent (A1) stays in force until the owner explicitly approves changing it | Brief §7.1; project owner |
 
 ### 13.2 Exploratory (to be settled by PR #31)
 
 | Topic | Options |
 |---|---|
 | Foundation colour | F1 navy-black or F2 neutral charcoal |
-| Accent | A1 to A4, or another cool saturated candidate |
+| Accent | A1 is in force. A2 to A4 (or another candidate) only as labelled alternatives, pending approval (section 13.3) |
 | Typeface pairing | T1, T2 or T3, and which families |
 | Hero framing | Aperture, viewfinder, full-bleed, or another |
 | Atmosphere | Whether grain, vignette or a diffuse light source is used |
@@ -500,7 +505,7 @@ Each concept is scored on the same criteria so the comparison is fair. The proje
 |---|---|---|
 | 1 | Which concept, or which parts of which, becomes the direction (gate G1) | Visual direction is the owner's call |
 | 2 | May monospace be used for labels, dates or metadata, or all-caps for small labels? | The Brief forbids both (§7.3). Allowing them changes a source-of-truth rule, so the Brief would need an explicit edit. |
-| 3 | Is a more saturated accent acceptable, given the Brief's "one pale accent" (§7.1)? | The Brief should be updated if the answer is yes |
+| 3 | May a more saturated accent (A2 to A4) replace the Brief's single pale accent (§7.1)? Until the answer is yes, concepts use A1 and show any alternative as labelled | The Brief's rule stays in force until then, and the Brief would need an explicit edit if the answer is yes |
 | 4 | Confirm the hero-only ceiling of 100 KB gzip, and whether it means 100,000 or 102,400 bytes | A new enforced limit |
 | 5 | Is grain or noise acceptable for the atmosphere? | Affects legibility and rendering cost |
 | 6 | Should the Brief's visual sections (§7) be updated after G1 to record the chosen direction? | The Brief is edited only when a task says so |
