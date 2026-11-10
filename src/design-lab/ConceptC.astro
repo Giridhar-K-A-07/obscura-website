@@ -1,0 +1,941 @@
+---
+import HeroCanvasProjection from "./HeroCanvasProjection";
+import { eventPath } from "../lib/eventsContent";
+import { eventDateParts } from "./designLab";
+import type { FooterContent } from "../lib/footerContent";
+import { areaNodes, tracksOf } from "../lib/homeGraph";
+import { formatDay, formatEventDate, type HomeContent } from "../lib/homeContent";
+import { siteMode } from "../lib/siteMode";
+
+/*
+  CONCEPT C: Projection (design exploration, not selected or approved).
+  The camera obscura as the organising idea: a pinhole of light, a round chamber, and a ray that runs
+  down the left of the page and touches each section. Editorial serif headings over a clean sans
+  interface, with a few precise details. Foundation F1 navy-black, type pairing T3 (mixed), accent
+  A1 only (docs/design-direction.md). The rail is for tablet and wider; on a phone it is hidden
+  (Master Brief §11.2). Sections follow Master Brief §8.3 in order and are hidden when empty.
+*/
+interface Props {
+  content: HomeContent;
+  footer: FooterContent;
+}
+const { content, footer } = Astro.props;
+const { intro, nextEvent, legacy, recent, projects, learning } = content;
+const [lead, ...others] = projects;
+const when = nextEvent ? eventDateParts(nextEvent.start, nextEvent.timezone) : null;
+const stops = legacy
+  ? [
+      ...(legacy.founding ? [{ label: "Founding term", term: legacy.founding }] : []),
+      { label: "Latest term", term: legacy.latest },
+    ]
+  : [];
+---
+
+<main id="main" tabindex="-1" data-concept="c">
+  <section class="hero" aria-labelledby="hero-title" id="top">
+    <div class="wrap hero-grid">
+      <div class="copy">
+        <h1 id="hero-title" class="wordmark">
+          OBSCURA
+        </h1>
+        <p class="tagline">Unveiling the unknown</p>
+        {intro && <p class="lead">{intro.description}</p>}
+        <p class="actions">
+          <a class="btn btn-primary" href="/about">
+            Explore OBSCURA
+          </a>
+          <a class="btn" href="/legacy">
+            The Legacy Line
+          </a>
+        </p>
+        <nav aria-label="Explore OBSCURA" class="explore">
+          <p class="type-label">Explore</p>
+          <ul>
+            {areaNodes.map((area) => (
+              <li>
+                <a class="link-quiet" href={area.href} data-node-link={area.id}>
+                  {area.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p class="type-label">Study roadmap tracks</p>
+          <ul class="tracks">
+            {tracksOf("learning").map((track) => (
+              <li>
+                <a class="link-quiet" href={track.href} data-node-link={track.id}>
+                  {track.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+      <figure class="stage reveal">
+        <HeroCanvasProjection client:idle />
+        <figcaption class="type-meta">
+          A pinhole of light projects the areas of this site into the chamber. Point at, or tap, a
+          point to bring it into focus.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  {nextEvent && when && (
+    <section class="sec" aria-labelledby="next-event-title" id="next-event">
+      <div class="rail-wrap">
+        <p class="kicker">Next event</p>
+        <div class="feature">
+          <div class="dial" aria-hidden="true">
+            <span class="dial-day">{when.day}</span>
+            <span class="dial-month">{when.month}</span>
+            <span class="dial-year">{when.year}</span>
+          </div>
+          <div class="feature-body">
+            <h2 id="next-event-title" class="h2">
+              {nextEvent.title}
+            </h2>
+            <dl class="inline-facts">
+              <div>
+                <dt>Date and time</dt>
+                <dd>
+                  <time datetime={nextEvent.start.toISOString()}>
+                    {formatEventDate(nextEvent.start, nextEvent.timezone)}
+                  </time>
+                </dd>
+              </div>
+              <div>
+                <dt>Type</dt>
+                <dd>{nextEvent.type}</dd>
+              </div>
+              <div>
+                <dt>Venue</dt>
+                <dd>{nextEvent.venue}</dd>
+              </div>
+            </dl>
+            <p class="actions">
+              <a class="btn btn-primary" href={eventPath(nextEvent.id)}>
+                Event details
+              </a>
+              <a class="btn" href="/events">
+                All events
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  {intro && (
+    <section class="sec intro" aria-labelledby="introduction-title" id="introduction">
+      <div class="rail-wrap">
+        <p class="kicker">What OBSCURA is</p>
+        <h2 id="introduction-title" class="h2 quiet">
+          A club, brought into focus
+        </h2>
+        <p class="statement">{intro.description}</p>
+        <p>
+          <a class="link action" href="/about">
+            About OBSCURA
+          </a>
+        </p>
+      </div>
+    </section>
+  )}
+
+  {legacy && (
+    <section class="sec" aria-labelledby="legacy-title" id="legacy">
+      <div class="rail-wrap">
+        <p class="kicker">The Legacy Line</p>
+        <h2 id="legacy-title" class="h2">
+          Batch by batch, one line of history
+        </h2>
+        <ol class="line">
+          {stops.map(({ label, term }, index) => (
+            <li class="stop" data-latest={index === stops.length - 1 ? "" : undefined}>
+              <p class="type-meta">
+                {label} · {term.academicYear}
+              </p>
+              <h3 class="stop-name">{term.name}</h3>
+              {term.summary && <p class="stop-text">{term.summary}</p>}
+            </li>
+          ))}
+        </ol>
+        <p>
+          <a class="btn" href="/legacy">
+            Explore the Legacy Line
+          </a>
+        </p>
+      </div>
+    </section>
+  )}
+
+  {recent && (
+    <section class="sec" aria-labelledby="recent-title" id="recent">
+      <div class="rail-wrap">
+        <p class="kicker">Recent</p>
+        <h2 id="recent-title" class="h2">
+          Lately in the chamber
+        </h2>
+        <ul class="entries">
+          {recent.event && (
+            <li>
+              <p class="entry-kind">Past event</p>
+              <h3 class="entry-title">{recent.event.title}</h3>
+              <p class="type-meta">{formatDay(recent.event.start)}</p>
+              <p>
+                <a class="link action" href={eventPath(recent.event.id)}>
+                  Event details
+                </a>
+              </p>
+            </li>
+          )}
+          {recent.post && (
+            <li>
+              <p class="entry-kind">Article</p>
+              <h3 class="entry-title">{recent.post.title}</h3>
+              <p class="type-meta">{formatDay(recent.post.date)}</p>
+              <p>
+                <a class="link action" href="/blog">
+                  Read the blog
+                </a>
+              </p>
+            </li>
+          )}
+        </ul>
+      </div>
+    </section>
+  )}
+
+  {lead && (
+    <section class="sec" aria-labelledby="projects-title" id="projects">
+      <div class="rail-wrap">
+        <p class="kicker">Project Showcase &amp; Portfolio</p>
+        <h2 id="projects-title" class="h2">
+          Built by members
+        </h2>
+        <article class="card lead-card">
+          <h3 class="lead-name">{lead.name}</h3>
+          <p class="lead-text">{lead.description}</p>
+          {lead.topics.length > 0 && (
+            <ul class="tags" aria-label="Topics">
+              {lead.topics.map((topic) => (
+                <li class="badge">{topic}</li>
+              ))}
+            </ul>
+          )}
+          {lead.contributors.length > 0 && (
+            <p class="type-meta">Contributors: {lead.contributors.join(", ")}</p>
+          )}
+          <p class="card-links">
+            <a class="link action" href={lead.repository}>
+              {lead.name} repository
+            </a>
+            {lead.liveDemo && (
+              <a class="link action" href={lead.liveDemo}>
+                {lead.name} live demo
+              </a>
+            )}
+          </p>
+        </article>
+        {others.length > 0 && (
+          <ul class="others">
+            {others.map((project) => (
+              <li class="card small-card">
+                <h3 class="small-name">{project.name}</h3>
+                <p class="type-meta">{project.description}</p>
+                {project.topics.length > 0 && (
+                  <ul class="tags" aria-label="Topics">
+                    {project.topics.map((topic) => (
+                      <li class="badge">{topic}</li>
+                    ))}
+                  </ul>
+                )}
+                <p>
+                  <a class="link action" href={project.repository}>
+                    {project.name} repository
+                  </a>
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p>
+          <a class="btn" href="/projects">
+            Project showcase
+          </a>
+        </p>
+      </div>
+    </section>
+  )}
+
+  {learning && (
+    <section class="sec" aria-labelledby="learning-title" id="learning">
+      <div class="rail-wrap">
+        <p class="kicker">Resource &amp; Learning Hub</p>
+        <h2 id="learning-title" class="h2">
+          Start learning
+        </h2>
+        {learning.tracks.length > 0 && (
+          <ol class="steps">
+            {learning.tracks.map((track) => (
+              <li>
+                <a class="step" href={track.roadmap.href}>
+                  <span class="step-name">{track.label}</span>
+                  <span class="step-road">{track.roadmap.title}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        )}
+        <p>
+          <a class="btn" href="/learn">
+            Resource &amp; Learning Hub
+          </a>
+        </p>
+      </div>
+    </section>
+  )}
+</main>
+
+<footer class="c-footer" data-concept="c">
+  <div class="wrap foot">
+    <div>
+      <p class="foot-mark">OBSCURA</p>
+      {siteMode.prototype && !footer.email && !footer.github && (
+        <p class="type-meta measure">
+          Prototype footer. Contact, social and legal details are not yet confirmed.
+        </p>
+      )}
+    </div>
+    <dl class="fields">
+      {footer.email && (
+        <div>
+          <dt>Contact</dt>
+          <dd>
+            <a class="link" href={`mailto:${footer.email}`}>
+              {footer.email}
+            </a>
+          </dd>
+        </div>
+      )}
+      {footer.github && (
+        <div>
+          <dt>GitHub</dt>
+          <dd>
+            {footer.github.href ? (
+              <a class="link" href={footer.github.href} rel="noopener noreferrer">
+                {footer.github.label}
+              </a>
+            ) : (
+              footer.github.label
+            )}
+          </dd>
+        </div>
+      )}
+      <div>
+        <dt>About</dt>
+        <dd>
+          <a class="link" href="/about">
+            About OBSCURA
+          </a>
+        </dd>
+      </div>
+      <div>
+        <dt>Privacy</dt>
+        <dd>
+          <a class="link" href="/privacy">
+            Privacy page
+          </a>
+        </dd>
+      </div>
+    </dl>
+  </div>
+</footer>
+
+<style is:global>
+  /* Concept C: a sturdier serif for headings (T3, mixed with the system sans), for this page only. */
+  html:has(main[data-concept="c"]) {
+    --font-serif:
+      Charter, "Bitstream Charter", "Sitka Text", Cambria, "Iowan Old Style", Georgia, serif;
+  }
+  html:has(main[data-concept="c"]) .site-header {
+    border-bottom-color: transparent;
+  }
+  html:has(main[data-concept="c"]) .site-header .brand {
+    font-weight: 600;
+    font-size: 1.0625rem;
+    letter-spacing: 0.16em;
+  }
+  html:has(main[data-concept="c"]) .site-header .link-quiet {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    position: relative;
+  }
+  html:has(main[data-concept="c"]) .site-header .link-quiet:hover {
+    color: var(--text-primary);
+  }
+  html:has(main[data-concept="c"]) .site-header .link-quiet[aria-current="page"] {
+    color: var(--text-accent);
+    text-decoration: none;
+  }
+  /* The current page is marked by a dot of light, not only by colour. */
+  html:has(main[data-concept="c"]) .site-header .link-quiet[aria-current="page"]::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 4px;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+</style>
+
+<style>
+  .wrap {
+    width: min(100% - 2 * var(--gutter), 78rem);
+    margin-inline: auto;
+  }
+  .kicker {
+    font-size: var(--text-small);
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-3);
+  }
+  .h2 {
+    font-size: clamp(1.875rem, 1.3rem + 2.4vw, 3rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.012em;
+    max-width: 20ch;
+  }
+  .h2.quiet {
+    font-size: var(--text-h3);
+    font-weight: 500;
+    font-style: italic;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-5);
+  }
+  .action {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+  }
+
+  /* ---- Hero: the chamber and its pinhole ------------------------------------------------------- */
+  .hero {
+    position: relative;
+    overflow-x: clip;
+    padding-block: var(--space-7) var(--space-8);
+    /* The one soft gradient on screen: light entering from the top, where the pinhole is. */
+    background: radial-gradient(70% 55% at 72% 0%, rgb(188 205 255 / 0.11), transparent 65%);
+  }
+  .hero-grid {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .copy > * + * {
+    margin-top: var(--space-5);
+  }
+  .wordmark {
+    font-size: clamp(2.75rem, 13.5vw, 6rem);
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .tagline {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: var(--text-h3);
+    color: var(--text-accent);
+  }
+  .lead {
+    font-size: var(--text-lead);
+    max-width: 36ch;
+  }
+  .explore {
+    border-top: 1px solid rgb(52 70 92 / 0.8);
+    padding-top: var(--space-4);
+    margin-top: var(--space-6);
+  }
+  .explore ul {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-2) 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-5);
+  }
+  .explore .type-label:not(:first-child) {
+    margin-top: var(--space-3);
+  }
+  .explore :global(.link-quiet) {
+    min-width: var(--target-min);
+  }
+  .tracks :global(.link-quiet) {
+    color: var(--text-secondary);
+  }
+  .stage {
+    margin: 0;
+    min-width: 0;
+  }
+  .stage figcaption {
+    margin-top: var(--space-2);
+    max-width: 46ch;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  /* ---- Sections: a ray of light along the left, from tablet up ---------------------------------- */
+  .sec {
+    position: relative;
+    padding-block: clamp(3.5rem, 2rem + 7vw, 8rem);
+  }
+  .rail-wrap {
+    width: min(100% - 2 * var(--gutter), 78rem);
+    margin-inline: auto;
+  }
+  .rail-wrap > * + * {
+    margin-top: var(--space-4);
+  }
+  .rail-wrap > .h2 {
+    margin-top: 0;
+  }
+  .rail-wrap > .kicker {
+    margin-top: 0;
+    margin-bottom: var(--space-3);
+  }
+  .card {
+    box-shadow: none;
+  }
+
+  /* Next event: a dial for the date, and a short row of facts. */
+  .feature {
+    display: grid;
+    gap: var(--space-6);
+    align-items: center;
+    padding-top: var(--space-4);
+  }
+  .dial {
+    position: relative;
+    width: clamp(9rem, 38vw, 13rem);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 1px solid rgb(107 119 136 / 0.7);
+    display: grid;
+    place-content: center;
+    text-align: center;
+    background: radial-gradient(circle at 50% 18%, rgb(188 205 255 / 0.12), transparent 60%);
+    font-family: var(--font-serif);
+    line-height: 1.05;
+  }
+  .dial::before {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border-radius: 50%;
+    border: 1px dashed rgb(52 70 92 / 0.9);
+  }
+  .dial::after {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    width: 7px;
+    height: 7px;
+    margin-left: -3px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .dial-day {
+    font-size: clamp(3.5rem, 2.2rem + 5vw, 5.5rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+  .dial-month {
+    font-size: var(--text-h4);
+    font-style: italic;
+    color: var(--text-secondary);
+  }
+  .dial-year {
+    font-family: var(--font-sans);
+    font-size: var(--text-small);
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+  .inline-facts {
+    display: grid;
+    gap: var(--space-3) var(--space-6);
+    margin: var(--space-5) 0 0;
+    padding-top: var(--space-4);
+    border-top: 1px solid rgb(52 70 92 / 0.8);
+  }
+  .inline-facts dt {
+    font-size: var(--text-small);
+    color: var(--text-secondary);
+  }
+  .inline-facts dd {
+    margin: var(--space-1) 0 0;
+  }
+
+  /* Introduction. A faint ring behind the statement echoes the chamber. */
+  .intro {
+    overflow-x: clip;
+  }
+  .intro .rail-wrap {
+    position: relative;
+  }
+  .intro .rail-wrap::before {
+    content: "";
+    position: absolute;
+    right: -10%;
+    top: 50%;
+    width: min(46rem, 90vw);
+    aspect-ratio: 1;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    border: 1px solid rgb(52 70 92 / 0.55);
+    pointer-events: none;
+  }
+  .statement {
+    position: relative;
+    font-size: clamp(1.5rem, 1rem + 2.2vw, 2.75rem);
+    font-weight: 400;
+    line-height: 1.28;
+    max-width: 24em;
+  }
+
+  /* Legacy: entries on a line of light, revealed as they come into view. */
+  .line {
+    list-style: none;
+    margin: var(--space-6) 0;
+    padding: 0 0 0 var(--space-6);
+    position: relative;
+  }
+  .line::before {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 0.5rem;
+    bottom: -1rem;
+    width: 1px;
+    background: linear-gradient(var(--accent), rgb(107 119 136 / 0.25) 60%, transparent);
+  }
+  .stop {
+    position: relative;
+    padding-bottom: var(--space-6);
+  }
+  .stop::before {
+    content: "";
+    position: absolute;
+    left: calc(-1 * var(--space-6));
+    top: 0.4rem;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--surface-page);
+    border: 2px solid var(--border-ui);
+  }
+  .stop[data-latest]::before {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .stop-name {
+    font-size: var(--text-h2);
+    font-weight: 600;
+    margin-block: var(--space-1);
+  }
+  .stop-text {
+    color: var(--text-secondary);
+    max-width: 46ch;
+  }
+
+  /* Recent. */
+  .entries {
+    list-style: none;
+    margin: var(--space-5) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-5);
+  }
+  .entries li {
+    padding-left: var(--space-5);
+    border-left: 1px solid rgb(107 119 136 / 0.45);
+  }
+  .entries li > * + * {
+    margin-top: var(--space-2);
+  }
+  .entry-kind {
+    font-size: var(--text-small);
+    font-weight: 600;
+    color: var(--text-accent);
+  }
+  .entry-title {
+    font-size: var(--text-h2);
+    font-weight: 600;
+    line-height: 1.2;
+    max-width: 22ch;
+  }
+
+  /* Projects: one lead card and smaller cards beside it. */
+  .lead-card {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    margin-top: var(--space-5);
+    background: linear-gradient(rgb(17 24 38 / 0.9), rgb(17 24 38 / 0.6));
+  }
+  .lead-name {
+    font-size: var(--text-h1);
+    font-weight: 600;
+    line-height: 1.1;
+  }
+  .lead-text {
+    font-size: var(--text-lead);
+    max-width: 44ch;
+  }
+  .tags {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .card-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-5);
+  }
+  .others {
+    list-style: none;
+    margin: var(--space-4) 0 var(--space-5);
+    padding: 0;
+    display: grid;
+    gap: var(--space-4);
+  }
+  .small-card {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+  .small-name {
+    font-size: var(--text-h3);
+    font-weight: 600;
+  }
+
+  /* Learning: steps on a line. */
+  .steps {
+    list-style: none;
+    counter-reset: step;
+    margin: var(--space-5) 0;
+    padding: 0;
+    display: grid;
+    gap: 0;
+  }
+  .steps li {
+    counter-increment: step;
+    position: relative;
+    padding-left: 3.5rem;
+  }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: var(--space-3);
+    width: 2.25rem;
+    aspect-ratio: 1;
+    display: grid;
+    place-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--border-ui);
+    background: var(--surface-page);
+    font-family: var(--font-serif);
+    font-size: var(--text-h4);
+    z-index: 1;
+  }
+  .steps li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: calc(1.125rem - 0.5px);
+    top: calc(var(--space-3) + 2.25rem);
+    bottom: calc(-1 * var(--space-3));
+    width: 1px;
+    background: rgb(107 119 136 / 0.45);
+  }
+  .step {
+    display: grid;
+    gap: 2px;
+    padding-block: var(--space-3);
+    min-height: var(--target-min);
+    color: var(--text-primary);
+    text-decoration: none;
+    margin-bottom: var(--space-2);
+  }
+  .step-name {
+    font-family: var(--font-serif);
+    font-size: var(--text-h2);
+    font-weight: 600;
+    line-height: 1.2;
+    transition: color var(--duration-feedback) var(--ease-out);
+  }
+  .step-road {
+    font-size: var(--text-small);
+    color: var(--text-secondary);
+  }
+  .step:hover .step-name,
+  .step:focus-visible .step-name {
+    color: var(--text-accent);
+  }
+  .steps li:has(.step:hover)::before,
+  .steps li:has(.step:focus-visible)::before {
+    border-color: var(--accent);
+    color: var(--text-accent);
+  }
+
+  /* Footer: the ray ends in a pinhole. */
+  .c-footer {
+    position: relative;
+    padding-block: var(--space-8);
+    border-top: 1px solid rgb(52 70 92 / 0.8);
+  }
+  .c-footer::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    width: 7px;
+    height: 7px;
+    margin-left: -3px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .foot {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .foot-mark {
+    font-family: var(--font-serif);
+    font-size: var(--text-h2);
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    margin-bottom: var(--space-3);
+  }
+  .fields {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .fields dt {
+    font-size: var(--text-small);
+    color: var(--text-secondary);
+  }
+  .fields dd {
+    margin: var(--space-1) 0 0;
+  }
+  .fields a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .stop {
+        animation-name: c-reveal;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: view();
+        animation-range: entry 5% entry 70%;
+      }
+    }
+  }
+  @keyframes c-reveal {
+    from {
+      opacity: 0.8;
+      filter: blur(3px);
+    }
+    to {
+      opacity: 1;
+      filter: none;
+    }
+  }
+
+  @media (min-width: 641px) {
+    .feature {
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: var(--space-7);
+    }
+    .inline-facts {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .entries {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-6);
+    }
+    .others {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .fields {
+      grid-template-columns: 1fr 1fr;
+    }
+    /* The rail starts here: a hairline down the left of every section, with a dot at its heading. */
+    .sec::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: max(var(--gutter), calc((100% - 78rem) / 2));
+      width: 1px;
+      background: rgb(107 119 136 / 0.35);
+    }
+    .sec::after {
+      content: "";
+      position: absolute;
+      top: clamp(3.5rem, 2rem + 7vw, 8rem);
+      left: max(var(--gutter), calc((100% - 78rem) / 2));
+      width: 9px;
+      height: 9px;
+      margin: 0.4rem 0 0 -4px;
+      border-radius: 50%;
+      background: var(--surface-page);
+      border: 1px solid var(--accent);
+    }
+    .rail-wrap {
+      padding-left: 3rem;
+    }
+  }
+  @media (min-width: 1025px) {
+    .hero {
+      padding-block: var(--space-8);
+    }
+    .hero-grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      align-items: center;
+      gap: var(--space-7);
+    }
+    .wordmark {
+      font-size: clamp(3.5rem, 6.4vw, 6rem);
+    }
+    .others {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .foot {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--space-8);
+    }
+    .lead-card {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

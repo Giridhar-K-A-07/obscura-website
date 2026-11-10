@@ -27,6 +27,15 @@ test.describe("prototype build: no demo content", () => {
     }
   });
 
+  test("the design exploration is not part of the normal build", async ({ request }) => {
+    for (const path of ["/design-lab/", "/design-lab/a/", "/design-lab/b/", "/design-lab/c/"]) {
+      expect((await request.get(path)).status(), path).toBe(404);
+    }
+    expect(
+      builtRoutes(BUILD_DIR.prototype).filter((route) => route.startsWith("/design-lab")),
+    ).toEqual([]);
+  });
+
   test("a visitor sees the prototype notice and no demo banner on the home page", async ({
     page,
   }) => {

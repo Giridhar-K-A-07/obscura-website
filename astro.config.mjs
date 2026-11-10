@@ -34,6 +34,22 @@ const sitemap = () => {
   };
 };
 
+// The homepage design exploration (PR #31, src/design-lab/). Its routes are registered ONLY in a demo
+// build, from outside src/pages, so a normal build never sees the pages, their scripts or their styles.
+/** @returns {import("astro").AstroIntegration} */
+const designLab = () => ({
+  name: "obscura-design-lab",
+  hooks: {
+    "astro:config:setup": ({ injectRoute }) => {
+      if (!DEMO) return;
+      injectRoute({
+        pattern: "/design-lab/[...concept]",
+        entrypoint: "./src/design-lab/DesignLabPage.astro",
+      });
+    },
+  },
+});
+
 // A demo build (synthetic data, local only) must never run in CI or on Vercel.
 const refusal = demoRefusal(process.env);
 if (refusal) throw new Error(refusal);
@@ -46,7 +62,7 @@ export default defineConfig({
   // A demo build writes to its own folder and serves its own static files (src/lib/demoMode.ts).
   outDir: DEMO ? "./dist-demo" : "./dist",
   publicDir: DEMO ? "./fixtures/demo/public" : "./public",
-  integrations: [react(), mdx(), sitemap()],
+  integrations: [react(), mdx(), sitemap(), designLab()],
   markdown: {
     // The one Markdown/MDX processor for every article and event body (Astro 7's Sätteri, with two
     // plugins added; see scripts/body-processor.mjs). A second page-level h1, or JavaScript in an MDX
