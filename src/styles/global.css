@@ -2,3 +2,5 @@
 @import "./tokens.css";
 @import "./base.css";
 @import "./components.css";
+/* The demo-only design exploration (src/design-lab) is not scanned: it must not add a utility to the real build. */
+@source not "../design-lab";

@@ -1,0 +1,906 @@
+---
+import HeroCanvasInstrument from "./HeroCanvasInstrument";
+import { eventPath } from "../lib/eventsContent";
+import { eventDateParts } from "./designLab";
+import type { FooterContent } from "../lib/footerContent";
+import { areaNodes, tracksOf } from "../lib/homeGraph";
+import { formatDay, formatEventDate, type HomeContent } from "../lib/homeContent";
+import { siteMode } from "../lib/siteMode";
+
+/*
+  CONCEPT B: Instrument (design exploration, not selected or approved).
+  A creative-technology laboratory: a visible grid, corner registration marks, a viewfinder hero and
+  panel-based, structured information. Foundation F2 neutral charcoal, type pairing T2 (sans display),
+  accent A1 only (docs/design-direction.md). Labels, dates and metadata stay sans and sentence case
+  (Master Brief §7.3). Sections follow Master Brief §8.3 in order and are hidden when empty.
+*/
+interface Props {
+  content: HomeContent;
+  footer: FooterContent;
+}
+const { content, footer } = Astro.props;
+const { intro, nextEvent, legacy, recent, projects, learning } = content;
+const when = nextEvent ? eventDateParts(nextEvent.start, nextEvent.timezone) : null;
+const stops = legacy
+  ? [
+      ...(legacy.founding ? [{ label: "Founding term", term: legacy.founding }] : []),
+      { label: "Latest term", term: legacy.latest },
+    ]
+  : [];
+---
+
+<main id="main" tabindex="-1" data-concept="b">
+  <section class="hero" aria-labelledby="hero-title" id="top">
+    <div class="wrap hero-grid">
+      <div class="copy">
+        <h1 id="hero-title" class="wordmark">
+          OBSCURA
+        </h1>
+        <p class="tagline">Unveiling the unknown</p>
+        {intro && <p class="lead">{intro.description}</p>}
+        <p class="actions">
+          <a class="btn btn-primary" href="/about">
+            Explore OBSCURA
+          </a>
+          <a class="btn" href="/legacy">
+            The Legacy Line
+          </a>
+        </p>
+        <nav aria-label="Explore OBSCURA" class="explore">
+          <p class="type-label">Explore</p>
+          <ul>
+            {areaNodes.map((area) => (
+              <li>
+                <a class="link-quiet" href={area.href} data-node-link={area.id}>
+                  {area.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p class="type-label">Study roadmap tracks</p>
+          <ul class="tracks">
+            {tracksOf("learning").map((track) => (
+              <li>
+                <a class="link-quiet" href={track.href} data-node-link={track.id}>
+                  {track.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+      <figure class="viewport reveal">
+        <span class="corner tl" aria-hidden="true"></span>
+        <span class="corner tr" aria-hidden="true"></span>
+        <span class="corner bl" aria-hidden="true"></span>
+        <span class="corner br" aria-hidden="true"></span>
+        <HeroCanvasInstrument client:idle />
+        <figcaption class="type-meta">
+          The areas of this site as a network. The sharp circle follows your pointer or tap.
+        </figcaption>
+      </figure>
+    </div>
+    <div class="ruler" aria-hidden="true"></div>
+  </section>
+
+  {nextEvent && when && (
+    <section class="block" aria-labelledby="next-event-title" id="next-event">
+      <div class="wrap layout">
+        <header class="head">
+          <p class="kicker">Next event</p>
+          <h2 id="next-event-title" class="h2">
+            {nextEvent.title}
+          </h2>
+        </header>
+        <div class="panel event">
+          <span class="corner tl" aria-hidden="true"></span>
+          <span class="corner br" aria-hidden="true"></span>
+          <div class="date" aria-hidden="true">
+            <span class="day">{when.day}</span>
+            <span class="month">{when.month}</span>
+            <span class="year">{when.year}</span>
+          </div>
+          <div class="spec">
+            <dl class="rows">
+              <div>
+                <dt>Date and time</dt>
+                <dd>
+                  <time datetime={nextEvent.start.toISOString()}>
+                    {formatEventDate(nextEvent.start, nextEvent.timezone)}
+                  </time>
+                </dd>
+              </div>
+              <div>
+                <dt>Type</dt>
+                <dd>{nextEvent.type}</dd>
+              </div>
+              <div>
+                <dt>Venue</dt>
+                <dd>{nextEvent.venue}</dd>
+              </div>
+            </dl>
+            <p class="actions">
+              <a class="btn btn-primary" href={eventPath(nextEvent.id)}>
+                Event details
+              </a>
+              <a class="btn" href="/events">
+                All events
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  {intro && (
+    <section class="block" aria-labelledby="introduction-title" id="introduction">
+      <div class="wrap layout">
+        <header class="head">
+          <p class="kicker">What OBSCURA is</p>
+          <h2 id="introduction-title" class="h2">
+            A club, brought into focus
+          </h2>
+        </header>
+        <div>
+          <p class="statement">{intro.description}</p>
+          <p>
+            <a class="link action" href="/about">
+              About OBSCURA
+            </a>
+          </p>
+        </div>
+      </div>
+    </section>
+  )}
+
+  {legacy && (
+    <section class="block" aria-labelledby="legacy-title" id="legacy">
+      <div class="wrap layout">
+        <header class="head">
+          <p class="kicker">The Legacy Line</p>
+          <h2 id="legacy-title" class="h2">
+            Batch by batch, one line of history
+          </h2>
+        </header>
+        <div>
+          <ol class="axis">
+            {stops.map(({ label, term }) => (
+              <li class="flag">
+                <p class="type-meta">
+                  {label} · {term.academicYear}
+                </p>
+                <h3 class="flag-name">{term.name}</h3>
+                {term.summary && <p class="flag-text">{term.summary}</p>}
+              </li>
+            ))}
+          </ol>
+          <p>
+            <a class="btn" href="/legacy">
+              Explore the Legacy Line
+            </a>
+          </p>
+        </div>
+      </div>
+    </section>
+  )}
+
+  {recent && (
+    <section class="block" aria-labelledby="recent-title" id="recent">
+      <div class="wrap layout">
+        <header class="head">
+          <p class="kicker">Recent</p>
+          <h2 id="recent-title" class="h2">
+            Lately in the chamber
+          </h2>
+        </header>
+        <ul class="log">
+          {recent.event && (
+            <li>
+              <p class="log-type">Past event</p>
+              <p class="log-date type-meta">{formatDay(recent.event.start)}</p>
+              <h3 class="log-title">{recent.event.title}</h3>
+              <a class="log-link link" href={eventPath(recent.event.id)}>
+                Event details
+              </a>
+            </li>
+          )}
+          {recent.post && (
+            <li>
+              <p class="log-type">Article</p>
+              <p class="log-date type-meta">{formatDay(recent.post.date)}</p>
+              <h3 class="log-title">{recent.post.title}</h3>
+              <a class="log-link link" href="/blog">
+                Read the blog
+              </a>
+            </li>
+          )}
+        </ul>
+      </div>
+    </section>
+  )}
+
+  {projects.length > 0 && (
+    <section class="block" aria-labelledby="projects-title" id="projects">
+      <div class="wrap">
+        <header class="head wide-head">
+          <p class="kicker">Project Showcase &amp; Portfolio</p>
+          <h2 id="projects-title" class="h2">
+            Built by members
+          </h2>
+        </header>
+        <ul class="specs">
+          {projects.map((project) => (
+            <li class="spec-card">
+              <h3 class="spec-name">{project.name}</h3>
+              <p>{project.description}</p>
+              {project.topics.length > 0 && (
+                <ul class="tags" aria-label="Topics">
+                  {project.topics.map((topic) => (
+                    <li>{topic}</li>
+                  ))}
+                </ul>
+              )}
+              {project.contributors.length > 0 && (
+                <p class="type-meta">Contributors: {project.contributors.join(", ")}</p>
+              )}
+              <p class="spec-links">
+                <a class="link action" href={project.repository}>
+                  {project.name} repository
+                </a>
+                {project.liveDemo && (
+                  <a class="link action" href={project.liveDemo}>
+                    {project.name} live demo
+                  </a>
+                )}
+              </p>
+            </li>
+          ))}
+        </ul>
+        <p>
+          <a class="btn" href="/projects">
+            Project showcase
+          </a>
+        </p>
+      </div>
+    </section>
+  )}
+
+  {learning && (
+    <section class="block" aria-labelledby="learning-title" id="learning">
+      <div class="wrap">
+        <header class="head wide-head">
+          <p class="kicker">Resource &amp; Learning Hub</p>
+          <h2 id="learning-title" class="h2">
+            Start learning
+          </h2>
+        </header>
+        {learning.tracks.length > 0 && (
+          <ul class="index">
+            {learning.tracks.map((track) => (
+              <li>
+                <a class="cell" href={track.roadmap.href}>
+                  <span class="cell-name">{track.label}</span>
+                  <span class="cell-road">{track.roadmap.title}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p>
+          <a class="btn" href="/learn">
+            Resource &amp; Learning Hub
+          </a>
+        </p>
+      </div>
+    </section>
+  )}
+</main>
+
+<footer class="b-footer" data-concept="b">
+  <div class="wrap foot">
+    <div>
+      <p class="foot-mark">OBSCURA</p>
+      {siteMode.prototype && !footer.email && !footer.github && (
+        <p class="type-meta measure">
+          Prototype footer. Contact, social and legal details are not yet confirmed.
+        </p>
+      )}
+    </div>
+    <dl class="rows fields">
+      {footer.email && (
+        <div>
+          <dt>Contact</dt>
+          <dd>
+            <a class="link" href={`mailto:${footer.email}`}>
+              {footer.email}
+            </a>
+          </dd>
+        </div>
+      )}
+      {footer.github && (
+        <div>
+          <dt>GitHub</dt>
+          <dd>
+            {footer.github.href ? (
+              <a class="link" href={footer.github.href} rel="noopener noreferrer">
+                {footer.github.label}
+              </a>
+            ) : (
+              footer.github.label
+            )}
+          </dd>
+        </div>
+      )}
+      <div>
+        <dt>About</dt>
+        <dd>
+          <a class="link" href="/about">
+            About OBSCURA
+          </a>
+        </dd>
+      </div>
+      <div>
+        <dt>Privacy</dt>
+        <dd>
+          <a class="link" href="/privacy">
+            Privacy page
+          </a>
+        </dd>
+      </div>
+    </dl>
+  </div>
+</footer>
+
+<style is:global>
+  /* Concept B: foundation F2 (neutral charcoal) and a sans display face, for this page only. */
+  html:has(main[data-concept="b"]) {
+    --color-ink: #0e0f12;
+    --color-chamber: #16181d;
+    --font-serif:
+      Bahnschrift, "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+  }
+  html:has(main[data-concept="b"]) .site-header {
+    border-bottom-color: rgb(107 119 136 / 0.35);
+  }
+  html:has(main[data-concept="b"]) .site-header .brand {
+    font-weight: 700;
+    font-size: 1.0625rem;
+    letter-spacing: 0.2em;
+  }
+  html:has(main[data-concept="b"]) .site-header .link-quiet {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+  }
+  html:has(main[data-concept="b"]) .site-header .link-quiet:hover {
+    color: var(--text-primary);
+    border-bottom-color: var(--border-ui);
+  }
+  html:has(main[data-concept="b"]) .site-header .link-quiet[aria-current="page"] {
+    color: var(--text-accent);
+    border-bottom-color: var(--accent);
+    text-decoration: none;
+  }
+</style>
+
+<style>
+  .wrap {
+    width: min(100% - 2 * var(--gutter), 78rem);
+    margin-inline: auto;
+  }
+  .kicker {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-small);
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-3);
+  }
+  .kicker::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    flex: none;
+  }
+  .h2 {
+    font-size: clamp(1.75rem, 1.25rem + 1.8vw, 2.5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  .action {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+
+  /* Registration marks: the corners of a frame. Decorative, hidden from assistive technology. */
+  .corner {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 0 solid var(--accent);
+    pointer-events: none;
+  }
+  .corner.tl {
+    top: -1px;
+    left: -1px;
+    border-top-width: 2px;
+    border-left-width: 2px;
+  }
+  .corner.tr {
+    top: -1px;
+    right: -1px;
+    border-top-width: 2px;
+    border-right-width: 2px;
+  }
+  .corner.bl {
+    bottom: -1px;
+    left: -1px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+  }
+  .corner.br {
+    bottom: -1px;
+    right: -1px;
+    border-bottom-width: 2px;
+    border-right-width: 2px;
+  }
+
+  /* ---- Hero: a 12-column grid showing through, and the viewfinder ------------------------------ */
+  .hero {
+    position: relative;
+    overflow-x: clip;
+    padding-top: var(--space-8);
+    /* The one soft gradient on screen, plus the grid hairlines (not a gradient fill). */
+    background:
+      linear-gradient(to right, rgb(154 165 180 / 0.06) 1px, transparent 1px) 0 0 / calc(100% / 12)
+        100%,
+      radial-gradient(50% 55% at 70% 35%, rgb(188 205 255 / 0.07), transparent 70%);
+  }
+  .hero-grid {
+    display: grid;
+    gap: var(--space-7);
+  }
+  .copy > * + * {
+    margin-top: var(--space-5);
+  }
+  .wordmark {
+    font-size: clamp(3rem, 14vw, 7.5rem);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 0.95;
+    white-space: nowrap;
+  }
+  .tagline {
+    font-family: var(--font-serif);
+    font-size: var(--text-h3);
+    font-weight: 400;
+    color: var(--text-accent);
+  }
+  .lead {
+    font-size: var(--text-lead);
+    max-width: 38ch;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+  .explore {
+    border-top: 1px solid rgb(107 119 136 / 0.35);
+    padding-top: var(--space-4);
+    margin-top: var(--space-6);
+  }
+  .explore ul {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-2) 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-5);
+  }
+  .explore .type-label:not(:first-child) {
+    margin-top: var(--space-3);
+  }
+  .explore :global(.link-quiet) {
+    min-width: var(--target-min);
+  }
+  .tracks :global(.link-quiet) {
+    color: var(--text-secondary);
+  }
+  .viewport {
+    position: relative;
+    margin: 0;
+    min-width: 0;
+    padding: var(--space-5) var(--space-5) var(--space-4);
+    border: 1px solid rgb(107 119 136 / 0.4);
+    background: rgb(22 24 29 / 0.7);
+  }
+  .viewport figcaption {
+    margin-top: var(--space-2);
+    padding-right: 9.5rem;
+    max-width: 52ch;
+  }
+  .ruler {
+    margin-top: var(--space-8);
+    height: 14px;
+    background:
+      repeating-linear-gradient(90deg, rgb(154 165 180 / 0.45) 0 1px, transparent 1px 12px) bottom /
+        100% 6px no-repeat,
+      repeating-linear-gradient(90deg, rgb(154 165 180 / 0.6) 0 1px, transparent 1px 60px) bottom /
+        100% 14px no-repeat;
+    border-bottom: 1px solid rgb(154 165 180 / 0.45);
+  }
+
+  /* ---- Sections: a heading column and a panel column ------------------------------------------ */
+  .block {
+    padding-block: clamp(3.5rem, 2rem + 6vw, 7rem);
+    border-bottom: 1px solid rgb(107 119 136 / 0.22);
+  }
+  .layout {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .head > * + * {
+    margin-top: var(--space-2);
+  }
+  .wide-head {
+    margin-bottom: var(--space-6);
+  }
+  .panel {
+    position: relative;
+    background: var(--surface-raised);
+    border: 1px solid rgb(107 119 136 / 0.4);
+  }
+
+  /* Next event: a date block and a specification table. */
+  .event {
+    display: grid;
+  }
+  .date {
+    display: grid;
+    align-content: center;
+    padding: var(--space-6);
+    border-bottom: 1px solid rgb(107 119 136 / 0.4);
+    line-height: 1;
+    font-family: var(--font-serif);
+  }
+  .day {
+    font-size: clamp(4.5rem, 3rem + 7vw, 8rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text-accent);
+  }
+  .month {
+    font-size: var(--text-h2);
+    font-weight: 700;
+    margin-top: var(--space-2);
+  }
+  .year {
+    font-size: var(--text-lead);
+    color: var(--text-secondary);
+    margin-top: var(--space-1);
+    font-variant-numeric: tabular-nums;
+  }
+  .spec {
+    padding: var(--space-5);
+    display: grid;
+    align-content: space-between;
+    gap: var(--space-5);
+  }
+  .rows {
+    margin: 0;
+  }
+  .rows > div {
+    display: grid;
+    gap: var(--space-1);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid rgb(107 119 136 / 0.3);
+  }
+  .rows dt {
+    font-size: var(--text-small);
+    color: var(--text-secondary);
+  }
+  .rows dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Introduction. */
+  .statement {
+    font-family: var(--font-serif);
+    font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.5rem);
+    font-weight: 600;
+    line-height: 1.22;
+    letter-spacing: -0.01em;
+    padding-left: var(--space-5);
+    border-left: 4px solid var(--accent);
+    margin-bottom: var(--space-5);
+    max-width: 30em;
+  }
+
+  /* Legacy: terms hang from an axis. */
+  .axis {
+    list-style: none;
+    margin: 0 0 var(--space-6);
+    padding: 0 0 0 var(--space-6);
+    position: relative;
+    display: grid;
+    gap: var(--space-5);
+  }
+  .axis::before {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    border-left: 1px solid rgb(154 165 180 / 0.5);
+  }
+  .flag {
+    position: relative;
+    background: var(--surface-raised);
+    border: 1px solid rgb(107 119 136 / 0.4);
+    padding: var(--space-4) var(--space-5);
+  }
+  .flag::before {
+    content: "";
+    position: absolute;
+    left: calc(-1 * var(--space-6) - 1px);
+    top: var(--space-5);
+    width: 11px;
+    height: 11px;
+    background: var(--accent);
+  }
+  .flag-name {
+    font-size: var(--text-h3);
+    font-weight: 700;
+    margin-block: var(--space-1);
+  }
+  .flag-text {
+    color: var(--text-secondary);
+    max-width: 52ch;
+  }
+
+  /* Recent: rows of a log; the whole row lights on hover and focus. */
+  .log {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid rgb(107 119 136 / 0.4);
+  }
+  .log li {
+    display: grid;
+    gap: var(--space-1) var(--space-5);
+    padding: var(--space-4);
+    border-bottom: 1px solid rgb(107 119 136 / 0.4);
+    border-left: 3px solid transparent;
+    transition:
+      background-color var(--duration-feedback) var(--ease-out),
+      border-color var(--duration-feedback) var(--ease-out);
+  }
+  .log li:hover,
+  .log li:focus-within {
+    background: var(--surface-raised);
+    border-left-color: var(--accent);
+  }
+  .log-type {
+    font-weight: 600;
+    font-size: var(--text-small);
+  }
+  .log-date {
+    font-variant-numeric: tabular-nums;
+  }
+  .log-title {
+    font-size: var(--text-h3);
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  .log-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+
+  /* Projects: specification cards. */
+  .specs {
+    list-style: none;
+    margin: 0 0 var(--space-6);
+    padding: 0;
+    display: grid;
+    gap: var(--space-4);
+  }
+  .spec-card {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    background: var(--surface-raised);
+    border: 1px solid rgb(107 119 136 / 0.4);
+    border-top: 3px solid var(--accent);
+  }
+  .spec-name {
+    font-size: var(--text-h3);
+    font-weight: 700;
+  }
+  .tags {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .tags li {
+    padding: 2px var(--space-3);
+    border: 1px solid var(--border-ui);
+    font-size: var(--text-small);
+    color: var(--text-secondary);
+  }
+  .spec-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-5);
+  }
+
+  /* Learning: a ruled index. */
+  .index {
+    list-style: none;
+    margin: 0 0 var(--space-6);
+    padding: 0;
+    display: grid;
+    border: 1px solid rgb(107 119 136 / 0.4);
+  }
+  .index li + li {
+    border-top: 1px solid rgb(107 119 136 / 0.4);
+  }
+  .cell {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-5);
+    min-height: var(--target-min);
+    color: var(--text-primary);
+    text-decoration: none;
+    border-top: 3px solid transparent;
+    margin-top: -1px;
+    height: 100%;
+    transition:
+      background-color var(--duration-feedback) var(--ease-out),
+      border-color var(--duration-feedback) var(--ease-out);
+  }
+  .cell:hover,
+  .cell:focus-visible {
+    background: var(--surface-raised);
+    border-top-color: var(--accent);
+  }
+  .cell-name {
+    font-family: var(--font-serif);
+    font-size: var(--text-h2);
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  .cell-road {
+    font-size: var(--text-small);
+    color: var(--text-secondary);
+  }
+
+  /* Footer. */
+  .b-footer {
+    padding-block: var(--space-8);
+  }
+  .foot {
+    display: grid;
+    gap: var(--space-6);
+    padding-top: var(--space-6);
+    border-top: 1px solid rgb(107 119 136 / 0.4);
+  }
+  .foot a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+  .foot-mark {
+    font-family: var(--font-serif);
+    font-size: var(--text-h2);
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    margin-bottom: var(--space-3);
+  }
+
+  @media (min-width: 641px) {
+    .event {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    }
+    .date {
+      border-bottom: 0;
+      border-right: 1px solid rgb(107 119 136 / 0.4);
+    }
+    .specs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .index {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .index li:nth-child(even) {
+      border-left: 1px solid rgb(107 119 136 / 0.4);
+    }
+    .index li:nth-child(2) {
+      border-top: 0;
+    }
+    .log li {
+      grid-template-columns: 8rem 8rem minmax(0, 1fr) auto;
+      align-items: center;
+    }
+    .foot .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: var(--space-6);
+    }
+  }
+  @media (min-width: 1025px) {
+    .hero-grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      align-items: center;
+      gap: var(--space-8);
+    }
+    .wordmark {
+      font-size: clamp(4rem, 6.2vw, 6.25rem);
+    }
+    .layout {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      gap: var(--space-8);
+      align-items: start;
+    }
+    .head {
+      position: sticky;
+      top: var(--space-6);
+    }
+    .wide-head {
+      position: static;
+      max-width: 36rem;
+    }
+    .specs {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .axis {
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      padding: var(--space-6) 0 0;
+      gap: var(--space-4);
+    }
+    .axis::before {
+      left: 0;
+      right: 0;
+      top: 5px;
+      bottom: auto;
+      width: auto;
+      height: 1px;
+      border-left: 0;
+      border-top: 1px solid rgb(154 165 180 / 0.5);
+    }
+    .flag::before {
+      left: var(--space-5);
+      top: calc(-1 * var(--space-6) - 1px);
+    }
+    .index {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .index li + li {
+      border-top: 0;
+      border-left: 1px solid rgb(107 119 136 / 0.4);
+    }
+    .foot {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      gap: var(--space-8);
+    }
+  }
+</style>

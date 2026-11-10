@@ -1,0 +1,91 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ConceptA from "./ConceptA.astro";
+import ConceptB from "./ConceptB.astro";
+import ConceptC from "./ConceptC.astro";
+import LabBar from "./LabBar.astro";
+import PrototypeNotice from "../components/home/PrototypeNotice.astro";
+import { CONCEPTS, conceptById, conceptPath, labStaticPaths } from "./designLab";
+import { loadFooterContent } from "../lib/footerData";
+import { loadHomeContent } from "../lib/homeData";
+
+/*
+  The homepage design exploration (PR #31). DEMO BUILD ONLY: `labStaticPaths` returns nothing in a
+  normal build, so none of these routes is emitted there (src/lib/designLab.ts). The page reads the
+  same homepage content the real homepage does, so every concept shows the same synthetic fixtures
+  in the same section order (Master Brief §8.3). No concept is selected or approved.
+*/
+export const getStaticPaths = () => labStaticPaths();
+
+const concept = conceptById(Astro.params.concept);
+const content = await loadHomeContent();
+const footer = await loadFooterContent();
+const title = concept
+  ? `Concept ${concept.id.toUpperCase()}: ${concept.name} (design exploration)`
+  : "Design exploration: homepage concepts";
+---
+
+<BaseLayout
+  title={title}
+  description="Homepage design exploration on synthetic demo data. Not selected, not approved, not verified club content."
+  noindex
+>
+  <LabBar current={concept} />
+  <PrototypeNotice />
+  {concept?.id === "a" && <ConceptA content={content} footer={footer} />}
+  {concept?.id === "b" && <ConceptB content={content} footer={footer} />}
+  {concept?.id === "c" && <ConceptC content={content} footer={footer} />}
+  {!concept && (
+    <main id="main" tabindex="-1">
+      <div class="page lab-index flow" style="--flow-space: var(--space-6)">
+        <h1 class="type-h1">Homepage design exploration</h1>
+        <p class="type-lead measure">
+          Three complete homepages, built on the synthetic demo data, to compare in a browser. Each
+          keeps the same eight sections in the Master Brief's order and the same navigation. No
+          concept is selected or approved, and every colour and font is provisional.
+        </p>
+        <ul class="concepts">
+          {CONCEPTS.map((item) => (
+            <li class="concept">
+              <h2 class="type-h3">
+                <a href={conceptPath(item.id)}>
+                  Concept {item.id.toUpperCase()}: {item.name}
+                </a>
+              </h2>
+              <p>{item.summary}</p>
+              <p class="type-meta">{item.recipe}</p>
+            </li>
+          ))}
+        </ul>
+        <p class="type-meta measure">
+          Use the A, B and C switcher at the bottom right of any concept page to move between them.
+          This index and the three concept pages exist only in the local demo build.
+        </p>
+      </div>
+    </main>
+  )}
+</BaseLayout>
+
+<style>
+  .lab-index {
+    padding-block: var(--space-7);
+  }
+  .concepts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .concept {
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .concept > * + * {
+    margin-top: var(--space-2);
+  }
+  .concept a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+</style>

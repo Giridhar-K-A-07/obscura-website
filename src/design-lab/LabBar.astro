@@ -1,0 +1,121 @@
+---
+import { CONCEPTS, LAB_BASE, conceptPath, type Concept } from "./designLab";
+
+/*
+  Design-lab chrome: says which concept is on screen and switches between them. It is review
+  tooling, not part of any concept, so its colours are fixed and neutral and it never follows a
+  concept's palette. It exists only on the demo-only /design-lab/ routes.
+  - The note is in the page flow. The switcher is fixed at the bottom right (the DEMO badge is
+    fixed at the bottom left), with 44px targets, and the page keeps scroll padding for it so a
+    focused control is never hidden behind it (WCAG 2.4.11).
+*/
+interface Props {
+  current?: Concept;
+}
+const { current } = Astro.props;
+---
+
+<div class="lab-note" data-lab-note>
+  <p class="page">
+    <strong>Design exploration.</strong>{" "}
+    {current ? (
+      <>
+        Viewing{" "}
+        <strong>
+          Concept {current.id.toUpperCase()}: {current.name}
+        </strong>
+        .
+      </>
+    ) : (
+      <>Three homepage concepts to compare.</>
+    )}{" "}
+    No concept is selected or approved.
+    {current && (
+      <>
+        {" "}
+        <a href={`${LAB_BASE}/`}>All concepts</a>
+      </>
+    )}
+  </p>
+</div>
+
+<nav class="lab-switch" aria-label="Design lab concepts" data-lab-switch>
+  {CONCEPTS.map((concept) => (
+    <a
+      href={conceptPath(concept.id)}
+      aria-label={`Concept ${concept.id.toUpperCase()}: ${concept.name}`}
+      aria-current={current?.id === concept.id ? "page" : undefined}
+    >
+      {concept.id.toUpperCase()}
+    </a>
+  ))}
+  <a href={`${LAB_BASE}/`} aria-label="All concepts" aria-current={current ? undefined : "page"}>
+    All
+  </a>
+</nav>
+
+<style is:global>
+  html {
+    scroll-padding-bottom: 4.5rem;
+  }
+</style>
+
+<style>
+  .lab-note {
+    background: #f2f2f2;
+    color: #151515;
+    font:
+      500 0.875rem/1.45 system-ui,
+      sans-serif;
+    padding-block: 0.5rem;
+    border-bottom: 1px solid #151515;
+  }
+  .lab-note a {
+    display: inline-block;
+    padding-block: 0.75rem;
+    margin-block: -0.75rem;
+    color: #151515;
+    text-decoration: underline;
+  }
+  .lab-note a:focus-visible {
+    outline: 2px solid #151515;
+    outline-offset: 2px;
+  }
+  .lab-switch {
+    position: fixed;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    z-index: 2147483646;
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+    background: #f2f2f2;
+    border: 2px solid #151515;
+    border-radius: 6px;
+    font:
+      600 0.9375rem/1 system-ui,
+      sans-serif;
+  }
+  .lab-switch a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding-inline: 0.5rem;
+    color: #151515;
+    text-decoration: none;
+    border-radius: 3px;
+  }
+  .lab-switch a:hover {
+    background: #d8d8d8;
+  }
+  .lab-switch a[aria-current="page"] {
+    background: #151515;
+    color: #f2f2f2;
+  }
+  .lab-switch a:focus-visible {
+    outline: 3px solid #0b57d0;
+    outline-offset: 1px;
+  }
+</style>
